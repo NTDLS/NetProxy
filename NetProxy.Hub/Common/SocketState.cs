@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net.Sockets;
-
-namespace NetProxy.Hub.Common
+﻿namespace NetProxy.Hub.Common
 {
     internal class SocketState
     {

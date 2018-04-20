@@ -1,11 +1,4 @@
-﻿using NetProxy.Hub;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NetProxy.Client.Classes
+﻿namespace NetProxy.Client.Classes
 {
     public class ConnectionInfo
     {

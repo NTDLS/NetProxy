@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Configuration.Install;
+using System.Diagnostics;
 using System.Reflection;
 using System.ServiceProcess;
-using System.Diagnostics;
 using NetProxy.Library;
 using NetProxy.Library.Win32;
 
@@ -10,9 +10,6 @@ namespace NetProxy.Service
 {
     static class Program
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
         static void Main(string[] args)
         {
             try

@@ -1,6 +1,4 @@
-﻿using NetProxy.Hub.Common;
-using NetProxy.Library.Routing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -8,6 +6,8 @@ using System.Linq;
 using System.Runtime.Caching;
 using System.Security.Cryptography;
 using System.Text;
+using NetProxy.Hub.Common;
+using NetProxy.Library.Routing;
 
 namespace NetProxy.Service.Routing
 {

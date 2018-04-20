@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NetProxy.Library.Win32;
+﻿using NetProxy.Library.Win32;
 
 namespace NetProxy.Service
 {

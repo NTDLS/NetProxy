@@ -1,6 +1,6 @@
-﻿using NetProxy.Hub.Common;
+﻿using System.Net.Sockets;
+using NetProxy.Hub.Common;
 using NetProxy.Library.Routing;
-using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing
 {

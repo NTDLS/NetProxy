@@ -1,15 +1,15 @@
-﻿using Microsoft.Win32;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.Win32;
+using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Win32;
-using NetProxy.Hub;
 using NetProxy.Service.Routing;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace NetProxy.Service
 {

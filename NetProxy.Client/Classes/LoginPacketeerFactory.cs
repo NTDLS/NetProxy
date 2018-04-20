@@ -1,12 +1,7 @@
-﻿using NetProxy.Library;
+﻿using NetProxy.Hub;
+using NetProxy.Library;
 using NetProxy.Library.Payloads;
-using NetProxy.Hub;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NetProxy.Client.Classes
 {

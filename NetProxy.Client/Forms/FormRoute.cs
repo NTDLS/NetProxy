@@ -1,13 +1,13 @@
-﻿using NetProxy.Client.Classes;
+﻿using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+using NetProxy.Client.Classes;
+using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.General;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utility;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using NetProxy.Hub;
 
 namespace NetProxy.Client.Forms
 {

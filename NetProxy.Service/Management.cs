@@ -102,7 +102,9 @@ namespace NetProxy.Service
                                 BindingProtocal = router.Route.BindingProtocal,
                                 Description = router.Route.Description,
                                 IsRunning = router.IsRunning,
-                                ListenPort = router.Route.ListenPort
+                                ListenPort = router.Route.ListenPort,
+                                ListenOnAllAddresses = router.Route.ListenOnAllAddresses,
+                                Bindings = router.Route.Bindings
                             };
 
                             routes.Add(augmentedRoute);

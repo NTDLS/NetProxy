@@ -93,10 +93,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SecureKeyExchange\SecureKeyExchange.csproj">
-      <Project>{41d8a197-e709-4953-b17e-6b24be5a4f3a}</Project>
-      <Name>SecureKeyExchange</Name>
-    </ProjectReference>
     <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj">
       <Project>{5cd8c3b0-ba16-46d4-a844-93f5fdb0ada5}</Project>
       <Name>NetProxy.Library</Name>
@@ -104,6 +100,10 @@
     <ProjectReference Include="..\NetProxy.Hub\NetProxy.Hub.csproj">
       <Project>{09eaa666-fa60-445d-82ce-d11d78146524}</Project>
       <Name>NetProxy.Hub</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Secure-Key-Exchange\C#\SecureKeyExchange.csproj">
+      <Project>{41d8a197-e709-4953-b17e-6b24be5a4f3a}</Project>
+      <Name>SecureKeyExchange</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

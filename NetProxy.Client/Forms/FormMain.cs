@@ -10,6 +10,7 @@ using System.Linq;
 using System.Windows.Forms;
 using NetProxy.Library.Utility;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Net;
 
 namespace NetProxy.Client.Forms
 {
@@ -179,15 +180,22 @@ namespace NetProxy.Client.Forms
             var recvSeries = chartPerformance.Series["MB/s Recv"];
             var connectionsSeries = chartPerformance.Series["Connections"];
 
-            var bytesSent = stats.Sum(od => (od.BytesSent / 1048576.0));
-            var bytesRecv = stats.Sum(od => (od.BytesReceived / 1048576.0));
+            var bytesSent = stats.Sum(od => (od.BytesSent / 1024.0));
+            var bytesRecv = stats.Sum(od => (od.BytesReceived / 1024.0));
             var currentConn = stats.Sum(od => od.CurrentConnections);
 
             if (lastBytesSent >= 0)
             {
-                sentSeries.Points.Add(bytesSent - lastBytesSent);
-                recvSeries.Points.Add(bytesRecv - lastBytesRecv);
-                connectionsSeries.Points.Add(currentConn);
+                double value = 0;
+
+                value = bytesSent - lastBytesSent;
+                sentSeries.Points.Add(value > 0 ? value : 0);
+
+                value = bytesRecv - lastBytesRecv;
+                recvSeries.Points.Add(value > 0 ? value : 0);
+
+                value = currentConn;
+                connectionsSeries.Points.Add(value > 0 ? value : 0);
             }
 
             lastBytesSent = bytesSent;
@@ -274,9 +282,80 @@ namespace NetProxy.Client.Forms
                 menu.Items.Add("-");
                 menu.Items.Add("Start").Enabled = route != null && route.IsRunning == false;
                 menu.Items.Add("Stop").Enabled = route != null && route.IsRunning == true;
+
+                if (route != null && (route.TrafficType == TrafficType.HTTP || route.TrafficType == TrafficType.HTTPS))
+                {
+                    ToolStripMenuItem bindingMenu = new ToolStripMenuItem("Browse");
+                    if (route.ListenOnAllAddresses)
+                    {
+                        IPHostEntry iphostentry = Dns.GetHostEntry(connectionInfo.ServerName);
+                        foreach (IPAddress ipaddress in iphostentry.AddressList)
+                        {
+                            if (
+                                (route.BindingProtocal == BindingProtocal.IPv4 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                                || (route.BindingProtocal == BindingProtocal.IPv6 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                                )
+                            {
+                                string address = null;
+                                if (route.BindingProtocal == BindingProtocal.IPv4)
+                                {
+                                    address = ipaddress.ToString();
+                                }
+                                else
+                                {
+                                    address = String.Format("[{0}]", ipaddress.ToString());
+                                }
+
+                                string url = String.Format("{0}://{1}:{2}/", (route.TrafficType == TrafficType.HTTP ? "HTTP" : "HTTPS"), address, route.ListenPort);
+                                var menuItem = bindingMenu.DropDownItems.Add(url);
+                                menuItem.Click += Browse_MenuItem_Click;
+                                menuItem.Tag = url;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var binding in route.Bindings)
+                        {
+                            if (binding.Enabled == true)
+                            {
+                                string address = null;
+                                if (route.BindingProtocal == BindingProtocal.IPv4)
+                                {
+                                    address = binding.Address;
+                                }
+                                else
+                                {
+                                    address = String.Format("[{0}]", binding.Address);
+                                }
+
+                                string url = String.Format("{0}://{1}:{2}/", (route.TrafficType == TrafficType.HTTP ? "HTTP" : "HTTPS"), address, route.ListenPort);
+                                var menuItem = bindingMenu.DropDownItems.Add(url);
+                                menuItem.Click += Browse_MenuItem_Click;
+                                menuItem.Tag = url;
+                            }
+                        }
+                    }
+
+                    if (bindingMenu.DropDownItems.Count > 0)
+                    {
+                        menu.Items.Add("-");
+                        menu.Items.Add(bindingMenu);
+                    }
+                }
+
                 menu.Items.Add("-");
                 menu.Items.Add("Delete").Enabled = route != null;
                 menu.Show(dataGridViewRoutes, e.X, e.Y);
+            }
+        }
+
+        private void Browse_MenuItem_Click(object sender, EventArgs e)
+        {
+            var senderObject = (sender as ToolStripMenuItem);
+            if (senderObject != null && senderObject.Tag != null)
+            {
+                System.Diagnostics.Process.Start(senderObject.Tag.ToString());
             }
         }
 
@@ -289,7 +368,10 @@ namespace NetProxy.Client.Forms
                 routeId = (dataGridViewRoutes.CurrentRow.Cells[ColumnId.Index].Value ?? "").ToString();
             }
 
-            (sender as ContextMenuStrip)?.Hide();
+            if (e.ClickedItem.Text != "Browse")
+            {
+                (sender as ContextMenuStrip)?.Hide();
+            }
 
             switch (e.ClickedItem.Text)
             {

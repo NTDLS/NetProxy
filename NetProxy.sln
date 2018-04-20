@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetProxy.Client", "NetProxy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetProxy.Hub", "NetProxy.Hub\NetProxy.Hub.csproj", "{09EAA666-FA60-445D-82CE-D11D78146524}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureKeyExchange", "..\SecureKeyExchange\SecureKeyExchange.csproj", "{41D8A197-E709-4953-B17E-6B24BE5A4F3A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureKeyExchange", "Secure-Key-Exchange\C#\SecureKeyExchange.csproj", "{41D8A197-E709-4953-B17E-6B24BE5A4F3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,5 +42,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {87A17EB3-DD18-4E84-B0B5-32F1E26ECEF3}
 	EndGlobalSection
 EndGlobal

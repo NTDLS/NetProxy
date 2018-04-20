@@ -6,8 +6,6 @@
  DefaultDirName                  = {pf}\NetworkDLS\NetProxy
  DefaultGroupName                = NetworkDLS\NetProxy
  UninstallDisplayIcon            = {app}\NetProxy.Client.Exe
- WizardImageFile                 = /../../@Resources/Setup/LgSetup.bmp
- WizardSmallImageFile            = /../../@Resources/Setup/SmSetup.bmp
  PrivilegesRequired              = PowerUser
  Uninstallable                   = Yes
  Compression                     = zip/9

@@ -8,3 +8,13 @@
 *.pdb
 *.exe
 *.ilk
+NetProxy.Client/obj/
+NetProxy.Library/bin/
+NetProxy.Library/obj/
+NetProxy.Service/bin/
+NetProxy.Service/obj/
+packages/
+NetProxy.Hub/obj/
+NetProxy.Hub/bin/
+NetProxy.Client/bin/
+.vs/

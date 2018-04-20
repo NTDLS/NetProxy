@@ -35,6 +35,14 @@
             System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.dataGridViewRoutes = new System.Windows.Forms.DataGridView();
+            this.ColumnStatus = new System.Windows.Forms.DataGridViewImageColumn();
+            this.ColumnId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnRouterType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColummListenPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnBytesTransferred = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnTotalConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnCurrentConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.changeConnectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,14 +54,6 @@
             this.statusStripMain = new System.Windows.Forms.StatusStrip();
             this.panelPerformance = new System.Windows.Forms.Panel();
             this.chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.ColumnStatus = new System.Windows.Forms.DataGridViewImageColumn();
-            this.ColumnId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnRouterType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColummListenPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnBytesTransferred = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnTotalConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnCurrentConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewRoutes)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.panelPerformance.SuspendLayout();
@@ -86,6 +86,67 @@
             this.dataGridViewRoutes.TabIndex = 0;
             this.dataGridViewRoutes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewRoutes_CellDoubleClick);
             this.dataGridViewRoutes.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridViewRoutes_MouseDown);
+            // 
+            // ColumnStatus
+            // 
+            this.ColumnStatus.Frozen = true;
+            this.ColumnStatus.HeaderText = "Status";
+            this.ColumnStatus.Name = "ColumnStatus";
+            this.ColumnStatus.ReadOnly = true;
+            this.ColumnStatus.Width = 45;
+            // 
+            // ColumnId
+            // 
+            this.ColumnId.DataPropertyName = "Id";
+            this.ColumnId.HeaderText = "Id";
+            this.ColumnId.Name = "ColumnId";
+            this.ColumnId.ReadOnly = true;
+            this.ColumnId.Visible = false;
+            // 
+            // ColumnName
+            // 
+            this.ColumnName.DataPropertyName = "Name";
+            this.ColumnName.HeaderText = "Name";
+            this.ColumnName.Name = "ColumnName";
+            this.ColumnName.ReadOnly = true;
+            this.ColumnName.Width = 200;
+            // 
+            // ColumnRouterType
+            // 
+            this.ColumnRouterType.DataPropertyName = "RouterType";
+            this.ColumnRouterType.HeaderText = "Type";
+            this.ColumnRouterType.Name = "ColumnRouterType";
+            this.ColumnRouterType.ReadOnly = true;
+            this.ColumnRouterType.Width = 80;
+            // 
+            // ColummListenPort
+            // 
+            this.ColummListenPort.DataPropertyName = "ListenPort";
+            this.ColummListenPort.HeaderText = "Port";
+            this.ColummListenPort.Name = "ColummListenPort";
+            this.ColummListenPort.ReadOnly = true;
+            this.ColummListenPort.Width = 50;
+            // 
+            // ColumnBytesTransferred
+            // 
+            this.ColumnBytesTransferred.HeaderText = "Bytes Transferred";
+            this.ColumnBytesTransferred.Name = "ColumnBytesTransferred";
+            this.ColumnBytesTransferred.ReadOnly = true;
+            this.ColumnBytesTransferred.Width = 80;
+            // 
+            // ColumnTotalConnections
+            // 
+            this.ColumnTotalConnections.HeaderText = "Total Conn.";
+            this.ColumnTotalConnections.Name = "ColumnTotalConnections";
+            this.ColumnTotalConnections.ReadOnly = true;
+            this.ColumnTotalConnections.Width = 70;
+            // 
+            // ColumnCurrentConnections
+            // 
+            this.ColumnCurrentConnections.HeaderText = "Curr. Conn.";
+            this.ColumnCurrentConnections.Name = "ColumnCurrentConnections";
+            this.ColumnCurrentConnections.ReadOnly = true;
+            this.ColumnCurrentConnections.Width = 50;
             // 
             // menuStrip1
             // 
@@ -171,27 +232,31 @@
             // 
             // chartPerformance
             // 
+            this.chartPerformance.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.chartPerformance.BackSecondaryColor = System.Drawing.Color.White;
             chartArea1.AxisX.LabelStyle.Enabled = false;
             chartArea1.AxisX.MajorGrid.Enabled = false;
+            chartArea1.BackColor = System.Drawing.Color.WhiteSmoke;
             chartArea1.Name = "ChartArea1";
             this.chartPerformance.ChartAreas.Add(chartArea1);
             this.chartPerformance.Dock = System.Windows.Forms.DockStyle.Fill;
+            legend1.BackColor = System.Drawing.Color.WhiteSmoke;
             legend1.Name = "Legend1";
             this.chartPerformance.Legends.Add(legend1);
             this.chartPerformance.Location = new System.Drawing.Point(0, 0);
             this.chartPerformance.Name = "chartPerformance";
             series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
             series1.Color = System.Drawing.Color.Red;
             series1.Legend = "Legend1";
             series1.Name = "MB/s Sent";
             series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
             series2.Color = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             series2.Legend = "Legend1";
             series2.Name = "MB/s Recv";
             series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
             series3.Color = System.Drawing.Color.Blue;
             series3.Legend = "Legend1";
             series3.Name = "Connections";
@@ -201,67 +266,6 @@
             this.chartPerformance.Size = new System.Drawing.Size(650, 100);
             this.chartPerformance.TabIndex = 0;
             this.chartPerformance.Text = "chart1";
-            // 
-            // ColumnStatus
-            // 
-            this.ColumnStatus.Frozen = true;
-            this.ColumnStatus.HeaderText = "Status";
-            this.ColumnStatus.Name = "ColumnStatus";
-            this.ColumnStatus.ReadOnly = true;
-            this.ColumnStatus.Width = 45;
-            // 
-            // ColumnId
-            // 
-            this.ColumnId.DataPropertyName = "Id";
-            this.ColumnId.HeaderText = "Id";
-            this.ColumnId.Name = "ColumnId";
-            this.ColumnId.ReadOnly = true;
-            this.ColumnId.Visible = false;
-            // 
-            // ColumnName
-            // 
-            this.ColumnName.DataPropertyName = "Name";
-            this.ColumnName.HeaderText = "Name";
-            this.ColumnName.Name = "ColumnName";
-            this.ColumnName.ReadOnly = true;
-            this.ColumnName.Width = 200;
-            // 
-            // ColumnRouterType
-            // 
-            this.ColumnRouterType.DataPropertyName = "RouterType";
-            this.ColumnRouterType.HeaderText = "Type";
-            this.ColumnRouterType.Name = "ColumnRouterType";
-            this.ColumnRouterType.ReadOnly = true;
-            this.ColumnRouterType.Width = 80;
-            // 
-            // ColummListenPort
-            // 
-            this.ColummListenPort.DataPropertyName = "ListenPort";
-            this.ColummListenPort.HeaderText = "Port";
-            this.ColummListenPort.Name = "ColummListenPort";
-            this.ColummListenPort.ReadOnly = true;
-            this.ColummListenPort.Width = 50;
-            // 
-            // ColumnBytesTransferred
-            // 
-            this.ColumnBytesTransferred.HeaderText = "Bytes Transferred";
-            this.ColumnBytesTransferred.Name = "ColumnBytesTransferred";
-            this.ColumnBytesTransferred.ReadOnly = true;
-            this.ColumnBytesTransferred.Width = 80;
-            // 
-            // ColumnTotalConnections
-            // 
-            this.ColumnTotalConnections.HeaderText = "Total Conn.";
-            this.ColumnTotalConnections.Name = "ColumnTotalConnections";
-            this.ColumnTotalConnections.ReadOnly = true;
-            this.ColumnTotalConnections.Width = 70;
-            // 
-            // ColumnCurrentConnections
-            // 
-            this.ColumnCurrentConnections.HeaderText = "Curr. Conn.";
-            this.ColumnCurrentConnections.Name = "ColumnCurrentConnections";
-            this.ColumnCurrentConnections.ReadOnly = true;
-            this.ColumnCurrentConnections.Width = 50;
             // 
             // FormMain
             // 

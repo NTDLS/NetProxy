@@ -64,18 +64,6 @@
             this.ColumnHTTPHeadersAction = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.ColumnHTTPHeadersValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnHTTPHeadersDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.textBoxEncryptionInitTimeout = new System.Windows.Forms.TextBox();
-            this.textBoxStickySessionCacheExpiration = new System.Windows.Forms.TextBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
-            this.textBoxSpinLockCount = new System.Windows.Forms.TextBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.textBoxMaxBufferSize = new System.Windows.Forms.TextBox();
-            this.textBoxAcceptBacklogSize = new System.Windows.Forms.TextBox();
-            this.textBoxInitialBufferSize = new System.Windows.Forms.TextBox();
             this.tabPageEndpoints = new System.Windows.Forms.TabPage();
             this.checkBoxUseStickySessions = new System.Windows.Forms.CheckBox();
             this.dataGridViewEndpoints = new System.Windows.Forms.DataGridView();
@@ -99,6 +87,18 @@
             this.textBoxTunnelBindingPreSharedKey = new System.Windows.Forms.TextBox();
             this.checkBoxTunnelBindingUseCompression = new System.Windows.Forms.CheckBox();
             this.checkBoxBindingIsTunnel = new System.Windows.Forms.CheckBox();
+            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.textBoxEncryptionInitTimeout = new System.Windows.Forms.TextBox();
+            this.textBoxStickySessionCacheExpiration = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.textBoxSpinLockCount = new System.Windows.Forms.TextBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textBoxMaxBufferSize = new System.Windows.Forms.TextBox();
+            this.textBoxAcceptBacklogSize = new System.Windows.Forms.TextBox();
+            this.textBoxInitialBufferSize = new System.Windows.Forms.TextBox();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
@@ -107,14 +107,14 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewBindings)).BeginInit();
             this.tabPageHTTPHeaders.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewHTTPHeaders)).BeginInit();
-            this.tabPageAdvanced.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.tabPageEndpoints.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEndpoints)).BeginInit();
             this.tabPageTunneling.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.tabPageAdvanced.SuspendLayout();
+            this.groupBox4.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -437,116 +437,6 @@
             this.ColumnHTTPHeadersDescription.Name = "ColumnHTTPHeadersDescription";
             this.ColumnHTTPHeadersDescription.Width = 250;
             // 
-            // tabPageAdvanced
-            // 
-            this.tabPageAdvanced.Controls.Add(this.groupBox4);
-            this.tabPageAdvanced.Controls.Add(this.groupBox1);
-            this.tabPageAdvanced.Location = new System.Drawing.Point(4, 22);
-            this.tabPageAdvanced.Name = "tabPageAdvanced";
-            this.tabPageAdvanced.Size = new System.Drawing.Size(583, 272);
-            this.tabPageAdvanced.TabIndex = 3;
-            this.tabPageAdvanced.Text = "Advanced";
-            this.tabPageAdvanced.UseVisualStyleBackColor = true;
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.textBoxEncryptionInitTimeout);
-            this.groupBox4.Controls.Add(this.textBoxStickySessionCacheExpiration);
-            this.groupBox4.Controls.Add(this.label13);
-            this.groupBox4.Controls.Add(this.label15);
-            this.groupBox4.Controls.Add(this.label14);
-            this.groupBox4.Controls.Add(this.textBoxSpinLockCount);
-            this.groupBox4.Location = new System.Drawing.Point(254, 15);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(308, 119);
-            this.groupBox4.TabIndex = 18;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Misc. (Super Advanced)";
-            // 
-            // textBoxEncryptionInitTimeout
-            // 
-            this.textBoxEncryptionInitTimeout.Location = new System.Drawing.Point(189, 19);
-            this.textBoxEncryptionInitTimeout.Name = "textBoxEncryptionInitTimeout";
-            this.textBoxEncryptionInitTimeout.Size = new System.Drawing.Size(100, 20);
-            this.textBoxEncryptionInitTimeout.TabIndex = 13;
-            // 
-            // textBoxStickySessionCacheExpiration
-            // 
-            this.textBoxStickySessionCacheExpiration.Location = new System.Drawing.Point(189, 74);
-            this.textBoxStickySessionCacheExpiration.Name = "textBoxStickySessionCacheExpiration";
-            this.textBoxStickySessionCacheExpiration.Size = new System.Drawing.Size(100, 20);
-            this.textBoxStickySessionCacheExpiration.TabIndex = 17;
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(12, 22);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(171, 13);
-            this.label13.TabIndex = 12;
-            this.label13.Text = "Encryption Initilization Timeout (ms)";
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(10, 77);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(173, 13);
-            this.label15.TabIndex = 16;
-            this.label15.Text = "Sticky Session Cache Expiration (s)";
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(97, 51);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(86, 13);
-            this.label14.TabIndex = 14;
-            this.label14.Text = "Spin-Lock Count";
-            // 
-            // textBoxSpinLockCount
-            // 
-            this.textBoxSpinLockCount.Location = new System.Drawing.Point(189, 48);
-            this.textBoxSpinLockCount.Name = "textBoxSpinLockCount";
-            this.textBoxSpinLockCount.Size = new System.Drawing.Size(100, 20);
-            this.textBoxSpinLockCount.TabIndex = 15;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.textBoxMaxBufferSize);
-            this.groupBox1.Controls.Add(this.textBoxAcceptBacklogSize);
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.labelAcceptBacklogSize);
-            this.groupBox1.Controls.Add(this.textBoxInitialBufferSize);
-            this.groupBox1.Location = new System.Drawing.Point(12, 15);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(236, 119);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Buffers";
-            // 
-            // textBoxMaxBufferSize
-            // 
-            this.textBoxMaxBufferSize.Location = new System.Drawing.Point(115, 48);
-            this.textBoxMaxBufferSize.Name = "textBoxMaxBufferSize";
-            this.textBoxMaxBufferSize.Size = new System.Drawing.Size(100, 20);
-            this.textBoxMaxBufferSize.TabIndex = 11;
-            // 
-            // textBoxAcceptBacklogSize
-            // 
-            this.textBoxAcceptBacklogSize.Location = new System.Drawing.Point(115, 74);
-            this.textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
-            this.textBoxAcceptBacklogSize.Size = new System.Drawing.Size(100, 20);
-            this.textBoxAcceptBacklogSize.TabIndex = 12;
-            // 
-            // textBoxInitialBufferSize
-            // 
-            this.textBoxInitialBufferSize.Location = new System.Drawing.Point(115, 22);
-            this.textBoxInitialBufferSize.Name = "textBoxInitialBufferSize";
-            this.textBoxInitialBufferSize.Size = new System.Drawing.Size(100, 20);
-            this.textBoxInitialBufferSize.TabIndex = 10;
-            // 
             // tabPageEndpoints
             // 
             this.tabPageEndpoints.Controls.Add(this.checkBoxUseStickySessions);
@@ -669,9 +559,9 @@
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(3, 93);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(64, 13);
+            this.label11.Size = new System.Drawing.Size(84, 13);
             this.label11.TabIndex = 23;
-            this.label11.Text = "Tunnel Key:";
+            this.label11.Text = "Pre-Shared Key:";
             // 
             // checkBoxTunnelEndpointUseEncryption
             // 
@@ -735,9 +625,9 @@
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(3, 93);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(64, 13);
+            this.label12.Size = new System.Drawing.Size(84, 13);
             this.label12.TabIndex = 27;
-            this.label12.Text = "Tunnel Key:";
+            this.label12.Text = "Pre-Shared Key:";
             // 
             // checkBoxTunnelBindingUseEncryption
             // 
@@ -781,6 +671,116 @@
             this.checkBoxBindingIsTunnel.Text = "Is Tunnel? (Connection from NetProxy)";
             this.checkBoxBindingIsTunnel.UseVisualStyleBackColor = true;
             this.checkBoxBindingIsTunnel.CheckStateChanged += new System.EventHandler(this.checkBoxBindingIsTunnel_CheckStateChanged);
+            // 
+            // tabPageAdvanced
+            // 
+            this.tabPageAdvanced.Controls.Add(this.groupBox4);
+            this.tabPageAdvanced.Controls.Add(this.groupBox1);
+            this.tabPageAdvanced.Location = new System.Drawing.Point(4, 22);
+            this.tabPageAdvanced.Name = "tabPageAdvanced";
+            this.tabPageAdvanced.Size = new System.Drawing.Size(583, 272);
+            this.tabPageAdvanced.TabIndex = 3;
+            this.tabPageAdvanced.Text = "Advanced";
+            this.tabPageAdvanced.UseVisualStyleBackColor = true;
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.textBoxEncryptionInitTimeout);
+            this.groupBox4.Controls.Add(this.textBoxStickySessionCacheExpiration);
+            this.groupBox4.Controls.Add(this.label13);
+            this.groupBox4.Controls.Add(this.label15);
+            this.groupBox4.Controls.Add(this.label14);
+            this.groupBox4.Controls.Add(this.textBoxSpinLockCount);
+            this.groupBox4.Location = new System.Drawing.Point(254, 15);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(308, 119);
+            this.groupBox4.TabIndex = 18;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Misc. (Super Advanced)";
+            // 
+            // textBoxEncryptionInitTimeout
+            // 
+            this.textBoxEncryptionInitTimeout.Location = new System.Drawing.Point(189, 19);
+            this.textBoxEncryptionInitTimeout.Name = "textBoxEncryptionInitTimeout";
+            this.textBoxEncryptionInitTimeout.Size = new System.Drawing.Size(100, 20);
+            this.textBoxEncryptionInitTimeout.TabIndex = 13;
+            // 
+            // textBoxStickySessionCacheExpiration
+            // 
+            this.textBoxStickySessionCacheExpiration.Location = new System.Drawing.Point(189, 74);
+            this.textBoxStickySessionCacheExpiration.Name = "textBoxStickySessionCacheExpiration";
+            this.textBoxStickySessionCacheExpiration.Size = new System.Drawing.Size(100, 20);
+            this.textBoxStickySessionCacheExpiration.TabIndex = 17;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(12, 22);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(171, 13);
+            this.label13.TabIndex = 12;
+            this.label13.Text = "Encryption Initilization Timeout (ms)";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(10, 77);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(173, 13);
+            this.label15.TabIndex = 16;
+            this.label15.Text = "Sticky Session Cache Expiration (s)";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(97, 51);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(86, 13);
+            this.label14.TabIndex = 14;
+            this.label14.Text = "Spin-Lock Count";
+            // 
+            // textBoxSpinLockCount
+            // 
+            this.textBoxSpinLockCount.Location = new System.Drawing.Point(189, 48);
+            this.textBoxSpinLockCount.Name = "textBoxSpinLockCount";
+            this.textBoxSpinLockCount.Size = new System.Drawing.Size(100, 20);
+            this.textBoxSpinLockCount.TabIndex = 15;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.textBoxMaxBufferSize);
+            this.groupBox1.Controls.Add(this.textBoxAcceptBacklogSize);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.labelAcceptBacklogSize);
+            this.groupBox1.Controls.Add(this.textBoxInitialBufferSize);
+            this.groupBox1.Location = new System.Drawing.Point(12, 15);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(236, 119);
+            this.groupBox1.TabIndex = 0;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Buffers";
+            // 
+            // textBoxMaxBufferSize
+            // 
+            this.textBoxMaxBufferSize.Location = new System.Drawing.Point(115, 48);
+            this.textBoxMaxBufferSize.Name = "textBoxMaxBufferSize";
+            this.textBoxMaxBufferSize.Size = new System.Drawing.Size(100, 20);
+            this.textBoxMaxBufferSize.TabIndex = 11;
+            // 
+            // textBoxAcceptBacklogSize
+            // 
+            this.textBoxAcceptBacklogSize.Location = new System.Drawing.Point(115, 74);
+            this.textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
+            this.textBoxAcceptBacklogSize.Size = new System.Drawing.Size(100, 20);
+            this.textBoxAcceptBacklogSize.TabIndex = 12;
+            // 
+            // textBoxInitialBufferSize
+            // 
+            this.textBoxInitialBufferSize.Location = new System.Drawing.Point(115, 22);
+            this.textBoxInitialBufferSize.Name = "textBoxInitialBufferSize";
+            this.textBoxInitialBufferSize.Size = new System.Drawing.Size(100, 20);
+            this.textBoxInitialBufferSize.TabIndex = 10;
             // 
             // buttonCancel
             // 
@@ -828,11 +828,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewBindings)).EndInit();
             this.tabPageHTTPHeaders.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewHTTPHeaders)).EndInit();
-            this.tabPageAdvanced.ResumeLayout(false);
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.tabPageEndpoints.ResumeLayout(false);
             this.tabPageEndpoints.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEndpoints)).EndInit();
@@ -841,6 +836,11 @@
             this.groupBox3.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            this.tabPageAdvanced.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }

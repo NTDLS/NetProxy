@@ -168,7 +168,6 @@
     <Content Include="AppIcon.ico" />
     <None Include="Resources\AppIcon.png" />
     <None Include="Resources\Password.ico" />
-    <None Include="Properties\AppIcon.png" />
     <None Include="StateStopped.ico" />
     <None Include="StateRunning.ico" />
   </ItemGroup>

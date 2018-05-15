@@ -20,10 +20,10 @@ namespace NetProxy.Hub
 
         #region Backend Variables.
 
-        private int listenBacklog = 4;
-        private Socket listenSocket;
-        private List<Peer> peers = new List<Peer>();
-        private AsyncCallback OnDataReceivedCallback;
+        private int _listenBacklog = 4;
+        private Socket _listenSocket;
+        private List<Peer> _peers = new List<Peer>();
+        private AsyncCallback _onDataReceivedCallback;
 
         #endregion
 
@@ -34,7 +34,7 @@ namespace NetProxy.Hub
         /// </summary>
         public void Start()
         {
-            listenSocket = null;
+            _listenSocket = null;
         }
 
         /// <summary>
@@ -43,13 +43,13 @@ namespace NetProxy.Hub
         /// <param name="listenPort"></param>
         public void Start(int listenPort)
         {
-            listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             IPEndPoint ipLocal = new IPEndPoint(IPAddress.Any, listenPort);
 
-            listenSocket.Bind(ipLocal);
-            listenSocket.Listen(listenBacklog);
-            listenSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
+            _listenSocket.Bind(ipLocal);
+            _listenSocket.Listen(_listenBacklog);
+            _listenSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
         }
 
         public void Stop()
@@ -65,20 +65,20 @@ namespace NetProxy.Hub
         {
             try
             {
-                if (listenSocket != null)
+                if (_listenSocket != null)
                 {
-                    listenSocket.Disconnect(false);
+                    _listenSocket.Disconnect(false);
                 }
             }
             catch
             {
             }
 
-            listenSocket = null;
+            _listenSocket = null;
 
             try
             {
-                var openSockets = peers.ToList();
+                var openSockets = _peers.ToList();
 
                 foreach (var peer in openSockets)
                 {
@@ -91,7 +91,7 @@ namespace NetProxy.Hub
                     }
                 }
 
-                peers.Clear();
+                _peers.Clear();
             }
             catch
             {
@@ -139,7 +139,7 @@ namespace NetProxy.Hub
                 {
                     lock (this)
                     {
-                        peers.Add(peer);
+                        _peers.Add(peer);
                     }
 
                     WaitForData(new SocketState(peer));
@@ -163,16 +163,16 @@ namespace NetProxy.Hub
             {
                 try
                 {
-                    Socket socket = listenSocket.EndAccept(asyn);
+                    Socket socket = _listenSocket.EndAccept(asyn);
 
                     Peer peer = new Peer(socket);
 
-                    peers.Add(peer);
+                    _peers.Add(peer);
 
                     // Let the worker Socket do the further processing for the just connected client.
                     WaitForData(new SocketState(peer));
 
-                    listenSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
+                    _listenSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
                 }
                 catch
                 {
@@ -182,12 +182,12 @@ namespace NetProxy.Hub
 
         private void WaitForData(SocketState socketState)
         {
-            if (OnDataReceivedCallback == null)
+            if (_onDataReceivedCallback == null)
             {
-                OnDataReceivedCallback = new AsyncCallback(OnDataReceived);
+                _onDataReceivedCallback = new AsyncCallback(OnDataReceived);
             }
 
-            socketState.Peer.Socket.BeginReceive(socketState.Buffer, 0, socketState.Buffer.Length, SocketFlags.None, OnDataReceivedCallback, socketState);
+            socketState.Peer.Socket.BeginReceive(socketState.Buffer, 0, socketState.Buffer.Length, SocketFlags.None, _onDataReceivedCallback, socketState);
         }
 
         private void OnDataReceived(IAsyncResult asyn)
@@ -250,7 +250,7 @@ namespace NetProxy.Hub
                     {
                     }
 
-                    peers.Remove(peer);
+                    _peers.Remove(peer);
                 }
                 catch
                 {
@@ -264,7 +264,7 @@ namespace NetProxy.Hub
             {
                 try
                 {
-                    foreach (var peer in peers)
+                    foreach (var peer in _peers)
                     {
                         if (peer.Socket == socket)
                         {
@@ -290,7 +290,7 @@ namespace NetProxy.Hub
         {
             lock (this)
             {
-                if (peers.Count == 0)
+                if (_peers.Count == 0)
                 {
                     return;
                 }
@@ -301,7 +301,7 @@ namespace NetProxy.Hub
                     Payload = payload
                 });
 
-                foreach (var peer in peers)
+                foreach (var peer in _peers)
                 {
                     try
                     {
@@ -324,7 +324,7 @@ namespace NetProxy.Hub
         {
             lock (this)
             {
-                if (peers.Count == 0)
+                if (_peers.Count == 0)
                 {
                     return;
                 }
@@ -335,7 +335,7 @@ namespace NetProxy.Hub
                     Payload = payload
                 });
 
-                foreach (var peer in peers)
+                foreach (var peer in _peers)
                 {
                     if (peer.Id == peerId)
                     {

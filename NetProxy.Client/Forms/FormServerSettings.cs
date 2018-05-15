@@ -10,11 +10,11 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private ConnectionInfo connectionInfo = null;
-        private Packeteer packeteer = null;
+        private ConnectionInfo _connectionInfo = null;
+        private Packeteer _packeteer = null;
 
         private delegate void PopulateGrid(Users users);
-        private PopulateGrid populateGrid = null;
+        private PopulateGrid _populateGrid = null;
         private void OnPopulateGrid(Users users)
         {
             foreach (var user in users.List)
@@ -38,31 +38,31 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
 
-            populateGrid = OnPopulateGrid;
-            this.connectionInfo = connectionInfo;
+            _populateGrid = OnPopulateGrid;
+            this._connectionInfo = connectionInfo;
 
-            packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
-            packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
         }
 
 
         private void FormServerSettings_Shown(object sender, EventArgs e)
         {
-            packeteer.SendAll(Constants.CommandLables.GUIRequestUserList);
+            _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
         }
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
-            if (packet.Label == Constants.CommandLables.GUIRequestUserList)
+            if (packet.Label == Constants.CommandLables.GuiRequestUserList)
             {
                 var collection = JsonConvert.DeserializeObject<Users>(packet.Payload);
-                this.Invoke(populateGrid, new object[] { collection });
+                this.Invoke(_populateGrid, new object[] { collection });
             }
         }
 
         private void FormServerSettings_FormClosed(object sender, FormClosedEventArgs e)
         {
-            packeteer.Disconnect();
+            _packeteer.Disconnect();
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -89,7 +89,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            packeteer.SendAll(Constants.CommandLables.GUIPersistUserList, JsonConvert.SerializeObject(users) );
+            _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users) );
 
             DialogResult = DialogResult.OK;
             this.Close();

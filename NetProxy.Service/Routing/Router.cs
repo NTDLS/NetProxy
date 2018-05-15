@@ -17,21 +17,22 @@ namespace NetProxy.Service.Routing
     {
         #region Backend Variables.
 
-        private MemoryCache stickySessionCache = new MemoryCache("NetProxy.Service.Routing.Router.StickySessionCache");
-        public RouterStatistics Stats = new RouterStatistics();
-        private int lastRoundRobinIndex = 0;
-        private Route route;
-        private Socket listenSocket = null;
-        private List<SocketState> connections = new List<SocketState>();
-        private AsyncCallback OnDataReceivedCallback;
+        public RouterStatistics Stats { get; set; }
+
+        private readonly MemoryCache _stickySessionCache = new MemoryCache("NetProxy.Service.Routing.Router.StickySessionCache");
+        private int _lastRoundRobinIndex = 0;
+        private readonly Route _route;
+        private Socket _listenSocket = null;
+        private readonly List<SocketState> _connections = new List<SocketState>();
+        private AsyncCallback _onDataReceivedCallback;
 
         public int CurrentConnectionCount
         {
             get
             {
-                lock (connections)
+                lock (_connections)
                 {
-                    return connections.Count;
+                    return _connections.Count;
                 }
             }
         }
@@ -40,7 +41,7 @@ namespace NetProxy.Service.Routing
         {
             get
             {
-                return route;
+                return _route;
             }
         }
 
@@ -48,14 +49,15 @@ namespace NetProxy.Service.Routing
 
         public Router(Route route)
         {
-            this.route = route;
+            Stats = new RouterStatistics();
+            this._route = route;
         }
 
         public bool IsRunning
         {
             get
             {
-                return listenSocket != null;
+                return _listenSocket != null;
             }
         }
 
@@ -72,30 +74,30 @@ namespace NetProxy.Service.Routing
             {
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
 
-                if (route.BindingProtocal == BindingProtocal.IPv6)
+                if (_route.BindingProtocal == BindingProtocal.Pv6)
                 {
-                    listenSocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+                    _listenSocket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
                 }
-                else if (route.BindingProtocal == BindingProtocal.IPv4)
+                else if (_route.BindingProtocal == BindingProtocal.Pv4)
                 {
-                    listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    _listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 }
                 else
                 {
                     throw new NotImplementedException();
                 }
 
-                if (route.ListenOnAllAddresses)
+                if (_route.ListenOnAllAddresses)
                 {
-                    if (route.BindingProtocal == BindingProtocal.IPv6)
+                    if (_route.BindingProtocal == BindingProtocal.Pv6)
                     {
-                        IPEndPoint ipLocal = new IPEndPoint(IPAddress.IPv6Any, route.ListenPort);
-                        listenSocket.Bind(ipLocal);
+                        IPEndPoint ipLocal = new IPEndPoint(IPAddress.IPv6Any, _route.ListenPort);
+                        _listenSocket.Bind(ipLocal);
                     }
-                    else if (route.BindingProtocal == BindingProtocal.IPv4)
+                    else if (_route.BindingProtocal == BindingProtocal.Pv4)
                     {
-                        IPEndPoint ipLocal = new IPEndPoint(IPAddress.Any, route.ListenPort);
-                        listenSocket.Bind(ipLocal);
+                        IPEndPoint ipLocal = new IPEndPoint(IPAddress.Any, _route.ListenPort);
+                        _listenSocket.Bind(ipLocal);
                     }
                     else
                     {
@@ -104,34 +106,34 @@ namespace NetProxy.Service.Routing
                 }
                 else
                 {
-                    foreach (var binding in route.Bindings)
+                    foreach (var binding in _route.Bindings)
                     {
                         if (binding.Enabled)
                         {
-                            IPEndPoint ipLocal = new IPEndPoint(IPAddress.Parse(binding.Address), route.ListenPort);
-                            listenSocket.Bind(ipLocal);
+                            IPEndPoint ipLocal = new IPEndPoint(IPAddress.Parse(binding.Address), _route.ListenPort);
+                            _listenSocket.Bind(ipLocal);
                         }
                     }
                 }
 
-                listenSocket.Listen(route.AcceptBacklogSize);
-                listenSocket.BeginAccept(new AsyncCallback(OnConnectionAccepted), null);
+                _listenSocket.Listen(_route.AcceptBacklogSize);
+                _listenSocket.BeginAccept(new AsyncCallback(OnConnectionAccepted), null);
 
                 return true;
             }
             catch (Exception ex)
             {
-                if (listenSocket != null)
+                if (_listenSocket != null)
                 {
                     try
                     {
-                        listenSocket.Close();
+                        _listenSocket.Close();
                     }
                     catch
                     {
                     }
                 }
-                listenSocket = null;
+                _listenSocket = null;
 
                 Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
                 {
@@ -155,31 +157,31 @@ namespace NetProxy.Service.Routing
 
             try
             {
-                if (listenSocket != null)
+                if (_listenSocket != null)
                 {
-                    listenSocket.Close();
-                    listenSocket = null;
+                    _listenSocket.Close();
+                    _listenSocket = null;
                 }
 
-                lock (connections)
+                lock (_connections)
                 {
-                    while (connections.Count > 0)
+                    while (_connections.Count > 0)
                     {
                         try
                         {
-                            CleanupConnection(connections[0]);
+                            CleanupConnection(_connections[0]);
                         }
                         catch
                         {
                         }
                     }
 
-                    connections.Clear();
+                    _connections.Clear();
                 }
             }
             catch (Exception ex)
             {
-                listenSocket = null;
+                _listenSocket = null;
 
                 Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
                 {
@@ -199,17 +201,17 @@ namespace NetProxy.Service.Routing
         {
             try
             {
-                if (listenSocket != null)
+                if (_listenSocket != null)
                 {
                     Stats.TotalConnections++;
 
-                    Socket socket = listenSocket.EndAccept(asyn);
-                    SocketState connection = new SocketState(socket, route.InitialBufferSize);
+                    Socket socket = _listenSocket.EndAccept(asyn);
+                    SocketState connection = new SocketState(socket, _route.InitialBufferSize);
 
-                    connection.Route = route;
+                    connection.Route = _route;
                     connection.IsIncomming = true;
 
-                    if (route.EncryptBindingTunnel)
+                    if (_route.EncryptBindingTunnel)
                     {
                         connection.KeyNegotiator = new SecureKeyExchange.SecureKeyNegotiator();
 
@@ -219,7 +221,7 @@ namespace NetProxy.Service.Routing
                             Payload = connection.KeyNegotiator.GenerateNegotiationToken()
                         });
                     }
-                    else if (route.BindingIsTunnel)
+                    else if (_route.BindingIsTunnel)
                     {
                         SendPacketEnvelope(connection, new PacketEnvelope
                         {
@@ -229,7 +231,7 @@ namespace NetProxy.Service.Routing
 
                     (new Thread(EstablishPeerConnection)).Start(connection);
 
-                    listenSocket.BeginAccept(new AsyncCallback(OnConnectionAccepted), null);
+                    _listenSocket.BeginAccept(new AsyncCallback(OnConnectionAccepted), null);
                 }
             }
             catch
@@ -240,7 +242,7 @@ namespace NetProxy.Service.Routing
 
         public SocketState Connect(string hostName, int port)
         {
-            IPAddress ipAddress = GetIPAddress(hostName);
+            IPAddress ipAddress = GetIpAddress(hostName);
             if (ipAddress != null)
             {
                 return Connect(ipAddress, port);
@@ -259,12 +261,12 @@ namespace NetProxy.Service.Routing
                 if (socket.Connected)
                 {
                     Stats.TotalConnections++;
-                    var connection = new SocketState(socket, route.InitialBufferSize);
+                    var connection = new SocketState(socket, _route.InitialBufferSize);
 
                     connection.IsOutgoing = true;
-                    connection.Route = route;
+                    connection.Route = _route;
 
-                    if (route.EndpointIsTunnel && route.EncryptEndpointTunnel == false)
+                    if (_route.EndpointIsTunnel && _route.EncryptEndpointTunnel == false)
                     {
                         SendPacketEnvelope(connection, new PacketEnvelope
                         {
@@ -319,11 +321,11 @@ namespace NetProxy.Service.Routing
                 string commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
                 {
-                    commonSalt = route.BindingPreSharedKey;
+                    commonSalt = _route.BindingPreSharedKey;
                 }
                 else if (connection.IsOutgoing && connection.IsEncryptionNegotationComplete)
                 {
-                    commonSalt = route.EndpointPreSharedKey;
+                    commonSalt = _route.EndpointPreSharedKey;
                 }
 
                 SendPacketEnvelope(connection, new PacketEnvelope
@@ -346,17 +348,17 @@ namespace NetProxy.Service.Routing
             SocketState foreignConnection = null;
 
             Endpoint foreignConnectionEndpoint = null;
-            string stickeySessionKey = route.Name + ":" + route.Endpoints.ConnectionPattern + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address.ToString();
+            string stickeySessionKey = _route.Name + ":" + _route.Endpoints.ConnectionPattern + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address.ToString();
 
-            if (route.UseStickySessions)
+            if (_route.UseStickySessions)
             {
-                lock (stickySessionCache)
+                lock (_stickySessionCache)
                 {
-                    if (stickySessionCache.Contains(stickeySessionKey))
+                    if (_stickySessionCache.Contains(stickeySessionKey))
                     {
-                        var cacheItem = (StickySession)stickySessionCache[stickeySessionKey];
+                        var cacheItem = (StickySession)_stickySessionCache[stickeySessionKey];
 
-                        foreignConnectionEndpoint = (from o in route.Endpoints.List
+                        foreignConnectionEndpoint = (from o in _route.Endpoints.List
                                                      where o.Address == cacheItem.DestinationAddress && o.Port == cacheItem.DestinationPort
                                                      select o).FirstOrDefault();
                     }
@@ -375,9 +377,9 @@ namespace NetProxy.Service.Routing
             //If not using sticky sessions, of if we failed to connect to the previously successful host - then take the connection pattern into account.
             if (foreignConnection == null)
             {
-                if (route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
+                if (_route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
                 {
-                    foreach (var remotePeer in route.Endpoints.List)
+                    foreach (var remotePeer in _route.Endpoints.List)
                     {
                         if (remotePeer.Enabled)
                         {
@@ -389,27 +391,27 @@ namespace NetProxy.Service.Routing
                         }
                     }
                 }
-                else if (route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
+                else if (_route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
                 {
                     throw new NotImplementedException();
                 }
-                else if (route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
+                else if (_route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
                 {
-                    if (lastRoundRobinIndex >= route.Endpoints.List.Count)
+                    if (_lastRoundRobinIndex >= _route.Endpoints.List.Count)
                     {
-                        lastRoundRobinIndex = 0;
+                        _lastRoundRobinIndex = 0;
                     }
 
-                    int startIndex = lastRoundRobinIndex++;
+                    int startIndex = _lastRoundRobinIndex++;
 
-                    if (startIndex >= route.Endpoints.List.Count)
+                    if (startIndex >= _route.Endpoints.List.Count)
                     {
                         startIndex = 0;
                     }
 
-                    for (int i = startIndex; i < route.Endpoints.List.Count; i++)
+                    for (int i = startIndex; i < _route.Endpoints.List.Count; i++)
                     {
-                        var remotePeer = route.Endpoints.List[i];
+                        var remotePeer = _route.Endpoints.List[i];
                         if (remotePeer.Enabled)
                         {
                             if ((foreignConnection = Connect(remotePeer.Address, remotePeer.Port)) != null)
@@ -432,9 +434,9 @@ namespace NetProxy.Service.Routing
                 return;
             }
 
-            if (route.UseStickySessions)
+            if (_route.UseStickySessions)
             {
-                lock (stickySessionCache)
+                lock (_stickySessionCache)
                 {
                     var stickySession = new StickySession()
                     {
@@ -442,9 +444,9 @@ namespace NetProxy.Service.Routing
                         DestinationPort = foreignConnectionEndpoint.Port
                     };
 
-                    stickySessionCache.Add(stickeySessionKey, stickySession, new CacheItemPolicy()
+                    _stickySessionCache.Add(stickeySessionKey, stickySession, new CacheItemPolicy()
                     {
-                        SlidingExpiration = new TimeSpan(0, 0, route.StickySessionCacheExpiration)
+                        SlidingExpiration = new TimeSpan(0, 0, _route.StickySessionCacheExpiration)
                     });
                 }
             }
@@ -452,10 +454,10 @@ namespace NetProxy.Service.Routing
             accpetedConnection.Peer = foreignConnection;
             foreignConnection.Peer = accpetedConnection;
 
-            lock (connections)
+            lock (_connections)
             {
-                connections.Add(accpetedConnection);
-                connections.Add(foreignConnection);
+                _connections.Add(accpetedConnection);
+                _connections.Add(foreignConnection);
             }
 
             WaitForData(accpetedConnection);
@@ -468,12 +470,12 @@ namespace NetProxy.Service.Routing
         {
             try
             {
-                if (OnDataReceivedCallback == null)
+                if (_onDataReceivedCallback == null)
                 {
-                    OnDataReceivedCallback = new AsyncCallback(OnDataReceived);
+                    _onDataReceivedCallback = new AsyncCallback(OnDataReceived);
                 }
 
-                if (connection.BytesReceived == connection.Buffer.Length && connection.BytesReceived < route.MaxBufferSize)
+                if (connection.BytesReceived == connection.Buffer.Length && connection.BytesReceived < _route.MaxBufferSize)
                 {
                     int largerBufferSize = connection.Buffer.Length + (connection.Buffer.Length / 4);
                     connection.Buffer = new byte[largerBufferSize];
@@ -481,7 +483,7 @@ namespace NetProxy.Service.Routing
 
                 Stats.BytesReceived += (UInt64)connection.BytesReceived;
 
-                connection.Socket.BeginReceive(connection.Buffer, 0, connection.Buffer.Length, SocketFlags.None, OnDataReceivedCallback, connection);
+                connection.Socket.BeginReceive(connection.Buffer, 0, connection.Buffer.Length, SocketFlags.None, _onDataReceivedCallback, connection);
             }
             catch (Exception ex)
             {
@@ -494,14 +496,14 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        private string ApplyHttpHeaderRules(string httpHeader, HttpHeaderType headerType, string HttpRequestVerb, string lineBreak)
+        private string ApplyHttpHeaderRules(string httpHeader, HttpHeaderType headerType, string httpRequestVerb, string lineBreak)
         {
             try
             {
-                var availableRules = (from o in route.HttpHeaderRules.List
+                var availableRules = (from o in _route.HttpHeaderRules.List
                                       where
                                       (o.HeaderType == headerType || o.HeaderType == HttpHeaderType.Any)
-                                      && (o.Verb.ToString().ToUpper() == HttpRequestVerb.ToUpper() || o.Verb == HTTPVerb.Any)
+                                      && (o.Verb.ToString().ToUpper() == httpRequestVerb.ToUpper() || o.Verb == HttpVerb.Any)
                                       && o.Enabled == true
                                       select o).ToList();
 
@@ -562,11 +564,11 @@ namespace NetProxy.Service.Routing
                 string commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
                 {
-                    commonSalt = route.BindingPreSharedKey;
+                    commonSalt = _route.BindingPreSharedKey;
                 }
                 else if (connection.IsOutgoing && connection.IsEncryptionNegotationComplete)
                 {
-                    commonSalt = route.EndpointPreSharedKey;
+                    commonSalt = _route.EndpointPreSharedKey;
                 }
 
                 if (connection.UsePackets)
@@ -606,7 +608,7 @@ namespace NetProxy.Service.Routing
                     {
                         WaitForData(connection);
 
-                        int spinCount = route.SpinLockCount;
+                        int spinCount = _route.SpinLockCount;
                         DateTime? startTime = null;
 
                         while (connection.IsTunnelNegotationComplete == false)
@@ -618,7 +620,7 @@ namespace NetProxy.Service.Routing
                             }
                             else if (startTime != null)
                             {
-                                if ((DateTime.Now - ((DateTime)startTime)).TotalMilliseconds > route.EncryptionInitilizationTimeoutMS)
+                                if ((DateTime.Now - ((DateTime)startTime)).TotalMilliseconds > _route.EncryptionInitilizationTimeoutMs)
                                 {
                                     break;
                                 }
@@ -636,7 +638,7 @@ namespace NetProxy.Service.Routing
                     else
                     {
                         Stats.DroppedPreNegotiateRawData++;
-                        Console.WriteLine("--Dropped Raw Data Segment", route.Name);
+                        Console.WriteLine("--Dropped Raw Data Segment", _route.Name);
                     }
                 }
 
@@ -676,14 +678,14 @@ namespace NetProxy.Service.Routing
             string commonSalt = null;
             if (connection.Peer.IsIncomming && connection.Peer.IsEncryptionNegotationComplete)
             {
-                commonSalt = route.BindingPreSharedKey;
+                commonSalt = _route.BindingPreSharedKey;
             }
             else if (connection.Peer.IsOutgoing && connection.Peer.IsEncryptionNegotationComplete)
             {
-                commonSalt = route.EndpointPreSharedKey;
+                commonSalt = _route.EndpointPreSharedKey;
             }
 
-            if (route.TrafficType == TrafficType.HTTP)
+            if (_route.TrafficType == TrafficType.Http)
             {
                 HttpHeaderType httpHeaderType = HttpHeaderType.None;
 
@@ -793,18 +795,18 @@ namespace NetProxy.Service.Routing
             {
                 CleanupSocket(connection.Socket);
 
-                lock (connections)
+                lock (_connections)
                 {
-                    connections.Remove(connection);
+                    _connections.Remove(connection);
                 }
 
                 if (connection.Peer != null)
                 {
                     CleanupSocket(connection.Peer.Socket);
 
-                    lock (connections)
+                    lock (_connections)
                     {
-                        connections.Remove(connection);
+                        _connections.Remove(connection);
                     }
                 }
             }
@@ -846,11 +848,11 @@ namespace NetProxy.Service.Routing
 
         #region Utility.
         
-        public static IPAddress GetIPAddress(string hostName)
+        public static IPAddress GetIpAddress(string hostName)
         {
             try
             {
-                string IP4Address = String.Empty;
+                string ip4Address = String.Empty;
 
                 foreach (IPAddress ipAddress in Dns.GetHostAddresses(hostName))
                 {

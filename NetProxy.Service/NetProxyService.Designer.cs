@@ -1,6 +1,6 @@
 ﻿namespace NetProxy.Service
 {
-    partial class NetworkDLSNetProxyService
+    partial class NetworkDlsNetProxyService
     {
         /// <summary> 
         /// Required designer variable.

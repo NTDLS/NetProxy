@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NetProxy.Library;
 
-namespace NetProxy.Service.Routing
+namespace NetProxy.Service
 {
     public static class HttpUtility
     {
@@ -24,7 +24,7 @@ namespace NetProxy.Service.Routing
         {
             str = str.ToUpper();
 
-            var verbs = Enum.GetValues(typeof(HTTPVerb));
+            var verbs = Enum.GetValues(typeof(HttpVerb));
 
             foreach (var verb in verbs)
             {

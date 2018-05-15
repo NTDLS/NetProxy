@@ -4,17 +4,17 @@
     {
         public static class CommandLables
         {
-            public const string GUIRequestRouteList = "GUIRequestRouteList";
-            public const string GUIRequestRoute = "GUIRequestRoute";
-            public const string GUIRequestLogin = "GUIRequestLogin";
-            public const string GUIRequestUserList = "GUIRequestUserList";
-            public const string GUIPersistUserList = "GUIPersistUserList";
-            public const string GUIPersistUpsertRoute = "GUIPersistUpsertRoute";
-            public const string GUIPersistDeleteRoute = "GUIPersistDeleteRoute";
-            public const string GUIPersistStopRoute = "GUIPersistStopRoute";
-            public const string GUIPersistStartRoute = "GUIPersistStartRoute";
-            public const string GUISendMessage = "GUISendMessage";
-            public const string GUIRequestRouteStatsList = "GUIRequestRouteStatsList";
+            public const string GuiRequestRouteList = "GUIRequestRouteList";
+            public const string GuiRequestRoute = "GUIRequestRoute";
+            public const string GuiRequestLogin = "GUIRequestLogin";
+            public const string GuiRequestUserList = "GUIRequestUserList";
+            public const string GuiPersistUserList = "GUIPersistUserList";
+            public const string GuiPersistUpsertRoute = "GUIPersistUpsertRoute";
+            public const string GuiPersistDeleteRoute = "GUIPersistDeleteRoute";
+            public const string GuiPersistStopRoute = "GUIPersistStopRoute";
+            public const string GuiPersistStartRoute = "GUIPersistStartRoute";
+            public const string GuiSendMessage = "GUISendMessage";
+            public const string GuiRequestRouteStatsList = "GUIRequestRouteStatsList";
         }
 
         public static class IntraServiceLables
@@ -28,18 +28,18 @@
         public const string RegsitryKey = "SOFTWARE\\NetworkDLS\\NetProxy";
         public const string ServiceName = "NetworkDLSNetProxyService";
         public const string TitleCaption = "NetProxy";
-        public const int DEFAULT_MANAGEMENT_PORT = 5854;
-        public const int DEFAULT_INITIAL_BUFFER_SIZE = 4096;
-        public const int DEFAULT_MAX_BUFFER_SIZE = 1048576;
-        public const int DEFAULT_STICKY_SESSION_EXPIRATION = 3600;
-        public const int DEFAULT_SPIN_LOCK_COUNT = 1000000;
-        public const int DEFAULT_ENCRYPTION_INITILIZATION_TIMEOUT_MS = 10000;
-        public const int DEFAULT_ACCEPT_BACKLOG_SIZE = 10;
-        public const string ROUTES_CONFIG_FILE_NAME = "routes.json";
-        public const string SERVER_CONFIG_FILE_NAME = "service.json";
+        public const int DefaultManagementPort = 5854;
+        public const int DefaultInitialBufferSize = 4096;
+        public const int DefaultMaxBufferSize = 1048576;
+        public const int DefaultStickySessionExpiration = 3600;
+        public const int DefaultSpinLockCount = 1000000;
+        public const int DefaultEncryptionInitilizationTimeoutMs = 10000;
+        public const int DefaultAcceptBacklogSize = 10;
+        public const string RoutesConfigFileName = "routes.json";
+        public const string ServerConfigFileName = "service.json";
     }
 
-    public enum HTTPVerb
+    public enum HttpVerb
     {
         Any,
         Connect,
@@ -53,15 +53,15 @@
 
     public enum BindingProtocal
     {
-        IPv4,
-        IPv6
+        Pv4,
+        Pv6
     }
 
     public enum TrafficType
     {
         Binary,
-        HTTP,
-        HTTPS
+        Http,
+        Https
     }
 
     public enum ConnectionPattern
@@ -90,7 +90,7 @@
     public enum HttpHeaderLineBreakType
     {
         None,
-        DoubleCRLF,
-        DoubleLF
+        DoubleCrlf,
+        DoubleLf
     }
 }

@@ -4,17 +4,17 @@ namespace NetProxy.Service
 {
     public static class Singletons
     {
-        private static EventLogging eventLog = null;
+        private static EventLogging _eventLog = null;
         public static EventLogging EventLog
         {
             get
             {
-                if (eventLog == null)
+                if (_eventLog == null)
                 {
-                    eventLog = new EventLogging(Library.Constants.TitleCaption, false);
+                    _eventLog = new EventLogging(Library.Constants.TitleCaption, false);
                 }
 
-                return eventLog;
+                return _eventLog;
             }
         }
     }

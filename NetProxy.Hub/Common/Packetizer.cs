@@ -16,16 +16,16 @@ namespace NetProxy.Hub.Common
                 byte[] payloadBody = Serialization.ObjectToByteArray(packet);
 
                 byte[] payloadBytes = Zip(payloadBody);
-                int grossPacketSize = payloadBytes.Length + Constants.PAYLOAD_HEADEER_SIZE;
+                int grossPacketSize = payloadBytes.Length + Constants.PayloadHeadeerSize;
 
                 byte[] packetBytes = new byte[grossPacketSize];
 
-                UInt16 payloadCrc = CRC16.ComputeChecksum(payloadBytes);
+                UInt16 payloadCrc = Crc16.ComputeChecksum(payloadBytes);
 
-                Buffer.BlockCopy(BitConverter.GetBytes(Constants.PAYLOAD_DELIMITER), 0, packetBytes, 0, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
-                Buffer.BlockCopy(payloadBytes, 0, packetBytes, Constants.PAYLOAD_HEADEER_SIZE, payloadBytes.Length);
+                Buffer.BlockCopy(payloadBytes, 0, packetBytes, Constants.PayloadHeadeerSize, payloadBytes.Length);
 
                 return packetBytes;
             }
@@ -49,7 +49,7 @@ namespace NetProxy.Hub.Common
 
                     int value = BitConverter.ToInt32(payloadDelimiterBytes, 0);
 
-                    if (value == Constants.PAYLOAD_DELIMITER)
+                    if (value == Constants.PayloadDelimiter)
                     {
                         Buffer.BlockCopy(state.PayloadBuilder, offset, state.PayloadBuilder, 0, state.PayloadBuilderLength - offset);
                         state.PayloadBuilderLength = state.PayloadBuilderLength - offset;
@@ -79,28 +79,28 @@ namespace NetProxy.Hub.Common
 
                 state.PayloadBuilderLength = state.PayloadBuilderLength + state.BytesReceived;
 
-                while (state.PayloadBuilderLength > Constants.PAYLOAD_HEADEER_SIZE) //[PayloadSize] and [CRC16]
+                while (state.PayloadBuilderLength > Constants.PayloadHeadeerSize) //[PayloadSize] and [CRC16]
                 {
                     Byte[] payloadDelimiterBytes = new Byte[4];
                     Byte[] payloadSizeBytes = new Byte[4];
-                    Byte[] expectedCRC16Bytes = new Byte[2];
+                    Byte[] expectedCrc16Bytes = new Byte[2];
 
                     Buffer.BlockCopy(state.PayloadBuilder, 0, payloadDelimiterBytes, 0, payloadDelimiterBytes.Length);
                     Buffer.BlockCopy(state.PayloadBuilder, 4, payloadSizeBytes, 0, payloadSizeBytes.Length);
-                    Buffer.BlockCopy(state.PayloadBuilder, 8, expectedCRC16Bytes, 0, expectedCRC16Bytes.Length);
+                    Buffer.BlockCopy(state.PayloadBuilder, 8, expectedCrc16Bytes, 0, expectedCrc16Bytes.Length);
 
                     int payloadDelimiter = BitConverter.ToInt32(payloadDelimiterBytes, 0);
                     int grossPayloadSize = BitConverter.ToInt32(payloadSizeBytes, 0);
-                    UInt16 expectedCRC16 = BitConverter.ToUInt16(expectedCRC16Bytes, 0);
+                    UInt16 expectedCrc16 = BitConverter.ToUInt16(expectedCrc16Bytes, 0);
 
-                    if (payloadDelimiter != Constants.PAYLOAD_DELIMITER)
+                    if (payloadDelimiter != Constants.PayloadDelimiter)
                     {
                         SkipPacket(ref state);
                         //throw new Exception("Malformed payload packet, invalid delimiter.");
                         continue;
                     }
 
-                    if (grossPayloadSize < Constants.DEFAULT_MIN_MSG_SIZE || grossPayloadSize > Constants.DEFAULT_MAX_MSG_SIZE)
+                    if (grossPayloadSize < Constants.DefaultMinMsgSize || grossPayloadSize > Constants.DefaultMaxMsgSize)
                     {
                         SkipPacket(ref state);
                         //throw new Exception("Malformed payload packet, invalid length."); 
@@ -114,19 +114,19 @@ namespace NetProxy.Hub.Common
                         break;
                     }
 
-                    UInt16 actualCRC16 = CRC16.ComputeChecksum(state.PayloadBuilder, Constants.PAYLOAD_HEADEER_SIZE, grossPayloadSize - Constants.PAYLOAD_HEADEER_SIZE);
+                    UInt16 actualCrc16 = Crc16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeadeerSize, grossPayloadSize - Constants.PayloadHeadeerSize);
 
-                    if (actualCRC16 != expectedCRC16)
+                    if (actualCrc16 != expectedCrc16)
                     {
                         SkipPacket(ref state);
                         //throw new Exception("Malformed payload packet, invalid CRC.");
                         continue;
                     }
 
-                    int netPayloadSize = grossPayloadSize - Constants.PAYLOAD_HEADEER_SIZE;
+                    int netPayloadSize = grossPayloadSize - Constants.PayloadHeadeerSize;
                     byte[] payloadBytes = new byte[netPayloadSize];
 
-                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PAYLOAD_HEADEER_SIZE, payloadBytes, 0, netPayloadSize);
+                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeadeerSize, payloadBytes, 0, netPayloadSize);
 
                     byte[] payloadBody = Unzip(payloadBytes);
 

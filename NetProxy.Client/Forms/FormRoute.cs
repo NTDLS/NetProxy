@@ -13,8 +13,8 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormRoute : Form
     {
-        private Packeteer packeteer = null;
-        private string routeId = null;
+        private Packeteer _packeteer = null;
+        private string _routeId = null;
 
         public FormRoute()
         {
@@ -25,24 +25,24 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
 
-            populateRouteInformation = OnPopulateRouteInformation;
+            _populateRouteInformation = OnPopulateRouteInformation;
 
-            this.routeId = routeId ?? Guid.NewGuid().ToString();
-            packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
-            packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            this._routeId = routeId ?? Guid.NewGuid().ToString();
+            _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
 
             var trafficTypes = new List<ComboItem>();
             trafficTypes.Add(new ComboItem("Binary", TrafficType.Binary));
-            trafficTypes.Add(new ComboItem("HTTP", TrafficType.HTTP));
-            trafficTypes.Add(new ComboItem("HTTPS", TrafficType.HTTPS));
+            trafficTypes.Add(new ComboItem("HTTP", TrafficType.Http));
+            trafficTypes.Add(new ComboItem("HTTPS", TrafficType.Https));
 
             comboBoxTrafficType.DisplayMember = "Display";
             comboBoxTrafficType.ValueMember = "Value";
             comboBoxTrafficType.DataSource = trafficTypes;
 
             var bindingProtocol = new List<ComboItem>();
-            bindingProtocol.Add(new ComboItem("TCP/IP v4", BindingProtocal.IPv4));
-            bindingProtocol.Add(new ComboItem("TCP/IP v6", BindingProtocal.IPv6));
+            bindingProtocol.Add(new ComboItem("TCP/IP v4", BindingProtocal.Pv4));
+            bindingProtocol.Add(new ComboItem("TCP/IP v6", BindingProtocal.Pv6));
 
             comboBoxBindingProtocol.DisplayMember = "Display";
             comboBoxBindingProtocol.ValueMember = "Value";
@@ -63,30 +63,30 @@ namespace NetProxy.Client.Forms
 
             //----------------------------------------------------------------------------
             //Fill in some safe defaults:
-            comboBoxTrafficType.SelectedValue = TrafficType.HTTP;
-            comboBoxBindingProtocol.SelectedValue = BindingProtocal.IPv4;
+            comboBoxTrafficType.SelectedValue = TrafficType.Http;
+            comboBoxBindingProtocol.SelectedValue = BindingProtocal.Pv4;
             checkBoxListenOnAllAddresses.Checked = true;
-            textBoxInitialBufferSize.Text = Constants.DEFAULT_INITIAL_BUFFER_SIZE.ToString();
-            textBoxMaxBufferSize.Text = Constants.DEFAULT_MAX_BUFFER_SIZE.ToString();
-            textBoxAcceptBacklogSize.Text = Constants.DEFAULT_ACCEPT_BACKLOG_SIZE.ToString();
+            textBoxInitialBufferSize.Text = Constants.DefaultInitialBufferSize.ToString();
+            textBoxMaxBufferSize.Text = Constants.DefaultMaxBufferSize.ToString();
+            textBoxAcceptBacklogSize.Text = Constants.DefaultAcceptBacklogSize.ToString();
             comboBoxConnectionPattern.SelectedValue = ConnectionPattern.RoundRobbin;
-            textBoxEncryptionInitTimeout.Text = Constants.DEFAULT_ENCRYPTION_INITILIZATION_TIMEOUT_MS.ToString();
-            textBoxStickySessionCacheExpiration.Text = Constants.DEFAULT_STICKY_SESSION_EXPIRATION.ToString();
-            textBoxSpinLockCount.Text = Constants.DEFAULT_SPIN_LOCK_COUNT.ToString();
+            textBoxEncryptionInitTimeout.Text = Constants.DefaultEncryptionInitilizationTimeoutMs.ToString();
+            textBoxStickySessionCacheExpiration.Text = Constants.DefaultStickySessionExpiration.ToString();
+            textBoxSpinLockCount.Text = Constants.DefaultSpinLockCount.ToString();
             checkBoxListenAutoStart.Checked = true;
             //----------------------------------------------------------------------------
         }
 
         private void FormRoute_Shown(object sender, EventArgs e)
         {
-            if (routeId != null)
+            if (_routeId != null)
             {
-                packeteer.SendAll(Constants.CommandLables.GUIRequestRoute, routeId);
+                _packeteer.SendAll(Constants.CommandLables.GuiRequestRoute, _routeId);
             }
         }
 
         private delegate void PopulateRouteInformation(Route route);
-        private PopulateRouteInformation populateRouteInformation;
+        private PopulateRouteInformation _populateRouteInformation;
         private void OnPopulateRouteInformation(Route route)
         {
             textBoxDescription.Text = route.Description;
@@ -111,7 +111,7 @@ namespace NetProxy.Client.Forms
             checkBoxTunnelEndpointUseEncryption.Checked = route.EncryptEndpointTunnel;
             textBoxTunnelEndpointPreSharedKey.Text = route.EndpointPreSharedKey;
             checkBoxUseStickySessions.Checked = route.UseStickySessions;
-            textBoxEncryptionInitTimeout.Text = route.EncryptionInitilizationTimeoutMS.ToString();
+            textBoxEncryptionInitTimeout.Text = route.EncryptionInitilizationTimeoutMs.ToString();
             textBoxStickySessionCacheExpiration.Text = route.StickySessionCacheExpiration.ToString();
             textBoxSpinLockCount.Text = route.SpinLockCount.ToString();
 
@@ -139,9 +139,9 @@ namespace NetProxy.Client.Forms
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
-            if (packet.Label == Constants.CommandLables.GUIRequestRoute)
+            if (packet.Label == Constants.CommandLables.GuiRequestRoute)
             {
-                this.Invoke(populateRouteInformation, JsonConvert.DeserializeObject<Route>(packet.Payload));
+                this.Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<Route>(packet.Payload));
             }
         }
 
@@ -193,7 +193,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            route.Id = Guid.Parse(routeId);
+            route.Id = Guid.Parse(_routeId);
             route.Name = textBoxRouteName.Text;
             route.Description = textBoxDescription.Text;
             route.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue.ToString());
@@ -207,7 +207,7 @@ namespace NetProxy.Client.Forms
             route.AutoStart = checkBoxListenAutoStart.Checked;
             route.UseStickySessions = checkBoxUseStickySessions.Checked;
 
-            route.EncryptionInitilizationTimeoutMS = Int32.Parse(textBoxEncryptionInitTimeout.Text);
+            route.EncryptionInitilizationTimeoutMs = Int32.Parse(textBoxEncryptionInitTimeout.Text);
             route.StickySessionCacheExpiration = Int32.Parse(textBoxStickySessionCacheExpiration.Text);
             route.SpinLockCount = Int32.Parse(textBoxSpinLockCount.Text);
 
@@ -278,7 +278,7 @@ namespace NetProxy.Client.Forms
                         HeaderType = (HttpHeaderType)Enum.Parse(typeof(HttpHeaderType), (row.Cells[ColumnHTTPHeadersType.Index].Value ?? "").ToString()),
                         Name = (row.Cells[ColumnHTTPHeadersHeader.Index].Value ?? "").ToString(),
                         Value = (row.Cells[ColumnHTTPHeadersValue.Index].Value ?? "").ToString(),
-                        Verb = (HTTPVerb)Enum.Parse(typeof(HTTPVerb), (row.Cells[ColumnHTTPHeadersVerb.Index].Value ?? "").ToString())
+                        Verb = (HttpVerb)Enum.Parse(typeof(HttpVerb), (row.Cells[ColumnHTTPHeadersVerb.Index].Value ?? "").ToString())
                     });
                 }
             }
@@ -301,7 +301,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            packeteer.SendAll(Constants.CommandLables.GUIPersistUpsertRoute, JsonConvert.SerializeObject(route));
+            _packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertRoute, JsonConvert.SerializeObject(route));
 
             System.Threading.Thread.Sleep(500);
 
@@ -317,7 +317,7 @@ namespace NetProxy.Client.Forms
 
         private void FormRoute_FormClosed(object sender, FormClosedEventArgs e)
         {
-            packeteer.Disconnect();
+            _packeteer.Disconnect();
         }
 
         private void comboBoxTrafficType_SelectedIndexChanged(object sender, EventArgs e)
@@ -326,7 +326,7 @@ namespace NetProxy.Client.Forms
 
             if (Enum.TryParse<TrafficType>(comboBoxTrafficType.Text, out trafficType))
             {
-                dataGridViewHTTPHeaders.ReadOnly = trafficType != TrafficType.HTTP;
+                dataGridViewHTTPHeaders.ReadOnly = trafficType != TrafficType.Http;
             }
             else
             {

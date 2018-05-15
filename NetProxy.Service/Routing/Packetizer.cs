@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Caching;
-using System.Security.Cryptography;
 using System.Text;
 using NetProxy.Hub.Common;
 using NetProxy.Library.Routing;
@@ -13,48 +12,22 @@ namespace NetProxy.Service.Routing
 {
     internal static class Packetizer
     {
-        private class KeySet
+        private static readonly MemoryCache KeyCache = new MemoryCache("NetProxy.Service.Routing.Packetizer.KeySet");
+
+        private static Keyset GetKey(string textKey, string salt)
         {
-            public byte[] Bytes { get; set; }
-            public byte[] IV { get; set; }
-            private SymmetricAlgorithm algorithm;
-
-            public ICryptoTransform GetEncryptor()
-            {
-                return algorithm.CreateEncryptor(Bytes, IV);
-            }
-            public ICryptoTransform CreateDecryptor()
-            {
-                return algorithm.CreateDecryptor(Bytes, IV);
-            }
-
-            public KeySet(string textKey, string salt)
-            {
-                using (Rfc2898DeriveBytes k2 = new Rfc2898DeriveBytes(textKey, Encoding.Unicode.GetBytes(salt)))
-                {
-                    this.Bytes = k2.GetBytes(32);
-                    this.IV = k2.GetBytes(16);
-                    this.algorithm = Aes.Create();
-                }
-            }
-        }
-
-        private static MemoryCache keyCache = new MemoryCache("NetProxy.Service.Routing.Packetizer.KeySet");
-
-        private static KeySet GetKey(string textKey, string salt)
-        {
-            lock (keyCache)
+            lock (KeyCache)
             {
                 string lookupKey = Library.Crypto.Hashing.Sha1(textKey + salt);
 
-                if (keyCache.Contains(lookupKey))
+                if (KeyCache.Contains(lookupKey))
                 {
-                    return (KeySet)keyCache[lookupKey];
+                    return (Keyset)KeyCache[lookupKey];
                 }
 
-                var key = new KeySet(textKey, salt);
+                var key = new Keyset(textKey, salt);
 
-                keyCache.Add(lookupKey, key, new CacheItemPolicy()
+                KeyCache.Add(lookupKey, key, new CacheItemPolicy()
                 {
                     SlidingExpiration = new TimeSpan(0, 0, 10)
                 });
@@ -109,16 +82,16 @@ namespace NetProxy.Service.Routing
                     payloadBody = Encrypt(encryptPacketKey, keySalt, payloadBody);
                 }
 
-                int grossPacketSize = payloadBody.Length + Constants.PAYLOAD_HEADEER_SIZE;
+                int grossPacketSize = payloadBody.Length + Constants.PayloadHeadeerSize;
 
                 byte[] packetBytes = new byte[grossPacketSize];
 
-                UInt16 payloadCrc = CRC16.ComputeChecksum(payloadBody);
+                UInt16 payloadCrc = Crc16.ComputeChecksum(payloadBody);
 
-                Buffer.BlockCopy(BitConverter.GetBytes(Constants.PAYLOAD_DELIMITER), 0, packetBytes, 0, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
-                Buffer.BlockCopy(payloadBody, 0, packetBytes, Constants.PAYLOAD_HEADEER_SIZE, payloadBody.Length);
+                Buffer.BlockCopy(payloadBody, 0, packetBytes, Constants.PayloadHeadeerSize, payloadBody.Length);
 
                 return packetBytes;
             }
@@ -142,7 +115,7 @@ namespace NetProxy.Service.Routing
 
                     int value = BitConverter.ToInt32(payloadDelimiterBytes, 0);
 
-                    if (value == Constants.PAYLOAD_DELIMITER)
+                    if (value == Constants.PayloadDelimiter)
                     {
                         Buffer.BlockCopy(state.PayloadBuilder, offset, state.PayloadBuilder, 0, state.PayloadBuilderLength - offset);
                         state.PayloadBuilderLength = state.PayloadBuilderLength - offset;
@@ -174,21 +147,21 @@ namespace NetProxy.Service.Routing
 
                 state.PayloadBuilderLength = state.PayloadBuilderLength + state.BytesReceived;
 
-                while (state.PayloadBuilderLength > Constants.PAYLOAD_HEADEER_SIZE) //[PayloadSize] and [CRC16]
+                while (state.PayloadBuilderLength > Constants.PayloadHeadeerSize) //[PayloadSize] and [CRC16]
                 {
                     Byte[] payloadDelimiterBytes = new Byte[4];
                     Byte[] payloadSizeBytes = new Byte[4];
-                    Byte[] expectedCRC16Bytes = new Byte[2];
+                    Byte[] expectedCrc16Bytes = new Byte[2];
 
                     Buffer.BlockCopy(state.PayloadBuilder, 0, payloadDelimiterBytes, 0, payloadDelimiterBytes.Length);
                     Buffer.BlockCopy(state.PayloadBuilder, 4, payloadSizeBytes, 0, payloadSizeBytes.Length);
-                    Buffer.BlockCopy(state.PayloadBuilder, 8, expectedCRC16Bytes, 0, expectedCRC16Bytes.Length);
+                    Buffer.BlockCopy(state.PayloadBuilder, 8, expectedCrc16Bytes, 0, expectedCrc16Bytes.Length);
 
                     int payloadDelimiter = BitConverter.ToInt32(payloadDelimiterBytes, 0);
                     int grossPayloadSize = BitConverter.ToInt32(payloadSizeBytes, 0);
-                    UInt16 expectedCRC16 = BitConverter.ToUInt16(expectedCRC16Bytes, 0);
+                    UInt16 expectedCrc16 = BitConverter.ToUInt16(expectedCrc16Bytes, 0);
 
-                    if (payloadDelimiter != Constants.PAYLOAD_DELIMITER)
+                    if (payloadDelimiter != Constants.PayloadDelimiter)
                     {
                         SkipPacket(ref state);
                         //throw new Exception("Malformed payload packet, invalid delimiter.");
@@ -196,7 +169,7 @@ namespace NetProxy.Service.Routing
                         continue;
                     }
 
-                    if (grossPayloadSize < Constants.DEFAULT_MIN_MSG_SIZE || grossPayloadSize > Constants.DEFAULT_MAX_MSG_SIZE)
+                    if (grossPayloadSize < Constants.DefaultMinMsgSize || grossPayloadSize > Constants.DefaultMaxMsgSize)
                     {
                         SkipPacket(ref state);
                         //throw new Exception("Malformed payload packet, invalid length."); 
@@ -212,20 +185,20 @@ namespace NetProxy.Service.Routing
                         break;
                     }
 
-                    UInt16 actualCRC16 = CRC16.ComputeChecksum(state.PayloadBuilder, Constants.PAYLOAD_HEADEER_SIZE, grossPayloadSize - Constants.PAYLOAD_HEADEER_SIZE);
+                    UInt16 actualCrc16 = Crc16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeadeerSize, grossPayloadSize - Constants.PayloadHeadeerSize);
 
-                    if (actualCRC16 != expectedCRC16)
+                    if (actualCrc16 != expectedCrc16)
                     {
                         SkipPacket(ref state);
                         //throw new Exception("Malformed payload packet, invalid CRC.");
-                        router.Stats.PacketCRCFailureCount++;
+                        router.Stats.PacketCrcFailureCount++;
                         continue;
                     }
 
-                    int netPayloadSize = grossPayloadSize - Constants.PAYLOAD_HEADEER_SIZE;
+                    int netPayloadSize = grossPayloadSize - Constants.PayloadHeadeerSize;
                     byte[] payloadBytes = new byte[netPayloadSize];
 
-                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PAYLOAD_HEADEER_SIZE, payloadBytes, 0, netPayloadSize);
+                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeadeerSize, payloadBytes, 0, netPayloadSize);
 
                     if (encrypt)
                     {

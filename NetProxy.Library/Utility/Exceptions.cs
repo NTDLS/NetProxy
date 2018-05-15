@@ -16,7 +16,7 @@ namespace NetProxy.Library.Utility
         {
             if (recursionLevel < 10)
             {
-                if (ex.Message != null && ex.Message != string.Empty)
+                if (!string.IsNullOrEmpty(ex.Message))
                 {
                     builder.AppendLine(ex.Message);
                 }

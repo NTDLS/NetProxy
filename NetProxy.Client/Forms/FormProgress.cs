@@ -6,7 +6,7 @@ namespace NetProxy.Client.Forms
     public partial class FormProgress : Form
     {
         public volatile bool IsLoaded = false;
-        private Timer timer = new Timer();
+        private Timer _timer = new Timer();
 
         public void WaitForLoaded()
         {
@@ -110,14 +110,14 @@ namespace NetProxy.Client.Forms
 
         public DialogResult ShowDialog(int timeoutMs)
         {
-            timer = new Timer();
-            timer.Tick += Timer_Tick;
-            timer.Interval = timeoutMs;
-            timer.Start();
+            _timer = new Timer();
+            _timer.Tick += Timer_Tick;
+            _timer.Interval = timeoutMs;
+            _timer.Start();
 
             DialogResult result = this.ShowDialog();
 
-            timer.Stop();
+            _timer.Stop();
 
             return result;
         }

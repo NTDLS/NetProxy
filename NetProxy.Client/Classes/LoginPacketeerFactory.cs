@@ -20,7 +20,7 @@ namespace NetProxy.Client.Classes
                     PasswordHash = Library.Crypto.Hashing.Sha256(connectionInfo.Password)
                 };
 
-                packeteer.SendAll(Constants.CommandLables.GUIRequestLogin, JsonConvert.SerializeObject(userLogin));
+                packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
                 return packeteer;
             }
 

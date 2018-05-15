@@ -6,10 +6,16 @@ namespace NetProxy.Hub.Common
     public class Peer
     {
         public Socket Socket { get; set; }
-        public Guid Id = Guid.NewGuid();
+        public Guid Id { get; set; }
+
+        public Peer()
+        {
+            Id = Guid.NewGuid();
+        }
 
         public Peer(Socket socket)
         {
+            Id = Guid.NewGuid();
             this.Socket = socket;
         }
     }

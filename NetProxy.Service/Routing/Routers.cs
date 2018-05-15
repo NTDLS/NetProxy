@@ -12,7 +12,7 @@ namespace NetProxy.Service.Routing
 
         public List<Route> Routes()
         {
-            List<Route> routes = new List<Route>();
+            var routes = new List<Route>();
 
             foreach (var router in List)
             {

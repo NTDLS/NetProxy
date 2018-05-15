@@ -2,10 +2,10 @@
 
 namespace NetProxy.Library.Routing
 {
-    public static class CRC16
+    public static class Crc16
     {
-        private const UInt16 polynomial = 0xAB01;
-        private static readonly UInt16[] table = new UInt16[256];
+        private const UInt16 Polynomial = 0xAB01;
+        internal static readonly UInt16[] Table = new UInt16[256];
 
         public static UInt16 ComputeChecksum(byte[] bytes)
         {
@@ -13,7 +13,7 @@ namespace NetProxy.Library.Routing
             for (int i = 0; i < bytes.Length; ++i)
             {
                 byte index = (byte)(crc ^ bytes[i]);
-                crc = (UInt16)((crc >> 8) ^ table[index]);
+                crc = (UInt16)((crc >> 8) ^ Table[index]);
             }
             return crc;
         }
@@ -24,16 +24,16 @@ namespace NetProxy.Library.Routing
             for (int i = offset; i < length + offset; ++i)
             {
                 byte index = (byte)(crc ^ bytes[i]);
-                crc = (UInt16)((crc >> 8) ^ table[index]);
+                crc = (UInt16)((crc >> 8) ^ Table[index]);
             }
             return crc;
         }
 
-        static CRC16()
+        static Crc16()
         {
             UInt16 value;
             UInt16 temp;
-            for (UInt16 i = 0; i < table.Length; ++i)
+            for (UInt16 i = 0; i < Table.Length; ++i)
             {
                 value = 0;
                 temp = i;
@@ -41,7 +41,7 @@ namespace NetProxy.Library.Routing
                 {
                     if (((value ^ temp) & 0x0001) != 0)
                     {
-                        value = (UInt16)((value >> 1) ^ polynomial);
+                        value = (UInt16)((value >> 1) ^ Polynomial);
                     }
                     else
                     {
@@ -49,7 +49,7 @@ namespace NetProxy.Library.Routing
                     }
                     temp >>= 1;
                 }
-                table[i] = value;
+                Table[i] = value;
             }
         }
     }

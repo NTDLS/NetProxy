@@ -10,7 +10,7 @@ namespace NetProxy.Service.Routing
         public UInt64 PacketMalformedCount = 0;
         public UInt64 PacketSizeExceededCount = 0;
         public UInt64 PacketFragmentCount = 0;
-        public UInt64 PacketCRCFailureCount = 0;
+        public UInt64 PacketCrcFailureCount = 0;
         public UInt64 DroppedPreNegotiatePacket = 0;
         public UInt64 DroppedPreNegotiateRawData = 0;
     }

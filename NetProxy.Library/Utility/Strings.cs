@@ -5,7 +5,7 @@ namespace NetProxy.Library.Utility
 {
     public static class Strings
     {
-        static readonly Regex lineBreaksAndExtraSpacesTrimmer = new Regex(@"\s\s+", RegexOptions.Compiled);
+        static readonly Regex LineBreaksAndExtraSpacesTrimmer = new Regex(@"\s\s+", RegexOptions.Compiled);
 
         public static bool ValidateInt32(string value)
         {
@@ -35,9 +35,9 @@ namespace NetProxy.Library.Utility
             return (haystack.Length - haystack.Replace(needle, "").Length) / needle.Length;
         }
 
-        public static string SplitCamelCase(string CamelCaseString)
+        public static string SplitCamelCase(string camelCaseString)
         {
-            return Regex.Replace(CamelCaseString, @"(?<a>(?<!^)((?:[A-Z][a-z])|(?:(?<!^[A-Z]+)[A-Z0-9]+(?:(?=[A-Z][a-z])|$))|(?:[0-9]+)))", @" ${a}");
+            return Regex.Replace(camelCaseString, @"(?<a>(?<!^)((?:[A-Z][a-z])|(?:(?<!^[A-Z]+)[A-Z0-9]+(?:(?=[A-Z][a-z])|$))|(?:[0-9]+)))", @" ${a}");
         }
 
         public static string FixDuplicateWhitespace(string str)
@@ -67,7 +67,7 @@ namespace NetProxy.Library.Utility
 
         public static string RemoveLineBreaksAndExtraSpaces(string str)
         {
-            return lineBreaksAndExtraSpacesTrimmer.Replace(RemoveLineBreaks(str), " ");
+            return LineBreaksAndExtraSpacesTrimmer.Replace(RemoveLineBreaks(str), " ");
         }
 
         public static string RemoveSpecialCharacters(string str)

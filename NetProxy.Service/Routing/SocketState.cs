@@ -22,11 +22,11 @@ namespace NetProxy.Service.Routing
         public byte[] PayloadBuilder;
         public SecureKeyExchange.SecureKeyNegotiator KeyNegotiator { get; set; }
         public bool IsEncryptionNegotationComplete { get; set; }
-         public int PayloadBuilderLength { get; set; }
+        public int PayloadBuilderLength { get; set; }
         public string HttpHeaderBuilder { get; set; }
         public int MaxBufferSize { get; set; }
 
-        private bool _IsTunnelNegotationComplete = false;
+        private bool _isTunnelNegotationComplete = false;
         public bool IsTunnelNegotationComplete
         {
             get
@@ -40,29 +40,29 @@ namespace NetProxy.Service.Routing
                     || ((this.IsIncomming && Route.BindingIsTunnel) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel)))
                 {
                     //Both connections are tunnel endpoints.
-                    return _IsTunnelNegotationComplete && this.Peer._IsTunnelNegotationComplete;
+                    return _isTunnelNegotationComplete && this.Peer._isTunnelNegotationComplete;
                 }
                 else if (((this.IsOutgoing && Route.EndpointIsTunnel) && (this.Peer.IsIncomming && Route.BindingIsTunnel == false))
                     || ((this.IsIncomming && Route.BindingIsTunnel) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel == false)))
                 {
                     //Only the current connection is a tunnel.
-                    return _IsTunnelNegotationComplete;
+                    return _isTunnelNegotationComplete;
                 }
                 else if (((this.IsOutgoing && Route.EndpointIsTunnel == false) && (this.Peer.IsIncomming && Route.BindingIsTunnel))
                     || ((this.IsIncomming && Route.BindingIsTunnel == false) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel)))
                 {
                     //Only the peer connection is a tunnel.
-                    return this.Peer._IsTunnelNegotationComplete;
+                    return this.Peer._isTunnelNegotationComplete;
                 }
 
                 //Seriously, shouldn't ever get here...
-                return _IsTunnelNegotationComplete && this.Peer.IsTunnelNegotationComplete;
+                return _isTunnelNegotationComplete && this.Peer.IsTunnelNegotationComplete;
             }
         }
 
         public void SetTunnelNegotationComplete()
         {
-            _IsTunnelNegotationComplete = true;
+            _isTunnelNegotationComplete = true;
         }
 
         public bool UseEncryption
@@ -95,7 +95,7 @@ namespace NetProxy.Service.Routing
         public SocketState()
         {
             HttpHeaderBuilder = string.Empty;
-            Buffer = new byte[Constants.DEFAULT_BUFFER_SIZE];
+            Buffer = new byte[Constants.DefaultBufferSize];
             PayloadBuilder = new byte[0];
         }
 

@@ -2,21 +2,21 @@
 {
     public class RoutingServices
     {
-        Management management;
+        private readonly Management _management;
 
         public RoutingServices()
         {
-            management = new Management();
+            _management = new Management();
         }
 
         public void Start()
         {
-            management.Start();
+            _management.Start();
         }
 
         public void Stop()
         {
-            management.Stop();
+            _management.Stop();
         }
     }
 }

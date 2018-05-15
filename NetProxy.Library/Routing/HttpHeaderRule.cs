@@ -12,13 +12,13 @@ namespace NetProxy.Library.Routing
         public HttpHeaderAction Action { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public HTTPVerb Verb { get; set; }
+        public HttpVerb Verb { get; set; }
         public bool Enabled { get; set; }
         public string Name { get; set; }
         public string Value { get; set; }
         public string Description { get; set; }
 
-        public HttpHeaderRule(HttpHeaderType headerType, HTTPVerb verb, string name, HttpHeaderAction action, string value)
+        public HttpHeaderRule(HttpHeaderType headerType, HttpVerb verb, string name, HttpHeaderAction action, string value)
         {
             HeaderType = headerType;
             Verb = verb;

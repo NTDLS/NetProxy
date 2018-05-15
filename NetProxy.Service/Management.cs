@@ -15,56 +15,56 @@ namespace NetProxy.Service
 {
     public class Management
     {
-        private Configuration config;
-        private Packeteer packeteer = new Packeteer();
-        private Routers routers = new Routers();
-        private HashSet<Guid> loggedInPeers = new HashSet<Guid>();
+        private Configuration _config;
+        private readonly Packeteer _packeteer = new Packeteer();
+        private readonly Routers _routers = new Routers();
+        private readonly HashSet<Guid> _loggedInPeers = new HashSet<Guid>();
 
         public Management()
         {
-            packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
-            packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
+            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            _packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
         }
 
         private void Packeteer_OnPeerDisconnected(Packeteer sender, NetProxy.Hub.Common.Peer peer)
         {
-            lock (config)
+            lock (_config)
             {
-                loggedInPeers.Remove(peer.Id);
+                _loggedInPeers.Remove(peer.Id);
             }
-            Console.WriteLine("Disconnected Session: {0} (Logged in users {1}).", peer.Id, loggedInPeers.Count());
+            Console.WriteLine("Disconnected Session: {0} (Logged in users {1}).", peer.Id, _loggedInPeers.Count());
         }
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
             //Console.WriteLine("{0}:{1}", packet.Label, packet.Payload);
 
-            if (loggedInPeers.Contains(peer.Id) == false)
+            if (_loggedInPeers.Contains(peer.Id) == false)
             {
-                if (packet.Label == Constants.CommandLables.GUIRequestLogin)
+                if (packet.Label == Constants.CommandLables.GuiRequestLogin)
                 {
                     try
                     {
-                        lock (config)
+                        lock (_config)
                         {
                             var userLogin = JsonConvert.DeserializeObject<UserLogin>(packet.Payload);
 
-                            var singleUser = (from o in config.Users.List
+                            var singleUser = (from o in _config.Users.List
                                               where o.UserName.ToLower() == userLogin.UserName.ToLower()
                                               && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()
                                               select o).FirstOrDefault();
 
                             if (singleUser != null)
                             {
-                                loggedInPeers.Add(peer.Id);
-                                Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin.UserName.ToLower(), loggedInPeers.Count());
+                                _loggedInPeers.Add(peer.Id);
+                                Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin.UserName.ToLower(), _loggedInPeers.Count());
                             }
                             else
                             {
-                                Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin.UserName.ToLower(), loggedInPeers.Count());
+                                Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin.UserName.ToLower(), _loggedInPeers.Count());
                             }
 
-                            packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(new GenericBooleanResult() { Value = singleUser != null }));
+                            _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(new GenericBooleanResult() { Value = singleUser != null }));
                         }
                     }
                     catch (Exception ex)
@@ -76,22 +76,22 @@ namespace NetProxy.Service
                             Exception = ex
                         });
 
-                        packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                        _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                     }
                 }
 
                 return; //If the peer is not logged in, don't go any further.
             }
 
-            if (packet.Label == Constants.CommandLables.GUIRequestRouteList)
+            if (packet.Label == Constants.CommandLables.GuiRequestRouteList)
             {
                 try
                 {
                     List<RouteGridItem> routes = new List<RouteGridItem>();
 
-                    lock (config)
+                    lock (_config)
                     {
-                        foreach (var router in routers.List)
+                        foreach (var router in _routers.List)
                         {
                             RouteGridItem augmentedRoute = new RouteGridItem()
                             {
@@ -111,7 +111,7 @@ namespace NetProxy.Service
                         }
                     }
 
-                    packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(routes));
+                    _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(routes));
                 }
                 catch (Exception ex)
                 {
@@ -122,18 +122,18 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIRequestRouteStatsList)
+            else if (packet.Label == Constants.CommandLables.GuiRequestRouteStatsList)
             {
                 try
                 {
                     List<RouteGridStats> stats = new List<RouteGridStats>();
 
-                    lock (config)
+                    lock (_config)
                     {
-                        foreach (var router in routers.List)
+                        foreach (var router in _routers.List)
                         {
                             RouteGridStats augmentedRoute = new RouteGridStats()
                             {
@@ -149,7 +149,7 @@ namespace NetProxy.Service
                         }
                     }
 
-                    packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(stats));
+                    _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(stats));
                 }
                 catch (Exception ex)
                 {
@@ -159,21 +159,21 @@ namespace NetProxy.Service
                         CustomText = "Failed to get route stats list.",
                         Exception = ex
                     });
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIRequestRoute)
+            else if (packet.Label == Constants.CommandLables.GuiRequestRoute)
             {
                 try
                 {
-                    lock (config)
+                    lock (_config)
                     {
                         Guid routerId = Guid.Parse(packet.Payload);
-                        Router router = routers[routerId];
+                        Router router = _routers[routerId];
                         if (router != null)
                         {
                             string value = JsonConvert.SerializeObject(router.Route);
-                            packeteer.SendTo(peer.Id, packet.Label, value);
+                            _packeteer.SendTo(peer.Id, packet.Label, value);
                         }
                     }
                 }
@@ -186,17 +186,17 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIRequestUserList)
+            else if (packet.Label == Constants.CommandLables.GuiRequestUserList)
             {
                 try
                 {
-                    lock (config)
+                    lock (_config)
                     {
-                        string value = JsonConvert.SerializeObject(config.Users);
-                        packeteer.SendTo(peer.Id, packet.Label, value);
+                        string value = JsonConvert.SerializeObject(_config.Users);
+                        _packeteer.SendTo(peer.Id, packet.Label, value);
                     }
                 }
                 catch (Exception ex)
@@ -208,22 +208,22 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIPersistUserList)
+            else if (packet.Label == Constants.CommandLables.GuiPersistUserList)
             {
                 try
                 {
                     var value = JsonConvert.DeserializeObject<Users>(packet.Payload);
 
-                    lock (config)
+                    lock (_config)
                     {
-                        config.Users.List.Clear();
+                        _config.Users.List.Clear();
 
                         foreach (var user in value.List)
                         {
-                            config.Users.Add(user);
+                            _config.Users.Add(user);
                         }
                         SaveConfiguration();
                     }
@@ -237,30 +237,30 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIPersistUpsertRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistUpsertRoute)
             {
                 try
                 {
                     var value = JsonConvert.DeserializeObject<Route>(packet.Payload);
 
-                    lock (config)
+                    lock (_config)
                     {
-                        var existingRoute = (from o in routers.List
+                        var existingRoute = (from o in _routers.List
                                              where o.Route.Id == value.Id
                                              select o).FirstOrDefault();
 
                         if (existingRoute != null)
                         {
                             existingRoute.Stop();
-                            routers.List.Remove(existingRoute);
+                            _routers.List.Remove(existingRoute);
                         }
 
                         var newRouter = new Router(value);
 
-                        routers.Add(newRouter);
+                        _routers.Add(newRouter);
 
                         SaveConfiguration();
 
@@ -279,25 +279,25 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIPersistDeleteRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistDeleteRoute)
             {
                 try
                 {
                     Guid routeId = Guid.Parse(packet.Payload);
 
-                    lock (config)
+                    lock (_config)
                     {
-                        var existingRoute = (from o in routers.List
+                        var existingRoute = (from o in _routers.List
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
                         if (existingRoute != null)
                         {
                             existingRoute.Stop();
-                            routers.List.Remove(existingRoute);
+                            _routers.List.Remove(existingRoute);
                         }
                         SaveConfiguration();
                     }
@@ -311,18 +311,18 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "The operation failed: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIPersistStopRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistStopRoute)
             {
                 try
                 {
                     Guid routeId = Guid.Parse(packet.Payload);
 
-                    lock (config)
+                    lock (_config)
                     {
-                        var existingRoute = (from o in routers.List
+                        var existingRoute = (from o in _routers.List
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
@@ -341,18 +341,18 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "Failed to stop route: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to stop route: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GUIPersistStartRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistStartRoute)
             {
                 try
                 {
                     Guid routeId = Guid.Parse(packet.Payload);
 
-                    lock (config)
+                    lock (_config)
                     {
-                        var existingRoute = (from o in routers.List
+                        var existingRoute = (from o in _routers.List
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
@@ -360,7 +360,7 @@ namespace NetProxy.Service
                         {
                             if (existingRoute.Start() == false)
                             {
-                                packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "Failed to start route.");
+                                _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start route.");
                             }
                         }
                     }
@@ -373,7 +373,7 @@ namespace NetProxy.Service
                         CustomText = "Failed to start route.",
                         Exception = ex
                     });
-                    packeteer.SendTo(peer.Id, Constants.CommandLables.GUISendMessage, "Failed to start route: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start route: " + ex.Message);
                 }
             }
         }
@@ -384,11 +384,11 @@ namespace NetProxy.Service
             {
                 string configPath = RegistryHelper.GetString(Registry.LocalMachine, Constants.RegsitryKey, "", "ConfigPath");
 
-                string configurationText = JsonConvert.SerializeObject(config);
-                File.WriteAllText(Path.Combine(configPath, Constants.SERVER_CONFIG_FILE_NAME), configurationText);
+                string configurationText = JsonConvert.SerializeObject(_config);
+                File.WriteAllText(Path.Combine(configPath, Constants.ServerConfigFileName), configurationText);
 
-                string routesText = JsonConvert.SerializeObject(routers.Routes());
-                File.WriteAllText(Path.Combine(configPath, Constants.ROUTES_CONFIG_FILE_NAME), routesText);
+                string routesText = JsonConvert.SerializeObject(_routers.Routes());
+                File.WriteAllText(Path.Combine(configPath, Constants.RoutesConfigFileName), routesText);
             }
             catch (Exception ex)
             {
@@ -412,11 +412,11 @@ namespace NetProxy.Service
                 string configPath = RegistryHelper.GetString(Registry.LocalMachine, Constants.RegsitryKey, "", "ConfigPath");
 
                 Console.WriteLine("Server configuration...");
-                string configurationText = File.ReadAllText(Path.Combine(configPath, Constants.SERVER_CONFIG_FILE_NAME));
-                config = JsonConvert.DeserializeObject<Configuration>(configurationText);
+                string configurationText = File.ReadAllText(Path.Combine(configPath, Constants.ServerConfigFileName));
+                _config = JsonConvert.DeserializeObject<Configuration>(configurationText);
 
                 Console.WriteLine("Route configuration...");
-                string routesText = File.ReadAllText(Path.Combine(configPath, Constants.ROUTES_CONFIG_FILE_NAME));
+                string routesText = File.ReadAllText(Path.Combine(configPath, Constants.RoutesConfigFileName));
                 List<Route> routes = JsonConvert.DeserializeObject<List<Route>>(routesText);
 
                 if (routes != null)
@@ -424,7 +424,7 @@ namespace NetProxy.Service
                     foreach (var route in routes)
                     {
                         Console.WriteLine("Adding route {0}.", route.Name);
-                        routers.Add(new Router(route));
+                        _routers.Add(new Router(route));
                     }
                 }
             }
@@ -449,7 +449,7 @@ namespace NetProxy.Service
                 {
                     Name = "NetworkDLS",
                     ListenPort = 80,
-                    TrafficType = TrafficType.HTTP,
+                    TrafficType = TrafficType.Http,
                     MaxBufferSize = 1021 * 1024,
                     ListenOnAllAddresses = false,
                     AutoStart = true,
@@ -462,7 +462,7 @@ namespace NetProxy.Service
                 route.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
                 route.Endpoints.Add(new Endpoint("www.NetworkDLS.com", 80));
 
-                route.HttpHeaderRules.Add(new HttpHeaderRule(HttpHeaderType.Request, HTTPVerb.Any, "Host", HttpHeaderAction.Upsert, "www.NetworkDLS.com"));
+                route.HttpHeaderRules.Add(new HttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.NetworkDLS.com"));
 
                 routers.Add(new Router(route));
             }
@@ -472,7 +472,7 @@ namespace NetProxy.Service
                 {
                     Name = "Ingenuity",
                     ListenPort = 81,
-                    TrafficType = TrafficType.HTTP,
+                    TrafficType = TrafficType.Http,
                     MaxBufferSize = 1021 * 1024,
                     ListenOnAllAddresses = true,
                     AutoStart = true
@@ -483,7 +483,7 @@ namespace NetProxy.Service
                 route.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
                 route.Endpoints.Add(new Endpoint("www.IngenuitySC.com", 80));
 
-                route.HttpHeaderRules.Add(new HttpHeaderRule(HttpHeaderType.Request, HTTPVerb.Any, "Host", HttpHeaderAction.Upsert, "www.IngenuitySC.com"));
+                route.HttpHeaderRules.Add(new HttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.IngenuitySC.com"));
 
                 routers.Add(new Router(route));
             }
@@ -493,7 +493,7 @@ namespace NetProxy.Service
                 {
                     Name = "Microsoft LIVE!",
                     ListenPort = 82,
-                    TrafficType = TrafficType.HTTPS,
+                    TrafficType = TrafficType.Https,
                     MaxBufferSize = 1021 * 1024,
                     ListenOnAllAddresses = true,
                     AutoStart = true
@@ -504,7 +504,7 @@ namespace NetProxy.Service
                 route.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
                 route.Endpoints.Add(new Endpoint("login.live.com", 443));
 
-                route.HttpHeaderRules.Add(new HttpHeaderRule(HttpHeaderType.Request, HTTPVerb.Any, "Host", HttpHeaderAction.Upsert, "login.live.com"));
+                route.HttpHeaderRules.Add(new HttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "login.live.com"));
 
                 routers.Add(new Router(route));
             }
@@ -513,7 +513,7 @@ namespace NetProxy.Service
             string routesText = JsonConvert.SerializeObject(routers.Routes());
 
             string configPath = RegistryHelper.GetString(Registry.LocalMachine, Constants.RegsitryKey, "", "ConfigPath");
-            File.WriteAllText(Path.Combine(configPath, Constants.ROUTES_CONFIG_FILE_NAME), routesText);
+            File.WriteAllText(Path.Combine(configPath, Constants.RoutesConfigFileName), routesText);
         }
 
         public void Start()
@@ -522,11 +522,11 @@ namespace NetProxy.Service
             {
                 LoadConfiguration();
 
-                Console.WriteLine("Starting management interface on port {0}.", config.ManagementPort);
-                packeteer.Start(config.ManagementPort);
+                Console.WriteLine("Starting management interface on port {0}.", _config.ManagementPort);
+                _packeteer.Start(_config.ManagementPort);
 
                 Console.WriteLine("starting routes...");
-                routers.Start();
+                _routers.Start();
             }
             catch (Exception ex)
             {
@@ -545,8 +545,8 @@ namespace NetProxy.Service
             {
                 SaveConfiguration();
 
-                packeteer.Stop();
-                routers.Stop();
+                _packeteer.Stop();
+                _routers.Stop();
             }
             catch (Exception ex)
             {

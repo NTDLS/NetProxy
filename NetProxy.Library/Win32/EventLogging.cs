@@ -26,23 +26,23 @@ namespace NetProxy.Library.Win32
 
         public string ApplicationName { get; set; }
 
-        private bool _WriteVerboseLogging;
+        private bool _writeVerboseLogging;
 
         public bool WriteVerboseLogging
         {
             get
             {
-                return _WriteVerboseLogging;
+                return _writeVerboseLogging;
             }
             set
             {
-                _WriteVerboseLogging = value;
+                _writeVerboseLogging = value;
             }
         }
 
         public EventLogging(string applicationName, bool writeVerboseLogging)
         {
-            this._WriteVerboseLogging = writeVerboseLogging;
+            this._writeVerboseLogging = writeVerboseLogging;
             this.ApplicationName = applicationName;
 
             //This is required before events can be written.
@@ -126,7 +126,7 @@ namespace NetProxy.Library.Win32
             {
                 Console.WriteLine(string.Format("<{0}> {1}", severity.ToString(), eventText));
 
-                if (severity == Severity.Verbose && !_WriteVerboseLogging)
+                if (severity == Severity.Verbose && !_writeVerboseLogging)
                 {
                     return;
                 }

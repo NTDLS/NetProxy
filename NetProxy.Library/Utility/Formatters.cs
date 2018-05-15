@@ -7,27 +7,27 @@ namespace NetProxy.Library.Utility
     {
         #region Constants.
 
-        public const long KILOBYTE = 1024;
-        public const long MEGABYTE = 1048576;
-        public const long GIGABYTE = 1073741824;
-        public const long TERABYTE = 1099511627776L;
-        public const long PETABYTE = 1125899906842624L;
-        public const long EXABYTE = 1152921504606847000L;
+        public const long Kilobyte = 1024;
+        public const long Megabyte = 1048576;
+        public const long Gigabyte = 1073741824;
+        public const long Terabyte = 1099511627776L;
+        public const long Petabyte = 1125899906842624L;
+        public const long Exabyte = 1152921504606847000L;
 
-        public const long MEGAHERTZ = 1000000L;
-        public const long GIGAHERTZ = 1000000000L;
-        public const long TERAHERTZ = 1000000000000L;
+        public const long Megahertz = 1000000L;
+        public const long Gigahertz = 1000000000L;
+        public const long Terahertz = 1000000000000L;
 
-        public const long KILOBIT = 1000L;
-        public const long MEGABIT = 1000000L;
-        public const long GIGIBIT = 1000000000L;
-        public const long TERABIT = 1000000000000L;
+        public const long Kilobit = 1000L;
+        public const long Megabit = 1000000L;
+        public const long Gigibit = 1000000000L;
+        public const long Terabit = 1000000000000L;
 
         // Used for the charting to abbreviate axis label values
-        public const long THOUSAND = 1000; // Thousand
-        public const long MILLION = THOUSAND * 1000; // Million
-        public const long BILLION = MILLION * 1000; // Billion
-        public const long TRILLION = BILLION * 1000; // Trillion
+        public const long Thousand = 1000; // Thousand
+        public const long Million = Thousand * 1000; // Million
+        public const long Billion = Million * 1000; // Billion
+        public const long Trillion = Billion * 1000; // Trillion
 
         #endregion
 
@@ -49,7 +49,7 @@ namespace NetProxy.Library.Utility
             return Strings.RemoveSpecialCharacters(nameString).Replace("_", string.Empty).Replace(".", string.Empty);
         }
 
-        public static string FormatAs1st2nd3rd(int number)
+        public static string FormatAs1St2Nd3Rd(int number)
         {
             string stringNumber = number.ToString("#,0");
 
@@ -99,24 +99,24 @@ namespace NetProxy.Library.Utility
                     number *= -1;
                 }
 
-                if (number >= TRILLION)
+                if (number >= Trillion)
                 {
-                    divideBy = TRILLION;
+                    divideBy = Trillion;
                     suffix = trillionSuffix;
                 }
-                else if (number >= BILLION)
+                else if (number >= Billion)
                 {
-                    divideBy = BILLION;
+                    divideBy = Billion;
                     suffix = billionSuffix;
                 }
-                else if (number >= MILLION)
+                else if (number >= Million)
                 {
-                    divideBy = MILLION;
+                    divideBy = Million;
                     suffix = millionSuffix;
                 }
-                else if (number >= THOUSAND)
+                else if (number >= Thousand)
                 {
-                    divideBy = THOUSAND;
+                    divideBy = Thousand;
                     suffix = thousandSuffix;
                 }
                 else
@@ -197,34 +197,34 @@ namespace NetProxy.Library.Utility
                 fileSize *= -1;
             }
 
-            if (fileSize >= EXABYTE)
+            if (fileSize >= Exabyte)
             {
-                divideBy = EXABYTE;
+                divideBy = Exabyte;
                 suffix = "EB";
             }
-            else if (fileSize >= PETABYTE)
+            else if (fileSize >= Petabyte)
             {
-                divideBy = PETABYTE;
+                divideBy = Petabyte;
                 suffix = "PB";
             }
-            else if (fileSize >= TERABYTE)
+            else if (fileSize >= Terabyte)
             {
-                divideBy = TERABYTE;
+                divideBy = Terabyte;
                 suffix = "TB";
             }
-            else if (fileSize >= GIGABYTE)
+            else if (fileSize >= Gigabyte)
             {
-                divideBy = GIGABYTE;
+                divideBy = Gigabyte;
                 suffix = "GB";
             }
-            else if (fileSize >= MEGABYTE)
+            else if (fileSize >= Megabyte)
             {
-                divideBy = MEGABYTE;
+                divideBy = Megabyte;
                 suffix = "MB";
             }
-            else if (fileSize >= KILOBYTE)
+            else if (fileSize >= Kilobyte)
             {
-                divideBy = KILOBYTE;
+                divideBy = Kilobyte;
                 suffix = "KB";
             }
             else
@@ -268,34 +268,34 @@ namespace NetProxy.Library.Utility
             string suffix = "";
 
 
-            if (fileSize >= EXABYTE)
+            if (fileSize >= Exabyte)
             {
-                divideBy = EXABYTE;
+                divideBy = Exabyte;
                 suffix = "EB";
             }
-            else if (fileSize >= PETABYTE)
+            else if (fileSize >= Petabyte)
             {
-                divideBy = PETABYTE;
+                divideBy = Petabyte;
                 suffix = "PB";
             }
-            else if (fileSize >= TERABYTE)
+            else if (fileSize >= Terabyte)
             {
-                divideBy = TERABYTE;
+                divideBy = Terabyte;
                 suffix = "TB";
             }
-            else if (fileSize >= GIGABYTE)
+            else if (fileSize >= Gigabyte)
             {
-                divideBy = GIGABYTE;
+                divideBy = Gigabyte;
                 suffix = "GB";
             }
-            else if (fileSize >= MEGABYTE)
+            else if (fileSize >= Megabyte)
             {
-                divideBy = MEGABYTE;
+                divideBy = Megabyte;
                 suffix = "MB";
             }
-            else if (fileSize >= KILOBYTE)
+            else if (fileSize >= Kilobyte)
             {
-                divideBy = KILOBYTE;
+                divideBy = Kilobyte;
                 suffix = "KB";
             }
             else
@@ -340,34 +340,34 @@ namespace NetProxy.Library.Utility
                 fileSize *= -1;
             }
 
-            if (fileSize >= EXABYTE)
+            if (fileSize >= Exabyte)
             {
-                divideBy = EXABYTE;
+                divideBy = Exabyte;
                 suffix = "EB";
             }
-            else if (fileSize >= PETABYTE)
+            else if (fileSize >= Petabyte)
             {
-                divideBy = PETABYTE;
+                divideBy = Petabyte;
                 suffix = "PB";
             }
-            else if (fileSize >= TERABYTE)
+            else if (fileSize >= Terabyte)
             {
-                divideBy = TERABYTE;
+                divideBy = Terabyte;
                 suffix = "TB";
             }
-            else if (fileSize >= GIGABYTE)
+            else if (fileSize >= Gigabyte)
             {
-                divideBy = GIGABYTE;
+                divideBy = Gigabyte;
                 suffix = "GB";
             }
-            else if (fileSize >= MEGABYTE)
+            else if (fileSize >= Megabyte)
             {
-                divideBy = MEGABYTE;
+                divideBy = Megabyte;
                 suffix = "MB";
             }
-            else if (fileSize >= KILOBYTE)
+            else if (fileSize >= Kilobyte)
             {
-                divideBy = KILOBYTE;
+                divideBy = Kilobyte;
                 suffix = "KB";
             }
             else
@@ -417,34 +417,34 @@ namespace NetProxy.Library.Utility
                 fileSize *= -1;
             }
 
-            if (fileSize >= EXABYTE)
+            if (fileSize >= Exabyte)
             {
-                divideBy = EXABYTE;
+                divideBy = Exabyte;
                 suffix = "EB";
             }
-            else if (fileSize >= PETABYTE)
+            else if (fileSize >= Petabyte)
             {
-                divideBy = PETABYTE;
+                divideBy = Petabyte;
                 suffix = "PB";
             }
-            else if (fileSize >= TERABYTE)
+            else if (fileSize >= Terabyte)
             {
-                divideBy = TERABYTE;
+                divideBy = Terabyte;
                 suffix = "TB";
             }
-            else if (fileSize >= GIGABYTE)
+            else if (fileSize >= Gigabyte)
             {
-                divideBy = GIGABYTE;
+                divideBy = Gigabyte;
                 suffix = "GB";
             }
-            else if (fileSize >= MEGABYTE)
+            else if (fileSize >= Megabyte)
             {
-                divideBy = MEGABYTE;
+                divideBy = Megabyte;
                 suffix = "MB";
             }
-            else if (fileSize >= KILOBYTE)
+            else if (fileSize >= Kilobyte)
             {
-                divideBy = KILOBYTE;
+                divideBy = Kilobyte;
                 suffix = "KB";
             }
             else
@@ -490,24 +490,24 @@ namespace NetProxy.Library.Utility
                 speed *= -1;
             }
 
-            if (speed >= TERABIT)
+            if (speed >= Terabit)
             {
-                divideBy = TERABIT;
+                divideBy = Terabit;
                 suffix = "T";
             }
-            else if (speed >= GIGIBIT)
+            else if (speed >= Gigibit)
             {
-                divideBy = GIGIBIT;
+                divideBy = Gigibit;
                 suffix = "G";
             }
-            else if (speed >= MEGABIT)
+            else if (speed >= Megabit)
             {
-                divideBy = MEGABIT;
+                divideBy = Megabit;
                 suffix = "M";
             }
-            else if (speed >= KILOBIT)
+            else if (speed >= Kilobit)
             {
-                divideBy = KILOBIT;
+                divideBy = Kilobit;
                 suffix = "K";
             }
             else
@@ -549,19 +549,19 @@ namespace NetProxy.Library.Utility
                 clockSpeed *= -1;
             }
 
-            if (clockSpeed >= TERAHERTZ)
+            if (clockSpeed >= Terahertz)
             {
-                divideBy = TERAHERTZ;
+                divideBy = Terahertz;
                 suffix = "THz";
             }
-            else if (clockSpeed >= GIGAHERTZ)
+            else if (clockSpeed >= Gigahertz)
             {
-                divideBy = GIGAHERTZ;
+                divideBy = Gigahertz;
                 suffix = "GHz";
             }
-            else if (clockSpeed >= MEGAHERTZ)
+            else if (clockSpeed >= Megahertz)
             {
-                divideBy = MEGAHERTZ;
+                divideBy = Megahertz;
                 suffix = "MHz";
             }
             else
@@ -580,7 +580,7 @@ namespace NetProxy.Library.Utility
             return friendlyClockSpeed.ToString("N" + decimalPlaces.ToString()) + " " + suffix;
         }
 
-        public static string FormatADUserName(string adUsername)
+        public static string FormatAdUserName(string adUsername)
         {
             //http://msdn.microsoft.com/en-us/library/windows/desktop/aa380525(v=vs.85).aspx
 

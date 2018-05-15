@@ -103,7 +103,7 @@ namespace NetProxy.Service
                     ServiceBase[] servicesToRun;
                     servicesToRun = new ServiceBase[]
                         {
-                           new NetworkDLSNetProxyService()
+                           new NetworkDlsNetProxyService()
                         };
                     ServiceBase.Run(servicesToRun);
                 }

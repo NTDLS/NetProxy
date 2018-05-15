@@ -9,7 +9,7 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormAbout : Form
     {
-        Assembly assembly = Assembly.GetExecutingAssembly();
+        Assembly _assembly = Assembly.GetExecutingAssembly();
 
         public FormAbout()
         {
@@ -40,8 +40,8 @@ namespace NetProxy.Client.Forms
             this.CancelButton = cmdOk;
             this.Text = "NetworkDLS " + Constants.TitleCaption + " : About";
 
-            var files = Directory.EnumerateFiles(Path.GetDirectoryName(assembly.Location), "*.dll", SearchOption.AllDirectories).ToList();
-            files.AddRange(Directory.EnumerateFiles(Path.GetDirectoryName(assembly.Location), "*.exe", SearchOption.AllDirectories).ToList());
+            var files = Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location), "*.dll", SearchOption.AllDirectories).ToList();
+            files.AddRange(Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location), "*.exe", SearchOption.AllDirectories).ToList());
 
             foreach (var file in files)
             {

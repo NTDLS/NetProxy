@@ -14,17 +14,17 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormConnect : Form
     {
-        private ConnectionInfo connectionInfo = new ConnectionInfo();
-        private FormProgress formProgress = null;
-        private AutoResetEvent loginConnectionEvent = null;
-        private BackgroundWorker worker = null;
-        private string connectMessage = string.Empty;
-        private bool loginResult = false;
-        private Packeteer packeteer = null;
+        private ConnectionInfo _connectionInfo = new ConnectionInfo();
+        private FormProgress _formProgress = null;
+        private AutoResetEvent _loginConnectionEvent = null;
+        private BackgroundWorker _worker = null;
+        private string _connectMessage = string.Empty;
+        private bool _loginResult = false;
+        private Packeteer _packeteer = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
-            return connectionInfo;
+            return _connectionInfo;
         }
 
         public FormConnect()
@@ -45,18 +45,18 @@ namespace NetProxy.Client.Forms
             string verbatiumServername = textBoxServer.Text;
             string verbatiumUsername = textBoxUsername.Text;
 
-            connectionInfo.ServerName = verbatiumServername.Trim();
-            connectionInfo.UserName = verbatiumUsername.Trim();
-            connectionInfo.Password = textBoxPassword.Text.Trim();
-            connectionInfo.Port = Constants.DEFAULT_MANAGEMENT_PORT;
+            _connectionInfo.ServerName = verbatiumServername.Trim();
+            _connectionInfo.UserName = verbatiumUsername.Trim();
+            _connectionInfo.Password = textBoxPassword.Text.Trim();
+            _connectionInfo.Port = Constants.DefaultManagementPort;
 
-            int portBegin = connectionInfo.ServerName.IndexOf(':');
+            int portBegin = _connectionInfo.ServerName.IndexOf(':');
             if (portBegin > 0)
             {
                 try
                 {
-                    connectionInfo.Port = int.Parse(connectionInfo.ServerName.Substring(portBegin + 1));
-                    connectionInfo.ServerName = connectionInfo.ServerName.Substring(0, portBegin);
+                    _connectionInfo.Port = int.Parse(_connectionInfo.ServerName.Substring(portBegin + 1));
+                    _connectionInfo.ServerName = _connectionInfo.ServerName.Substring(0, portBegin);
                 }
                 catch
                 {
@@ -74,22 +74,22 @@ namespace NetProxy.Client.Forms
             }
             else
             {
-                MessageBox.Show(connectMessage, Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(_connectMessage, Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
         }
 
         private bool TestConnection()
         {
-            worker = new BackgroundWorker() { WorkerReportsProgress = true };
-            worker.DoWork += Worker_DoWork;
-            worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
-            worker.ProgressChanged += Worker_ProgressChanged;
-            worker.RunWorkerAsync();
+            _worker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _worker.DoWork += Worker_DoWork;
+            _worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
+            _worker.ProgressChanged += Worker_ProgressChanged;
+            _worker.RunWorkerAsync();
 
-            using (formProgress = new FormProgress())
+            using (_formProgress = new FormProgress())
             {
-                if (formProgress.ShowDialog() == DialogResult.OK)
+                if (_formProgress.ShowDialog() == DialogResult.OK)
                 {
                     return true;
                 }
@@ -100,7 +100,7 @@ namespace NetProxy.Client.Forms
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            formProgress.UpdateStatus(e.UserState as ProgressFormStatus);
+            _formProgress.UpdateStatus(e.UserState as ProgressFormStatus);
         }
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -109,72 +109,72 @@ namespace NetProxy.Client.Forms
 
             if (result)
             {
-                formProgress.Close(DialogResult.OK);
+                _formProgress.Close(DialogResult.OK);
             }
             else
             {
-                formProgress.Close(DialogResult.Cancel);
+                _formProgress.Close(DialogResult.Cancel);
             }
         }
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
             e.Result = false;
-            loginResult = false;
-            connectMessage = "Failed to connect.";
+            _loginResult = false;
+            _connectMessage = "Failed to connect.";
 
-            packeteer = new Packeteer();
-            packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            _packeteer = new Packeteer();
+            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
 
             try
             {
-                worker.ReportProgress(0, new ProgressFormStatus() { Header = "Connecting..." });
+                _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Connecting..." });
 
-                if (packeteer.Connect(connectionInfo.ServerName, connectionInfo.Port))
+                if (_packeteer.Connect(_connectionInfo.ServerName, _connectionInfo.Port))
                 {
-                    worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
-                    loginConnectionEvent = new AutoResetEvent(false);
+                    _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
+                    _loginConnectionEvent = new AutoResetEvent(false);
 
                     UserLogin userLogin = new UserLogin()
                     {
-                        UserName = connectionInfo.UserName,
-                        PasswordHash = Library.Crypto.Hashing.Sha256(connectionInfo.Password)
+                        UserName = _connectionInfo.UserName,
+                        PasswordHash = Library.Crypto.Hashing.Sha256(_connectionInfo.Password)
                     };
 
-                    packeteer.SendAll(Constants.CommandLables.GUIRequestLogin, JsonConvert.SerializeObject(userLogin));
+                    _packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
 
-                    if (loginConnectionEvent.WaitOne(5000))
+                    if (_loginConnectionEvent.WaitOne(5000))
                     {
-                        worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
+                        _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
 
-                        e.Result = loginResult;
+                        e.Result = _loginResult;
 
-                        if (loginResult == false)
+                        if (_loginResult == false)
                         {
-                            connectMessage = "Unknown user or bad password.";
+                            _connectMessage = "Unknown user or bad password.";
                         }
                     }
                 }
                 else
                 {
-                    connectMessage = "Could not connect to remote server.";
+                    _connectMessage = "Could not connect to remote server.";
                 }
             }
             catch (Exception ex)
             {
-                connectMessage = "An error occured while logging in: " + ex.Message;
+                _connectMessage = "An error occured while logging in: " + ex.Message;
             }
 
-            packeteer.Disconnect();
+            _packeteer.Disconnect();
         }
 
         private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Hub.Common.Packet packet)
         {
-            if (packet.Label == Constants.CommandLables.GUIRequestLogin)
+            if (packet.Label == Constants.CommandLables.GuiRequestLogin)
             {
                 GenericBooleanResult result = JsonConvert.DeserializeObject<GenericBooleanResult>(packet.Payload);
-                loginResult = result.Value;
-                loginConnectionEvent.Set();
+                _loginResult = result.Value;
+                _loginConnectionEvent.Set();
             }
         }
 

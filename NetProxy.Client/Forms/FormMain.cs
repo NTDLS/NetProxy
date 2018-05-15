@@ -285,6 +285,7 @@ namespace NetProxy.Client.Forms
                 menu.Items.Add("-");
                 menu.Items.Add("Start").Enabled = route != null && route.IsRunning == false;
                 menu.Items.Add("Stop").Enabled = route != null && route.IsRunning == true;
+                menu.Items.Add("Edit");
 
                 if (route != null && (route.TrafficType == TrafficType.Http || route.TrafficType == TrafficType.Https))
                 {
@@ -395,11 +396,25 @@ namespace NetProxy.Client.Forms
                     RefreshRouteList();
                     break;
                 case "Stop":
-                    _packeteer.SendAll(Constants.CommandLables.GuiPersistStopRoute, routeId);
-                    RefreshRouteList();
+                    if (MessageBox.Show(@"Stop the selected route?", Constants.TitleCaption, MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                    {
+                        _packeteer.SendAll(Constants.CommandLables.GuiPersistStopRoute, routeId);
+                        RefreshRouteList();
+                    }
+
+                    break;
+                case "Edit":
+                    using (FormRoute formRoute = new FormRoute(_connectionInfo, routeId))
+                    {
+                        if (formRoute.ShowDialog() == DialogResult.OK)
+                        {
+                            RefreshRouteList();
+                        }
+                    }
                     break;
                 case "Delete":
-                    if (MessageBox.Show("Delete the selected route?", Constants.TitleCaption, MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                    if (MessageBox.Show(@"Delete the selected route?", Constants.TitleCaption, MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         _packeteer.SendAll(Constants.CommandLables.GuiPersistDeleteRoute, routeId);
                         RefreshRouteList();

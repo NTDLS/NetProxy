@@ -324,7 +324,7 @@ namespace NetProxy.Client.Forms
         {
             TrafficType trafficType;
 
-            if (Enum.TryParse<TrafficType>(comboBoxTrafficType.Text, out trafficType))
+            if (Enum.TryParse<TrafficType>(comboBoxTrafficType.Text, true, out trafficType))
             {
                 dataGridViewHTTPHeaders.ReadOnly = trafficType != TrafficType.Http;
             }

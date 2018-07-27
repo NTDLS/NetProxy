@@ -1,7 +1,7 @@
 [Setup]
 ;-- Main Setup Information
  AppName                         = NetProxy
- AppVerName                      = NetProxy 1.0.0.1
+ AppVerName                      = NetProxy 1.0.0.2
  AppCopyright                    = Copyright © 1995-2018 NetworkDLS.
  DefaultDirName                  = {pf}\NetworkDLS\NetProxy
  DefaultGroupName                = NetworkDLS\NetProxy

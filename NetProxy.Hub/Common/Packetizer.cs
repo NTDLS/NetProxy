@@ -16,7 +16,7 @@ namespace NetProxy.Hub.Common
                 byte[] payloadBody = Serialization.ObjectToByteArray(packet);
 
                 byte[] payloadBytes = Zip(payloadBody);
-                int grossPacketSize = payloadBytes.Length + Constants.PayloadHeadeerSize;
+                int grossPacketSize = payloadBytes.Length + Constants.PayloadHeaderSize;
 
                 byte[] packetBytes = new byte[grossPacketSize];
 
@@ -25,7 +25,7 @@ namespace NetProxy.Hub.Common
                 Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
-                Buffer.BlockCopy(payloadBytes, 0, packetBytes, Constants.PayloadHeadeerSize, payloadBytes.Length);
+                Buffer.BlockCopy(payloadBytes, 0, packetBytes, Constants.PayloadHeaderSize, payloadBytes.Length);
 
                 return packetBytes;
             }
@@ -79,7 +79,7 @@ namespace NetProxy.Hub.Common
 
                 state.PayloadBuilderLength = state.PayloadBuilderLength + state.BytesReceived;
 
-                while (state.PayloadBuilderLength > Constants.PayloadHeadeerSize) //[PayloadSize] and [CRC16]
+                while (state.PayloadBuilderLength > Constants.PayloadHeaderSize) //[PayloadSize] and [CRC16]
                 {
                     Byte[] payloadDelimiterBytes = new Byte[4];
                     Byte[] payloadSizeBytes = new Byte[4];
@@ -114,7 +114,7 @@ namespace NetProxy.Hub.Common
                         break;
                     }
 
-                    UInt16 actualCrc16 = Crc16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeadeerSize, grossPayloadSize - Constants.PayloadHeadeerSize);
+                    UInt16 actualCrc16 = Crc16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeaderSize, grossPayloadSize - Constants.PayloadHeaderSize);
 
                     if (actualCrc16 != expectedCrc16)
                     {
@@ -123,10 +123,10 @@ namespace NetProxy.Hub.Common
                         continue;
                     }
 
-                    int netPayloadSize = grossPayloadSize - Constants.PayloadHeadeerSize;
+                    int netPayloadSize = grossPayloadSize - Constants.PayloadHeaderSize;
                     byte[] payloadBytes = new byte[netPayloadSize];
 
-                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeadeerSize, payloadBytes, 0, netPayloadSize);
+                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeaderSize, payloadBytes, 0, netPayloadSize);
 
                     byte[] payloadBody = Unzip(payloadBytes);
 

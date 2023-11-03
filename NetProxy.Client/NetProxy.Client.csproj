@@ -6,7 +6,20 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+
+    <Copyright>Copyright © 2023 NetworkDLS</Copyright>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <VersionPrefix>1.0.1.0</VersionPrefix>
+    <Version>1.0.1.0</Version>
+    <Company>NetworkDLS</Company>
+    <Product>NetProxy</Product>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="AppIcon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NTDLS.Persistence" Version="1.0.0" />

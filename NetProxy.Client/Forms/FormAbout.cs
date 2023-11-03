@@ -53,6 +53,14 @@ namespace NetProxy.Client.Forms
             try
             {
                 AssemblyName componentAssembly = AssemblyName.GetAssemblyName(appPath);
+                var assembly = Assembly.Load(componentAssembly);
+                var companyAttribute = Attribute.GetCustomAttribute(assembly, typeof(AssemblyCompanyAttribute)) as AssemblyCompanyAttribute;
+
+                if (companyAttribute?.Company.ToLower().Contains("networkdls") == false)
+                {
+                    return;
+                }
+
                 listViewVersions.Items.Add(new ListViewItem(new string[] { componentAssembly?.Name ?? "", componentAssembly?.Version?.ToString() ?? "" }));
             }
             catch

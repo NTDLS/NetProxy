@@ -777,7 +777,7 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, NASCCLStream ?encryptionProvider)
+        private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, NASCCLStream? encryptionProvider)
         {
             Utility.EnsureNotNull(connection.Socket);
 

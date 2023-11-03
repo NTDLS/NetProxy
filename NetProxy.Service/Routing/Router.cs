@@ -2,6 +2,7 @@
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.FastMemoryCache;
+using NTDLS.NASCCL;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -309,22 +310,16 @@ namespace NetProxy.Service.Routing
                 connection.IsEncryptionNegotationComplete = true;
                 //Console.WriteLine("--{0} Shared Secret: {1}", connection.Route.Name, connection.KeyNegotiator.SharedSecretString);
 
-                string? sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
-
-                string? commonSalt = null;
-                if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
+                NASCCLStream? encryptionProvider = null;
+                if (connection.IsEncryptionNegotationComplete && connection.KeyNegotiator.SharedSecretHash != null)
                 {
-                    commonSalt = _route.BindingPreSharedKey;
-                }
-                else if (connection.IsOutgoing && connection.IsEncryptionNegotationComplete)
-                {
-                    commonSalt = _route.EndpointPreSharedKey;
+                    encryptionProvider = connection.EncryptionProvider;
                 }
 
                 SendPacketEnvelope(connection, new PacketEnvelope
                 {
                     Label = IntraServiceLables.TunnelNegotationComplete,
-                }, sharedSecretString, commonSalt);
+                }, encryptionProvider);
             }
             else if (envelope.Label == IntraServiceLables.TunnelNegotationComplete)
             {
@@ -557,23 +552,17 @@ namespace NetProxy.Service.Routing
                     return;
                 }
 
-                string? sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
-
-                string? commonSalt = null;
-                if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
+                NASCCLStream? encryptionProvider = null;
+                if (connection.IsEncryptionNegotationComplete == true && connection.KeyNegotiator.SharedSecretHash != null)
                 {
-                    commonSalt = _route.BindingPreSharedKey;
-                }
-                else if (connection.IsOutgoing && connection.IsEncryptionNegotationComplete)
-                {
-                    commonSalt = _route.EndpointPreSharedKey;
+                    encryptionProvider = connection.EncryptionProvider;
                 }
 
                 if (connection.UsePackets)
                 {
                     //Console.WriteLine("--Recv:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(connection.Buffer.Take(connection.BytesReceived).ToArray()));
 
-                    var envelopes = Packetizer.DissasemblePacketData(this, connection, connection.UseCompression, connection.IsEncryptionNegotationComplete, sharedSecretString, commonSalt);
+                    var envelopes = Packetizer.DissasemblePacketData(this, connection, connection.UseCompression, encryptionProvider);
                     foreach (var envelope in envelopes)
                     {
                         if (envelope.Label == null)
@@ -678,16 +667,10 @@ namespace NetProxy.Service.Routing
 
             Utility.EnsureNotNull(connection.Peer);
 
-            string? sharedSecretString = connection.Peer.IsEncryptionNegotationComplete ? connection.Peer.KeyNegotiator.SharedSecretHash : null;
-
-            string? commonSalt = null;
-            if (connection.Peer.IsIncomming && connection.Peer.IsEncryptionNegotationComplete)
+            NASCCLStream? encryptionProvider = null;
+            if (connection.Peer.UseEncryption && connection?.Peer.IsEncryptionNegotationComplete != null && connection.Peer.KeyNegotiator.SharedSecretHash != null)
             {
-                commonSalt = _route.BindingPreSharedKey;
-            }
-            else if (connection.Peer.IsOutgoing && connection.Peer.IsEncryptionNegotationComplete)
-            {
-                commonSalt = _route.EndpointPreSharedKey;
+                encryptionProvider = connection.Peer.EncryptionProvider;
             }
 
             if (_route.TrafficType == TrafficType.Http)
@@ -697,7 +680,7 @@ namespace NetProxy.Service.Routing
                 string? httpHeader = null;
                 string? httpRequestVerb = string.Empty;
 
-                if (connection.HttpHeaderBuilder != string.Empty)
+                if (connection != null && connection.HttpHeaderBuilder != string.Empty)
                 {
                     //This is a continuation of a previously received fragmented header.
                     httpHeader = (connection.HttpHeaderBuilder ?? string.Empty) + Encoding.UTF8.GetString(buffer);
@@ -741,7 +724,7 @@ namespace NetProxy.Service.Routing
 
                     byte[] fullReponse = new byte[httpHeader.Length + contentLength];
 
-                    Buffer.BlockCopy(System.Text.Encoding.UTF8.GetBytes(httpHeader), 0, fullReponse, 0, httpHeader.Length);
+                    Buffer.BlockCopy(Encoding.UTF8.GetBytes(httpHeader), 0, fullReponse, 0, httpHeader.Length);
                     if (contentLength > 0)
                     {
                         Buffer.BlockCopy(buffer, endOfHeaderPos, fullReponse, httpHeader.Length, contentLength);
@@ -751,7 +734,9 @@ namespace NetProxy.Service.Routing
                     {
                         //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(fullReponse.Take(fullReponse.Length).ToArray()));
 
-                        byte[] sendBuffer = Packetizer.AssembleMessagePacket(fullReponse, fullReponse.Length, connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
+                        byte[] sendBuffer = Packetizer.AssembleMessagePacket(fullReponse, fullReponse.Length,
+                            connection.Peer.UseCompression, encryptionProvider);
+
                         Stats.BytesSent += (ulong)sendBuffer.Length;
                         Utility.EnsureNotNull(connection?.Peer?.Socket);
                         connection.Peer.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
@@ -771,12 +756,11 @@ namespace NetProxy.Service.Routing
                 }
             }
 
-            if (connection.Peer.UsePackets)
+            if (connection?.Peer?.UsePackets == true)
             {
                 //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
-                byte[] sendBuffer = Packetizer.AssembleMessagePacket(buffer, bufferSize,
-                    connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
+                byte[] sendBuffer = Packetizer.AssembleMessagePacket(buffer, bufferSize, connection.Peer.UseCompression, encryptionProvider);
                 Stats.BytesSent += (ulong)sendBuffer.Length;
 
                 Utility.EnsureNotNull(connection?.Peer?.Socket);
@@ -793,11 +777,11 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, string? encryptionKey, string? salt)
+        private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, NASCCLStream ?encryptionProvider)
         {
             Utility.EnsureNotNull(connection.Socket);
 
-            byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, true, encryptionKey, salt);
+            byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, encryptionProvider);
             Stats.BytesSent += (ulong)sendBuffer.Length;
             connection.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
         }
@@ -806,7 +790,7 @@ namespace NetProxy.Service.Routing
         {
             Utility.EnsureNotNull(connection.Socket);
 
-            byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, false, null, null);
+            byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, null);
             Stats.BytesSent += (ulong)sendBuffer.Length;
             connection.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
         }

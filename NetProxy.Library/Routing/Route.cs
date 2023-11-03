@@ -19,8 +19,6 @@ namespace NetProxy.Library.Routing
         public bool CompressEndpointTunnel { get; set; }
         public bool EncryptBindingTunnel { get; set; }
         public bool EncryptEndpointTunnel { get; set; }
-        public string BindingPreSharedKey { get; set; } = string.Empty;
-        public string EndpointPreSharedKey { get; set; } = string.Empty;
         public bool BindingIsTunnel { get; set; }
         public bool EndpointIsTunnel { get; set; }
         public int AcceptBacklogSize { get; set; }

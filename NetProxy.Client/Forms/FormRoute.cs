@@ -115,11 +115,9 @@ namespace NetProxy.Client.Forms
             checkBoxBindingIsTunnel.Checked = route.BindingIsTunnel;
             checkBoxTunnelBindingUseCompression.Checked = route.CompressBindingTunnel;
             checkBoxTunnelBindingUseEncryption.Checked = route.EncryptBindingTunnel;
-            textBoxTunnelBindingPreSharedKey.Text = route.BindingPreSharedKey;
             checkBoxEndpointIsTunnel.Checked = route.EndpointIsTunnel;
             checkBoxTunnelEndpointUseCompression.Checked = route.CompressEndpointTunnel;
             checkBoxTunnelEndpointUseEncryption.Checked = route.EncryptEndpointTunnel;
-            textBoxTunnelEndpointPreSharedKey.Text = route.EndpointPreSharedKey;
             checkBoxUseStickySessions.Checked = route.UseStickySessions;
             textBoxEncryptionInitTimeout.Text = route.EncryptionInitilizationTimeoutMs.ToString();
             textBoxStickySessionCacheExpiration.Text = route.StickySessionCacheExpiration.ToString();
@@ -227,28 +225,14 @@ namespace NetProxy.Client.Forms
             route.BindingIsTunnel = checkBoxBindingIsTunnel.Checked;
             route.CompressBindingTunnel = checkBoxTunnelBindingUseCompression.Checked;
             route.EncryptBindingTunnel = checkBoxTunnelBindingUseEncryption.Checked;
-            route.BindingPreSharedKey = textBoxTunnelBindingPreSharedKey.Text;
 
             route.EndpointIsTunnel = checkBoxEndpointIsTunnel.Checked;
             route.CompressEndpointTunnel = checkBoxTunnelEndpointUseCompression.Checked;
             route.EncryptEndpointTunnel = checkBoxTunnelEndpointUseEncryption.Checked;
-            route.EndpointPreSharedKey = textBoxTunnelEndpointPreSharedKey.Text;
 
             if (route.InitialBufferSize > route.MaxBufferSize)
             {
                 MessageBox.Show("The max buffer size must be larger than the initial buffer size.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                return;
-            }
-
-            if (route.BindingIsTunnel && route.EncryptBindingTunnel && route.BindingPreSharedKey.Trim().Length == 0)
-            {
-                MessageBox.Show("The Binding Tunnel Key cannot be blank when tunnel encryption is selected.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                return;
-            }
-
-            if (route.EndpointIsTunnel && route.EncryptEndpointTunnel && route.EndpointPreSharedKey.Trim().Length == 0)
-            {
-                MessageBox.Show("The Endpoint Tunnel Key cannot be blank when tunnel encryption is selected.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
@@ -376,14 +360,12 @@ namespace NetProxy.Client.Forms
         {
             checkBoxTunnelBindingUseCompression.Enabled = checkBoxBindingIsTunnel.Checked;
             checkBoxTunnelBindingUseEncryption.Enabled = checkBoxBindingIsTunnel.Checked;
-            textBoxTunnelBindingPreSharedKey.Enabled = checkBoxBindingIsTunnel.Checked;
         }
 
         private void checkBoxEndpointIsTunnel_CheckedChanged(object? sender, EventArgs e)
         {
             checkBoxTunnelEndpointUseCompression.Enabled = checkBoxEndpointIsTunnel.Checked;
             checkBoxTunnelEndpointUseEncryption.Enabled = checkBoxEndpointIsTunnel.Checked;
-            textBoxTunnelEndpointPreSharedKey.Enabled = checkBoxEndpointIsTunnel.Checked;
         }
     }
 }

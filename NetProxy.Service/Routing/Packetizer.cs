@@ -1,13 +1,13 @@
 ﻿using NetProxy.Hub.Common;
 using NetProxy.Library.Routing;
+using NTDLS.NASCCL;
 using System.IO.Compression;
 
 namespace NetProxy.Service.Routing
 {
     internal static class Packetizer
     {
-
-        public static byte[] AssembleMessagePacket(byte[]? payload, int payloadLength, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
+        public static byte[] AssembleMessagePacket(byte[]? payload, int payloadLength, bool compress, NASCCLStream? encryptionProvider)
         {
             var envelope = new PacketEnvelope
             {
@@ -15,10 +15,10 @@ namespace NetProxy.Service.Routing
                 Payload = payload?.Take(payloadLength).ToArray()
             };
 
-            return AssembleMessagePacket(envelope, compress, encrypt, encryptPacketKey, keySalt);
+            return AssembleMessagePacket(envelope, compress, encryptionProvider);
         }
 
-        public static byte[] AssembleMessagePacket(PacketEnvelope envelope, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
+        public static byte[] AssembleMessagePacket(PacketEnvelope envelope, bool compress, NASCCLStream? encryptionProvider)
         {
             byte[] payloadBody = Serialization.SerializeToByteArray(envelope);
 
@@ -27,10 +27,7 @@ namespace NetProxy.Service.Routing
                 payloadBody = Zip(payloadBody);
             }
 
-            if (encrypt)
-            {
-                //payloadBody = Encrypt(encryptPacketKey, keySalt, payloadBody);
-            }
+            encryptionProvider?.Cipher(ref payloadBody);
 
             int grossPacketSize = payloadBody.Length + Constants.PayloadHeaderSize;
 
@@ -75,7 +72,7 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        public static List<PacketEnvelope> DissasemblePacketData(Router router, SocketState state, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
+        public static List<PacketEnvelope> DissasemblePacketData(Router router, SocketState state, bool compress, NASCCLStream? encryptionProvider)
         {
             List<PacketEnvelope> envelopes = new List<PacketEnvelope>();
 
@@ -139,21 +136,18 @@ namespace NetProxy.Service.Routing
                     }
 
                     int netPayloadSize = grossPayloadSize - Constants.PayloadHeaderSize;
-                    byte[] payloadBytes = new byte[netPayloadSize];
+                    byte[] payloadBody = new byte[netPayloadSize];
 
-                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeaderSize, payloadBytes, 0, netPayloadSize);
+                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeaderSize, payloadBody, 0, netPayloadSize);
 
-                    if (encrypt)
-                    {
-                        //payloadBytes = Decrypt(encryptPacketKey, keySalt, payloadBytes);
-                    }
+                    encryptionProvider?.Cipher(ref payloadBody);
 
                     if (compress)
                     {
-                        payloadBytes = Unzip(payloadBytes);
+                        payloadBody = Unzip(payloadBody);
                     }
 
-                    envelopes.Add(Serialization.DeserializeToObject<PacketEnvelope>(payloadBytes));
+                    envelopes.Add(Serialization.DeserializeToObject<PacketEnvelope>(payloadBody));
 
                     //Zero out the consumed portion of the payload buffer - more for fun than anything else.
                     Array.Clear(state.PayloadBuilder, 0, grossPayloadSize);
@@ -172,30 +166,26 @@ namespace NetProxy.Service.Routing
 
         public static byte[] Zip(byte[] bytes)
         {
-            using (var msi = new MemoryStream(bytes, 0, bytes.Length))
-            using (var mso = new MemoryStream())
+            using var msi = new MemoryStream(bytes, 0, bytes.Length);
+            using var mso = new MemoryStream();
+            using (var gs = new GZipStream(mso, CompressionLevel.Optimal))
             {
-                using (var gs = new GZipStream(mso, CompressionLevel.Optimal))
-                {
-                    msi.CopyTo(gs);
-                }
-
-                return mso.ToArray();
+                msi.CopyTo(gs);
             }
+
+            return mso.ToArray();
         }
 
         public static byte[] Unzip(byte[] bytes)
         {
-            using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream())
+            using var msi = new MemoryStream(bytes);
+            using var mso = new MemoryStream();
+            using (var gs = new GZipStream(msi, CompressionMode.Decompress))
             {
-                using (var gs = new GZipStream(msi, CompressionMode.Decompress))
-                {
-                    gs.CopyTo(mso);
-                }
-
-                return mso.ToArray();
+                gs.CopyTo(mso);
             }
+
+            return mso.ToArray();
         }
     }
 }

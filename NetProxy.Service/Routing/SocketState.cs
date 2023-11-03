@@ -1,5 +1,6 @@
 ﻿using NetProxy.Hub.Common;
 using NetProxy.Library.Routing;
+using NTDLS.NASCCL;
 using NTDLS.SecureKeyExchange;
 using System.Net.Sockets;
 
@@ -22,6 +23,7 @@ namespace NetProxy.Service.Routing
         public byte[] Buffer { get; set; }
         public byte[] PayloadBuilder;
         public CompoundNegotiator KeyNegotiator { get; set; } = new CompoundNegotiator();
+        public NASCCLStream? EncryptionProvider = null;
         public bool IsEncryptionNegotationComplete { get; set; }
         public int PayloadBuilderLength { get; set; }
         public string HttpHeaderBuilder { get; set; }

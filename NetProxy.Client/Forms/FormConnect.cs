@@ -28,7 +28,7 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
         }
 
-        private void FormConnect_Load(object sender, EventArgs e)
+        private void FormConnect_Load(object? sender, EventArgs e)
         {
             AcceptButton = buttonConnect;
 
@@ -43,7 +43,7 @@ namespace NetProxy.Client.Forms
             textBoxUsername.Text = prefs.Username;
         }
 
-        private void buttonConnect_Click(object sender, EventArgs e)
+        private void buttonConnect_Click(object? sender, EventArgs e)
         {
             string verbatiumServername = textBoxServer.Text;
             string verbatiumUsername = textBoxUsername.Text;
@@ -106,12 +106,12 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-        private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
             _formProgress.UpdateStatus(e.UserState as ProgressFormStatus);
         }
 
-        private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void Worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
             bool result = (bool)e.Result;
 
@@ -125,7 +125,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Worker_DoWork(object sender, DoWorkEventArgs e)
+        private void Worker_DoWork(object? sender, DoWorkEventArgs e)
         {
             e.Result = false;
             _loginResult = false;
@@ -186,13 +186,13 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void buttonCancel_Click(object sender, EventArgs e)
+        private void buttonCancel_Click(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
-        private void FormConnect_Shown(object sender, EventArgs e)
+        private void FormConnect_Shown(object? sender, EventArgs e)
         {
             if (textBoxServer.Text.Length > 0 && textBoxUsername.Text.Length > 0)
             {

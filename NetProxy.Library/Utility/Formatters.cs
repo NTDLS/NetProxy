@@ -141,7 +141,7 @@
             }
             else
             {
-                return String.Format("{0:n" + decimals.ToString() + "}", (ulong)number);
+                return string.Format("{0:n" + decimals.ToString() + "}", (ulong)number);
             }
         }
 
@@ -153,7 +153,7 @@
             }
             else
             {
-                return String.Format("{0:n" + decimals.ToString() + "}", (ulong)number);
+                return string.Format("{0:n" + decimals.ToString() + "}", (ulong)number);
             }
         }
 
@@ -585,7 +585,7 @@
             if (stringArray.Count() > 1)
             {
                 return stringArray[0].ToUpper() + "\\"
-                    + String.Join("\\", stringArray, 1, stringArray.Count() - 1).ToLower();
+                    + string.Join("\\", stringArray, 1, stringArray.Count() - 1).ToLower();
             }
             return adUsername;
         }

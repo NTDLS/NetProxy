@@ -30,7 +30,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void FormAbout_Load(object sender, EventArgs e)
+        private void FormAbout_Load(object? sender, EventArgs e)
         {
             this.AcceptButton = cmdOk;
             this.CancelButton = cmdOk;
@@ -60,7 +60,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void linkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start("http://www.NetworkDLS.com");
         }

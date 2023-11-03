@@ -44,7 +44,7 @@ namespace NetProxy.Client.Forms
         }
 
 
-        private void FormServerSettings_Shown(object sender, EventArgs e)
+        private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
             _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
         }
@@ -58,12 +58,12 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void FormServerSettings_FormClosed(object sender, FormClosedEventArgs e)
+        private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
         {
             _packeteer.Disconnect();
         }
 
-        private void buttonSave_Click(object sender, EventArgs e)
+        private void buttonSave_Click(object? sender, EventArgs e)
         {
             Users users = new Users();
 
@@ -93,13 +93,13 @@ namespace NetProxy.Client.Forms
             this.Close();
         }
 
-        private void buttonCancel_Click(object sender, EventArgs e)
+        private void buttonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
-        private void dataGridViewUsers_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dataGridViewUsers_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == ColumnSetPassword.Index)
             {

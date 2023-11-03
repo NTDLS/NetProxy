@@ -20,7 +20,7 @@
             public bool Cancel = false;
         }
 
-        public delegate void EventOnCancel(Object sender, OnCancelInfo e);
+        public delegate void EventOnCancel(object? sender, OnCancelInfo e);
         public event EventOnCancel OnCancel;
 
         #endregion
@@ -38,7 +38,7 @@
             this.DialogResult = DialogResult.OK;
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void cmdCancel_Click(object? sender, EventArgs e)
         {
             if (OnCancel != null)
             {
@@ -125,7 +125,7 @@
             this.Close();
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
@@ -167,7 +167,7 @@
             }
         }
 
-        private void FormProgress_Shown(object sender, EventArgs e)
+        private void FormProgress_Shown(object? sender, EventArgs e)
         {
             IsLoaded = true;
         }

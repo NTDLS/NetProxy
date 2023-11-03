@@ -134,7 +134,7 @@ namespace NetProxy.Service
 
             Match existingMatch = fieldFidner.Match(headerText);
 
-            string newFieldValue = String.Format("{0}: {1}", name, value);
+            string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {
@@ -162,7 +162,7 @@ namespace NetProxy.Service
 
             Match existingMatch = fieldFidner.Match(headerText);
 
-            string newFieldValue = String.Format("{0}: {1}", name, value);
+            string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {
@@ -190,7 +190,7 @@ namespace NetProxy.Service
 
             Match existingMatch = fieldFidner.Match(headerText);
 
-            string newFieldValue = String.Format("{0}: {1}", name, value);
+            string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {

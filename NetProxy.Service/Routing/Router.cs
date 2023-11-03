@@ -472,7 +472,7 @@ namespace NetProxy.Service.Routing
                     connection.Buffer = new byte[largerBufferSize];
                 }
 
-                Stats.BytesReceived += (UInt64)connection.BytesReceived;
+                Stats.BytesReceived += (ulong)connection.BytesReceived;
 
                 connection.Socket.BeginReceive(connection.Buffer, 0, connection.Buffer.Length, SocketFlags.None, _onDataReceivedCallback, connection);
             }
@@ -734,7 +734,7 @@ namespace NetProxy.Service.Routing
                         //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(fullReponse.Take(fullReponse.Length).ToArray()));
 
                         byte[] sendBuffer = Packetizer.AssembleMessagePacket(fullReponse, fullReponse.Length, connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
-                        Stats.BytesSent += (UInt64)sendBuffer.Length;
+                        Stats.BytesSent += (ulong)sendBuffer.Length;
                         connection.Peer.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
                         WaitForData(connection);
                     }
@@ -742,7 +742,7 @@ namespace NetProxy.Service.Routing
                     {
                         //Console.WriteLine("--Send:{0}, Raw: {1}", route.Name, Encoding.UTF8.GetString(fullReponse.Take(fullReponse.Length).ToArray()));
 
-                        Stats.BytesSent += (UInt64)fullReponse.Length;
+                        Stats.BytesSent += (ulong)fullReponse.Length;
                         connection.Peer.Socket.Send(fullReponse, fullReponse.Length, SocketFlags.None);
                     }
 
@@ -755,14 +755,14 @@ namespace NetProxy.Service.Routing
                 //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
                 byte[] sendBuffer = Packetizer.AssembleMessagePacket(buffer, bufferSize, connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
-                Stats.BytesSent += (UInt64)sendBuffer.Length;
+                Stats.BytesSent += (ulong)sendBuffer.Length;
                 connection.Peer.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
             }
             else
             {
                 //Console.WriteLine("--Send:{0}, Raw: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
-                Stats.BytesSent += (UInt64)bufferSize;
+                Stats.BytesSent += (ulong)bufferSize;
                 connection.Peer.Socket.Send(buffer, bufferSize, SocketFlags.None);
             }
         }
@@ -770,13 +770,13 @@ namespace NetProxy.Service.Routing
         private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, string encryptionKey, string salt)
         {
             byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, true, encryptionKey, salt);
-            Stats.BytesSent += (UInt64)sendBuffer.Length;
+            Stats.BytesSent += (ulong)sendBuffer.Length;
             connection.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
         }
         private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope)
         {
             byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, false, null, null);
-            Stats.BytesSent += (UInt64)sendBuffer.Length;
+            Stats.BytesSent += (ulong)sendBuffer.Length;
             connection.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
         }
 
@@ -843,7 +843,7 @@ namespace NetProxy.Service.Routing
         {
             try
             {
-                string ip4Address = String.Empty;
+                string ip4Address = string.Empty;
 
                 foreach (IPAddress ipAddress in Dns.GetHostAddresses(hostName))
                 {

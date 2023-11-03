@@ -14,7 +14,7 @@ namespace NetProxy.Client.Controls
         private bool _mAutoIncrement = true;
         private double _mIncrementFrequency = 100;
         private bool _mBehindIsActive = true;
-        private Int32 _mTransitionSegment = 0;
+        private int _mTransitionSegment = 0;
 
         private System.Timers.Timer _mAutoRotateTimer = null;
 
@@ -81,7 +81,7 @@ namespace NetProxy.Client.Controls
             }
         }
 
-        Int32 TransistionSegment
+        int TransistionSegment
         {
             get
             {
@@ -166,7 +166,7 @@ namespace NetProxy.Client.Controls
             _innerBackgroundRegion = new Region(pthInnerBackground);
         }
 
-        private void SpinningProgress_EnabledChanged(object sender, System.EventArgs e)
+        private void SpinningProgress_EnabledChanged(object? sender, System.EventArgs e)
         {
             if (this.Enabled)
             {
@@ -184,7 +184,7 @@ namespace NetProxy.Client.Controls
             }
         }
 
-        private void IncrementTransisionSegment(object sender, System.Timers.ElapsedEventArgs e)
+        private void IncrementTransisionSegment(object? sender, System.Timers.ElapsedEventArgs e)
         {
             if (_mTransitionSegment == 12)
             {
@@ -202,7 +202,7 @@ namespace NetProxy.Client.Controls
             Invalidate();
         }
 
-        private void ProgressDisk_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        private void ProgressDisk_Paint(object? sender, System.Windows.Forms.PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.ExcludeClip(_innerBackgroundRegion);
@@ -257,12 +257,12 @@ namespace NetProxy.Client.Controls
             }
         }
 
-        private void ProgressDisk_Resize(object sender, System.EventArgs e)
+        private void ProgressDisk_Resize(object? sender, System.EventArgs e)
         {
             CalculateSegments();
         }
 
-        private void ProgressDisk_SizeChanged(object sender, System.EventArgs e)
+        private void ProgressDisk_SizeChanged(object? sender, System.EventArgs e)
         {
             CalculateSegments();
         }

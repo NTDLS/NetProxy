@@ -29,7 +29,7 @@ namespace NetProxy.Client.Forms
             _statsTimer.Tick += StatsTimer_Tick;
         }
 
-        private void FormMain_Shown(object sender, EventArgs e)
+        private void FormMain_Shown(object? sender, EventArgs e)
         {
             if (ChangeConnection() == false)
             {
@@ -37,7 +37,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void StatsTimer_Tick(object sender, EventArgs e)
+        private void StatsTimer_Tick(object? sender, EventArgs e)
         {
             _packeteer.SendAll(Constants.CommandLables.GuiRequestRouteStatsList);
         }
@@ -235,7 +235,7 @@ namespace NetProxy.Client.Forms
 
         #region Events. 
 
-        private void dataGridViewRoutes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void dataGridViewRoutes_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
             {
@@ -253,7 +253,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void configurationToolStripMenuItem_Click(object sender, EventArgs e)
+        private void configurationToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             using (var formServerSettings = new FormServerSettings(_connectionInfo))
             {
@@ -261,7 +261,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void dataGridViewRoutes_MouseDown(object sender, MouseEventArgs e)
+        private void dataGridViewRoutes_MouseDown(object? sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
@@ -303,10 +303,10 @@ namespace NetProxy.Client.Forms
                                 }
                                 else
                                 {
-                                    address = String.Format("[{0}]", ipaddress.ToString());
+                                    address = string.Format("[{0}]", ipaddress.ToString());
                                 }
 
-                                string url = String.Format("{0}://{1}:{2}/", (route.TrafficType == TrafficType.Http ? "HTTP" : "HTTPS"), address, route.ListenPort);
+                                string url = string.Format("{0}://{1}:{2}/", (route.TrafficType == TrafficType.Http ? "HTTP" : "HTTPS"), address, route.ListenPort);
                                 var menuItem = bindingMenu.DropDownItems.Add(url);
                                 menuItem.Click += Browse_MenuItem_Click;
                                 menuItem.Tag = url;
@@ -326,10 +326,10 @@ namespace NetProxy.Client.Forms
                                 }
                                 else
                                 {
-                                    address = String.Format("[{0}]", binding.Address);
+                                    address = string.Format("[{0}]", binding.Address);
                                 }
 
-                                string url = String.Format("{0}://{1}:{2}/", (route.TrafficType == TrafficType.Http ? "HTTP" : "HTTPS"), address, route.ListenPort);
+                                string url = string.Format("{0}://{1}:{2}/", (route.TrafficType == TrafficType.Http ? "HTTP" : "HTTPS"), address, route.ListenPort);
                                 var menuItem = bindingMenu.DropDownItems.Add(url);
                                 menuItem.Click += Browse_MenuItem_Click;
                                 menuItem.Tag = url;
@@ -350,7 +350,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Browse_MenuItem_Click(object sender, EventArgs e)
+        private void Browse_MenuItem_Click(object? sender, EventArgs e)
         {
             var senderObject = (sender as ToolStripMenuItem);
             if (senderObject != null && senderObject.Tag != null)
@@ -359,7 +359,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Menu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void Menu_ItemClicked(object? sender, ToolStripItemClickedEventArgs e)
         {
             string routeId = string.Empty;
 
@@ -422,12 +422,12 @@ namespace NetProxy.Client.Forms
         #endregion
 
         #region Menu.
-        private void changeConnectionToolStripMenuItem_Click(object sender, EventArgs e)
+        private void changeConnectionToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             ChangeConnection();
         }
 
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void aboutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             using (var formAbout = new FormAbout())
             {
@@ -435,7 +435,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        private void exitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             this.Close();
         }

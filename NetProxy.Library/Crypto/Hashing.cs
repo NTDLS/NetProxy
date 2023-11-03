@@ -5,62 +5,19 @@ namespace NetProxy.Library.Crypto
 {
     public static class Hashing
     {
-        public static string Sha256(string value)
+        public static string Sha256(string input)
         {
-            if (value == null)
+            using SHA256 sha256 = SHA256.Create();
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            byte[] hashBytes = sha256.ComputeHash(inputBytes);
+
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
             {
-                value = string.Empty;
+                stringBuilder.Append(hashBytes[i].ToString("x2"));
             }
 
-            var crypt = new SHA256Managed();
-            StringBuilder hash = new StringBuilder();
-            byte[] crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(value), 0, Encoding.UTF8.GetByteCount(value));
-            foreach (byte theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-            return hash.ToString();
-        }
-
-        public static byte[] Sha256Bytes(string value)
-        {
-            if (value == null)
-            {
-                value = string.Empty;
-            }
-
-            var crypt = new SHA256Managed();
-            StringBuilder hash = new StringBuilder();
-            return crypt.ComputeHash(Encoding.UTF8.GetBytes(value), 0, Encoding.UTF8.GetByteCount(value));
-        }
-
-        public static string Sha1(string value)
-        {
-            if (value == null)
-            {
-                value = string.Empty;
-            }
-
-            var crypt = new SHA1Managed();
-            StringBuilder hash = new StringBuilder();
-            byte[] crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(value), 0, Encoding.UTF8.GetByteCount(value));
-            foreach (byte theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-            return hash.ToString();
-        }
-
-        public static byte[] Sha1Bytes(string value)
-        {
-            if (value == null)
-            {
-                value = string.Empty;
-            }
-
-            var crypt = new SHA1Managed();
-            StringBuilder hash = new StringBuilder();
-            return crypt.ComputeHash(Encoding.UTF8.GetBytes(value), 0, Encoding.UTF8.GetByteCount(value));
+            return stringBuilder.ToString();
         }
     }
 }

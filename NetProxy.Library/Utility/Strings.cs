@@ -20,8 +20,8 @@ namespace NetProxy.Library.Utility
                 return false;
             }
 
-            Int32 numeric;
-            if (Int32.TryParse(value, out numeric))
+            int numeric;
+            if (int.TryParse(value, out numeric))
             {
                 return (numeric >= min) && (numeric <= max);
             }

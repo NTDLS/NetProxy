@@ -74,7 +74,7 @@ namespace NetProxy.Client.Forms
             //----------------------------------------------------------------------------
         }
 
-        private void FormRoute_Shown(object sender, EventArgs e)
+        private void FormRoute_Shown(object? sender, EventArgs e)
         {
             if (_routeId != null)
             {
@@ -142,7 +142,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void buttonSave_Click(object sender, EventArgs e)
+        private void buttonSave_Click(object? sender, EventArgs e)
         {
             Route route = new Route();
 
@@ -195,18 +195,18 @@ namespace NetProxy.Client.Forms
             route.Description = textBoxDescription.Text;
             route.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue.ToString());
             route.BindingProtocal = (BindingProtocal)Enum.Parse(typeof(BindingProtocal), comboBoxBindingProtocol.SelectedValue.ToString());
-            route.ListenPort = Int32.Parse(textBoxListenPort.Text);
+            route.ListenPort = int.Parse(textBoxListenPort.Text);
             route.ListenOnAllAddresses = checkBoxListenOnAllAddresses.Checked;
-            route.InitialBufferSize = Int32.Parse(textBoxInitialBufferSize.Text);
-            route.MaxBufferSize = Int32.Parse(textBoxMaxBufferSize.Text);
-            route.AcceptBacklogSize = Int32.Parse(textBoxAcceptBacklogSize.Text);
+            route.InitialBufferSize = int.Parse(textBoxInitialBufferSize.Text);
+            route.MaxBufferSize = int.Parse(textBoxMaxBufferSize.Text);
+            route.AcceptBacklogSize = int.Parse(textBoxAcceptBacklogSize.Text);
             route.Endpoints.ConnectionPattern = (ConnectionPattern)Enum.Parse(typeof(ConnectionPattern), comboBoxConnectionPattern.SelectedValue.ToString());
             route.AutoStart = checkBoxListenAutoStart.Checked;
             route.UseStickySessions = checkBoxUseStickySessions.Checked;
 
-            route.EncryptionInitilizationTimeoutMs = Int32.Parse(textBoxEncryptionInitTimeout.Text);
-            route.StickySessionCacheExpiration = Int32.Parse(textBoxStickySessionCacheExpiration.Text);
-            route.SpinLockCount = Int32.Parse(textBoxSpinLockCount.Text);
+            route.EncryptionInitilizationTimeoutMs = int.Parse(textBoxEncryptionInitTimeout.Text);
+            route.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
+            route.SpinLockCount = int.Parse(textBoxSpinLockCount.Text);
 
             route.BindingIsTunnel = checkBoxBindingIsTunnel.Checked;
             route.CompressBindingTunnel = checkBoxTunnelBindingUseCompression.Checked;
@@ -242,9 +242,9 @@ namespace NetProxy.Client.Forms
                 {
                     route.Endpoints.Add(new Endpoint()
                     {
-                        Enabled = Boolean.Parse((row.Cells[ColumnEndpointsEnabled.Index].Value ?? "True").ToString()),
+                        Enabled = bool.Parse((row.Cells[ColumnEndpointsEnabled.Index].Value ?? "True").ToString()),
                         Address = (row.Cells[ColumnEndpointsAddress.Index].Value ?? "").ToString(),
-                        Port = Int32.Parse((row.Cells[ColumnEndpointsPort.Index].Value ?? "0").ToString()),
+                        Port = int.Parse((row.Cells[ColumnEndpointsPort.Index].Value ?? "0").ToString()),
                         Description = (row.Cells[ColumnEndpointsDescription.Index].Value ?? "").ToString()
                     });
                 }
@@ -256,7 +256,7 @@ namespace NetProxy.Client.Forms
                 {
                     route.Bindings.Add(new Library.Routing.Binding()
                     {
-                        Enabled = Boolean.Parse((row.Cells[ColumnBindingsEnabled.Index].Value ?? "True").ToString()),
+                        Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value ?? "True").ToString()),
                         Address = (row.Cells[ColumnBindingsIPAddress.Index].Value ?? "").ToString(),
                         Description = (row.Cells[ColumnBindingsDescription.Index].Value ?? "").ToString()
                     });
@@ -269,7 +269,7 @@ namespace NetProxy.Client.Forms
                 {
                     route.HttpHeaderRules.Add(new HttpHeaderRule
                     {
-                        Enabled = Boolean.Parse((row.Cells[ColumnHTTPHeadersEnabled.Index].Value ?? "True").ToString()),
+                        Enabled = bool.Parse((row.Cells[ColumnHTTPHeadersEnabled.Index].Value ?? "True").ToString()),
                         Action = (HttpHeaderAction)Enum.Parse(typeof(HttpHeaderAction), (row.Cells[ColumnHTTPHeadersAction.Index].Value ?? "").ToString()),
                         Description = (row.Cells[ColumnHTTPHeadersDescription.Index].Value ?? "").ToString(),
                         HeaderType = (HttpHeaderType)Enum.Parse(typeof(HttpHeaderType), (row.Cells[ColumnHTTPHeadersType.Index].Value ?? "").ToString()),
@@ -306,18 +306,18 @@ namespace NetProxy.Client.Forms
             this.Close();
         }
 
-        private void buttonCancel_Click(object sender, EventArgs e)
+        private void buttonCancel_Click(object? sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
-        private void FormRoute_FormClosed(object sender, FormClosedEventArgs e)
+        private void FormRoute_FormClosed(object? sender, FormClosedEventArgs e)
         {
             _packeteer.Disconnect();
         }
 
-        private void comboBoxTrafficType_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBoxTrafficType_SelectedIndexChanged(object? sender, EventArgs e)
         {
             TrafficType trafficType;
 
@@ -331,12 +331,12 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void checkBoxListenOnAllAddresses_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxListenOnAllAddresses_CheckedChanged(object? sender, EventArgs e)
         {
             dataGridViewBindings.ReadOnly = checkBoxListenOnAllAddresses.Checked;
         }
 
-        private void dataGridViewHTTPHeaders_Click(object sender, EventArgs e)
+        private void dataGridViewHTTPHeaders_Click(object? sender, EventArgs e)
         {
             if (dataGridViewHTTPHeaders.ReadOnly)
             {
@@ -344,7 +344,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void dataGridViewBindings_Click(object sender, EventArgs e)
+        private void dataGridViewBindings_Click(object? sender, EventArgs e)
         {
             if (dataGridViewBindings.ReadOnly)
             {
@@ -352,14 +352,14 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void checkBoxBindingIsTunnel_CheckStateChanged(object sender, EventArgs e)
+        private void checkBoxBindingIsTunnel_CheckStateChanged(object? sender, EventArgs e)
         {
             checkBoxTunnelBindingUseCompression.Enabled = checkBoxBindingIsTunnel.Checked;
             checkBoxTunnelBindingUseEncryption.Enabled = checkBoxBindingIsTunnel.Checked;
             textBoxTunnelBindingPreSharedKey.Enabled = checkBoxBindingIsTunnel.Checked;
         }
 
-        private void checkBoxEndpointIsTunnel_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxEndpointIsTunnel_CheckedChanged(object? sender, EventArgs e)
         {
             checkBoxTunnelEndpointUseCompression.Enabled = checkBoxEndpointIsTunnel.Checked;
             checkBoxTunnelEndpointUseEncryption.Enabled = checkBoxEndpointIsTunnel.Checked;

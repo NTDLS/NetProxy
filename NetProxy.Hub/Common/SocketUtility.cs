@@ -7,7 +7,7 @@ namespace NetProxy.Hub.Common
     {
         public static IPAddress GetIPv4Address(string hostName)
         {
-            string ip4Address = String.Empty;
+            string ip4Address = string.Empty;
 
             foreach (IPAddress ipAddress in Dns.GetHostAddresses(hostName))
             {

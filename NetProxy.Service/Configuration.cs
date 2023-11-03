@@ -5,6 +5,6 @@ namespace NetProxy.Service
     public class Configuration
     {
         public int ManagementPort { get; set; }
-        public Users Users = new Users();
+        public Users Users = new();
     }
 }

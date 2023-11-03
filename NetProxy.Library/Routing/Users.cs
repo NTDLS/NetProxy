@@ -1,19 +1,9 @@
-﻿using System.Collections.Generic;
-
-namespace NetProxy.Library.Routing
+﻿namespace NetProxy.Library.Routing
 {
     public class Users
     {
-        public List<User> List { get; set; }
+        public List<User> Collection { get; set; } = new();
 
-        public Users()
-        {
-            List = new List<User>();
-        }
-
-        public void Add(User user)
-        {
-            List.Add(user);
-        }
+        public void Add(User user) => Collection.Add(user);
     }
 }

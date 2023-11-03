@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace NetProxy.Library.Routing
@@ -9,7 +8,7 @@ namespace NetProxy.Library.Routing
         [JsonConverter(typeof(StringEnumConverter))]
         public ConnectionPattern ConnectionPattern { get; set; }
 
-        public List<Endpoint> List = new List<Endpoint>();
+        public List<Endpoint> List = new();
 
         public void Add(Endpoint peer)
         {

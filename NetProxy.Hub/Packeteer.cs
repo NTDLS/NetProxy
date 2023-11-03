@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using NetProxy.Hub.Common;
+using NetProxy.Hub.MessageFraming;
+using NetProxy.Library.Utilities;
 using System.Net;
 using System.Net.Sockets;
-using NetProxy.Hub.Common;
 
 namespace NetProxy.Hub
 {
@@ -11,19 +10,19 @@ namespace NetProxy.Hub
     {
         #region Events.
 
-        public event PacketReceivedEvent OnMessageReceived;
-        public event PeerDisconnectedEvent OnPeerDisconnected;
-        public delegate void PacketReceivedEvent(Packeteer sender, Peer peer, Packet packet);
+        public event PacketReceivedEvent? OnMessageReceived;
+        public event PeerDisconnectedEvent? OnPeerDisconnected;
+        public delegate void PacketReceivedEvent(Packeteer sender, Peer peer, Frame packet);
         public delegate void PeerDisconnectedEvent(Packeteer sender, Peer peer);
 
         #endregion
 
         #region Backend Variables.
 
-        private int _listenBacklog = 4;
-        private Socket _listenSocket;
-        private List<Peer> _peers = new List<Peer>();
-        private AsyncCallback _onDataReceivedCallback;
+        private readonly int _listenBacklog = 4;
+        private Socket? _listenSocket;
+        private readonly List<Peer> _peers = new();
+        private AsyncCallback? _onDataReceivedCallback;
 
         #endregion
 
@@ -105,7 +104,11 @@ namespace NetProxy.Hub
         /// <returns></returns>
         public bool Connect(string hostName, int port, bool retryInBackground)
         {
-            IPAddress ipAddress = SocketUtility.GetIPv4Address(hostName);
+            IPAddress? ipAddress = SocketUtility.GetIPv4Address(hostName);
+            if (ipAddress == null)
+            {
+                return false;
+            }
             return Connect(ipAddress, port, retryInBackground);
         }
 
@@ -149,7 +152,7 @@ namespace NetProxy.Hub
             catch
             {
             }
-            
+
             return false;
         }
 
@@ -163,9 +166,11 @@ namespace NetProxy.Hub
             {
                 try
                 {
-                    Socket socket = _listenSocket.EndAccept(asyn);
+                    Utility.EnsureNotNull(_listenSocket);
 
-                    Peer peer = new Peer(socket);
+                    var socket = _listenSocket.EndAccept(asyn);
+
+                    var peer = new Peer(socket);
 
                     _peers.Add(peer);
 
@@ -192,11 +197,12 @@ namespace NetProxy.Hub
 
         private void OnDataReceived(IAsyncResult asyn)
         {
-            Socket socket = null;
+            Socket? socket = null;
 
             try
             {
-                SocketState socketState = (SocketState)asyn.AsyncState;
+                var socketState = asyn.AsyncState as SocketState;
+                Utility.EnsureNotNull(socketState);
 
                 socket = socketState.Peer.Socket;
 
@@ -208,7 +214,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                Packetizer.DissasemblePacketData(socketState, ProcessPayloadHandler);
+                Framing.ProcessFrameBuffer(socketState, ProcessPayloadHandler);
 
                 WaitForData(socketState);
             }
@@ -227,7 +233,7 @@ namespace NetProxy.Hub
             }
         }
 
-        private void ProcessPayloadHandler(SocketState state, Packet packet)
+        private void ProcessPayloadHandler(SocketState state, Frame packet)
         {
             OnMessageReceived?.Invoke(this, state.Peer, packet);
         }
@@ -238,7 +244,6 @@ namespace NetProxy.Hub
             {
                 try
                 {
-
                     try
                     {
                         OnPeerDisconnected?.Invoke(this, peer);
@@ -258,7 +263,7 @@ namespace NetProxy.Hub
             }
         }
 
-        private void CleanupConnection(Socket socket)
+        private void CleanupConnection(Socket? socket)
         {
             lock (this)
             {
@@ -295,7 +300,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                byte[] packet = Packetizer.AssembleMessagePacket(new Packet()
+                byte[] packet = Framing.AssembleFrame(new Frame()
                 {
                     Label = label,
                     Payload = payload
@@ -329,7 +334,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                byte[] packet = Packetizer.AssembleMessagePacket(new Packet()
+                byte[] packet = Framing.AssembleFrame(new Frame()
                 {
                     Label = label,
                     Payload = payload

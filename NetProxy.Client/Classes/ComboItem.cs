@@ -1,4 +1,4 @@
-﻿namespace NetProxy.Library.General
+﻿namespace NetProxy.Client.Classes
 {
     public class ComboItem
     {
@@ -6,8 +6,8 @@
         public object Value { get; set; }
         public ComboItem(string display, object value)
         {
-            this.Display = display;
-            this.Value = value;
+            Display = display;
+            Value = value;
         }
     }
 }

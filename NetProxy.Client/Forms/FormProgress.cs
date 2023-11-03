@@ -1,12 +1,9 @@
-﻿using System;
-using System.Windows.Forms;
-
-namespace NetProxy.Client.Forms
+﻿namespace NetProxy.Client.Forms
 {
     public partial class FormProgress : Form
     {
         public volatile bool IsLoaded = false;
-        private Timer _timer = new Timer();
+        private System.Windows.Forms.Timer _timer = new();
 
         public void WaitForLoaded()
         {
@@ -23,8 +20,8 @@ namespace NetProxy.Client.Forms
             public bool Cancel = false;
         }
 
-        public delegate void EventOnCancel(Object sender, OnCancelInfo e);
-        public event EventOnCancel OnCancel;
+        public delegate void EventOnCancel(object? sender, OnCancelInfo e);
+        public event EventOnCancel? OnCancel;
 
         #endregion
 
@@ -38,24 +35,24 @@ namespace NetProxy.Client.Forms
             pbProgress.Minimum = 0;
             pbProgress.Maximum = 100;
 
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void cmdCancel_Click(object? sender, EventArgs e)
         {
             if (OnCancel != null)
             {
-                OnCancelInfo onCancelInfo = new OnCancelInfo();
+                OnCancelInfo onCancelInfo = new();
                 OnCancel(this, onCancelInfo);
-                if(onCancelInfo.Cancel)
+                if (onCancelInfo.Cancel)
                 {
                     return;
                 }
             }
 
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
-        
+            DialogResult = DialogResult.Cancel;
+            Close();
+
         }
 
         #region Properties.
@@ -66,18 +63,18 @@ namespace NetProxy.Client.Forms
         }
         public string CaptionText
         {
-            get { return this.Text; }
-            set { this.Text = value; }
+            get { return Text; }
+            set { Text = value; }
         }
         public string HeaderText
         {
-            get { return this.lblHeader.Text; }
-            set { this.lblHeader.Text = value; }
+            get { return lblHeader.Text; }
+            set { lblHeader.Text = value; }
         }
         public string BodyText
         {
-            get { return this.lblBody.Text; }
-            set { this.lblBody.Text = value; }
+            get { return lblBody.Text; }
+            set { lblBody.Text = value; }
         }
         public int ProgressMinimum
         {
@@ -110,12 +107,12 @@ namespace NetProxy.Client.Forms
 
         public DialogResult ShowDialog(int timeoutMs)
         {
-            _timer = new Timer();
+            _timer = new();
             _timer.Tick += Timer_Tick;
             _timer.Interval = timeoutMs;
             _timer.Start();
 
-            DialogResult result = this.ShowDialog();
+            DialogResult result = ShowDialog();
 
             _timer.Stop();
 
@@ -124,53 +121,53 @@ namespace NetProxy.Client.Forms
 
         public void Close(DialogResult result)
         {
-            this.DialogResult = result;
-            this.Close();
+            DialogResult = result;
+            Close();
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
 
-        public void UpdateStatus(ProgressFormStatus status)
+        public void UpdateStatus(ProgressFormStatus? status)
         {
             if (status != null)
             {
                 if (status.Caption != null)
                 {
-                    this.CaptionText = status.Caption;
+                    CaptionText = status.Caption;
                 }
 
                 if (status.Header != null)
                 {
-                    this.HeaderText = status.Header;
+                    HeaderText = status.Header;
                 }
 
                 if (status.Body != null)
                 {
-                    this.BodyText = status.Body;
+                    BodyText = status.Body;
                 }
 
                 if (status.ProgressValue != null)
                 {
-                    this.ProgressPosition = (int)status.ProgressValue;
+                    ProgressPosition = (int)status.ProgressValue;
                 }
 
                 if (status.ProgressMinimum != null)
                 {
-                    this.ProgressMinimum = (int)status.ProgressMinimum;
+                    ProgressMinimum = (int)status.ProgressMinimum;
                 }
 
                 if (status.ProgressMaximum != null)
                 {
-                    this.ProgressMaximum = (int)status.ProgressMaximum;
+                    ProgressMaximum = (int)status.ProgressMaximum;
                 }
             }
         }
 
-        private void FormProgress_Shown(object sender, EventArgs e)
+        private void FormProgress_Shown(object? sender, EventArgs e)
         {
             IsLoaded = true;
         }

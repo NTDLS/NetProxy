@@ -1,6 +1,5 @@
-﻿using System;
-using System.Windows.Forms;
-using NetProxy.Library;
+﻿using NetProxy.Library;
+using NetProxy.Library.Utilities;
 
 namespace NetProxy.Client.Forms
 {
@@ -8,10 +7,7 @@ namespace NetProxy.Client.Forms
     {
         public string PasswordHash
         {
-            get
-            {
-                return Library.Crypto.Hashing.Sha256(textBoxPassword1.Text);
-            }
+            get => Utility.Sha256(textBoxPassword1.Text);
         }
 
         public FormSetPassword()
@@ -19,13 +15,13 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
         }
 
-        private void buttonCancel_Click(object sender, EventArgs e)
+        private void buttonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
-            this.Close();
+            Close();
         }
 
-        private void buttonSave_Click(object sender, EventArgs e)
+        private void buttonSave_Click(object? sender, EventArgs e)
         {
             if (textBoxPassword1.Text != textBoxPassword2.Text)
             {
@@ -34,10 +30,10 @@ namespace NetProxy.Client.Forms
             }
 
             DialogResult = DialogResult.OK;
-            this.Close();
+            Close();
         }
 
-        private void FormSetPassword_Load(object sender, EventArgs e)
+        private void FormSetPassword_Load(object? sender, EventArgs e)
         {
             AcceptButton = buttonSave;
             CancelButton = buttonCancel;

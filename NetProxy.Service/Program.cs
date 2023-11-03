@@ -1,10 +1,5 @@
-﻿using System;
-using System.Configuration.Install;
-using System.Diagnostics;
-using System.Reflection;
-using System.ServiceProcess;
-using NetProxy.Library;
-using NetProxy.Library.Win32;
+﻿using NetProxy.Library;
+using Topshelf;
 
 namespace NetProxy.Service
 {
@@ -12,123 +7,27 @@ namespace NetProxy.Service
     {
         static void Main(string[] args)
         {
-            try
+            HostFactory.Run(x =>
             {
-                bool runInConsole = Debugger.IsAttached;
+                x.StartAutomatically();
 
-                if (System.Environment.UserInteractive && args.Length > 0 || runInConsole)
+                x.EnableServiceRecovery(rc =>
                 {
-                    foreach (string sensitiveArg in args)
-                    {
-                        string arg = sensitiveArg.ToLower();
-
-                        switch (arg)
-                        {
-                            case "/console":
-                                {
-                                    runInConsole = true;
-                                    break;
-                                }
-
-                            case "/debug":
-                                {
-                                    while (Debugger.IsAttached == false)
-                                    {
-                                        System.Threading.Thread.Sleep(500);
-                                    }
-                                    break;
-                                }
-
-                            case "/install":
-                                {
-                                    try
-                                    {
-                                        ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                    break;
-
-                                }
-
-                            case "/uninstall":
-                                {
-                                    try
-                                    {
-                                        ManagedInstallerClass.InstallHelper(new string[] { "/u", Assembly.GetExecutingAssembly().Location });
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                    break;
-                                }
-
-                            case "/start":
-                                {
-                                    try
-                                    {
-                                        ServiceController serviceController = new System.ServiceProcess.ServiceController(Constants.ServiceName);
-                                        serviceController.Start();
-                                        serviceController.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, new System.TimeSpan(0, 0, 0, 10)); //10 seconds.
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                    break;
-                                }
-
-                            case "/stop":
-                                {
-                                    try
-                                    {
-                                        ServiceController serviceController = new System.ServiceProcess.ServiceController(Constants.ServiceName);
-                                        serviceController.Stop();
-                                        serviceController.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Stopped, new System.TimeSpan(0, 0, 10, 0)); //10 minutes - because this could take some time.
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                    break;
-                                }
-                        }
-                    }
-                }
-                else
-                {
-                    ServiceBase[] servicesToRun;
-                    servicesToRun = new ServiceBase[]
-                        {
-                           new NetworkDlsNetProxyService()
-                        };
-                    ServiceBase.Run(servicesToRun);
-                }
-
-                if (runInConsole)
-                {
-                    RoutingServices routingServices = new RoutingServices();
-
-                    routingServices.Start();
-
-                    Console.WriteLine("Server running... press enter to close.");
-                    Console.ReadLine();
-
-                    routingServices.Stop();
-                }
-            }
-            catch(Exception ex)
-            {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
-                {
-                    Severity = EventLogging.Severity.Error,
-                    CustomText = "Generic failure.",
-                    Exception = ex
+                    rc.RestartService(1);
                 });
-            }
+
+                x.Service<NetProxyService>(s =>
+                {
+                    s.ConstructUsing(hostSettings => new NetProxyService());
+                    s.WhenStarted(tc => tc.Start());
+                    s.WhenStopped(tc => tc.Stop());
+                });
+                x.RunAsLocalSystem();
+
+                x.SetDescription("Provides TCP/IP v4/v6 routing, proxing, load-balancing, fail-over and shaping services.");
+                x.SetDisplayName(Constants.TitleCaption);
+                x.SetServiceName("NtNetProxy");
+            });
         }
     }
 }

@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace NetProxy.Library.Routing
+﻿namespace NetProxy.Library.Routing
 {
     public class HttpHeaderRules
     {
-        public List<HttpHeaderRule> List = new List<HttpHeaderRule>();
+        public List<HttpHeaderRule> List = new();
 
         public void Add(HttpHeaderRule rule)
         {

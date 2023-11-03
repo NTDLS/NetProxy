@@ -2,9 +2,9 @@
 {
     public class User
     {
-        public string Id { get; set; }
-        public string UserName { get; set; }
-        public string PasswordHash { get; set; }
-        public string Description { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
     }
 }

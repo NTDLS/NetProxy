@@ -1,32 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Linq;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NetProxy.Service
+﻿namespace NetProxy.Service
 {
-    partial class NetworkDlsNetProxyService : ServiceBase
+    internal class NetProxyService
     {
-        RoutingServices _routingServices = new RoutingServices();
+        private readonly SemaphoreSlim _semaphoreToRequestStop;
+        private readonly Thread _thread;
 
-        public NetworkDlsNetProxyService()
+        private readonly Management _management;
+
+        public NetProxyService()
         {
-            InitializeComponent();
+            _management = new Management();
+            _semaphoreToRequestStop = new SemaphoreSlim(0);
+            _thread = new Thread(DoWork);
         }
 
-        protected override void OnStart(string[] args)
+        public void Start()
         {
-            _routingServices.Start();
+            _thread.Start();
         }
 
-        protected override void OnStop()
+        public void Stop()
         {
-            _routingServices.Stop();
+            _management.Stop();
+            _semaphoreToRequestStop.Release();
+            _thread.Join();
+        }
+
+        private void DoWork()
+        {
+            _management.Start();
+
+            while (true)
+            {
+                if (_semaphoreToRequestStop.Wait(500))
+                {
+                    break;
+                }
+            }
         }
     }
 }

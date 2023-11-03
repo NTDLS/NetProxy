@@ -1,13 +1,12 @@
-﻿using System;
+﻿using NetProxy.Library;
 using System.Text;
 using System.Text.RegularExpressions;
-using NetProxy.Library;
 
 namespace NetProxy.Service
 {
     public static class HttpUtility
     {
-        public static string GetNextHeaderToken(string str, ref int position)
+        public static string? GetNextHeaderToken(string str, ref int position)
         {
             int spacePos = str.IndexOfAny(new char[] { ' ', '\n' }, position);
             if (spacePos >= position)
@@ -20,15 +19,15 @@ namespace NetProxy.Service
             return null;
         }
 
-        public static bool IsHttpVerb(string str)
+        public static bool IsHttpVerb(string? str)
         {
-            str = str.ToUpper();
+            str = str?.ToUpper();
 
             var verbs = Enum.GetValues(typeof(HttpVerb));
 
             foreach (var verb in verbs)
             {
-                if (str == verb.ToString().ToUpper())
+                if (str == verb?.ToString()?.ToUpper())
                 {
                     return true;
                 }
@@ -36,16 +35,19 @@ namespace NetProxy.Service
             return false;
         }
 
-        public static HttpHeaderType IsHttpHeader(byte[] data, int length, out string verb)
+        public static HttpHeaderType IsHttpHeader(byte[]? data, int length, out string? verb)
         {
+            if (data == null)
+            {
+                return IsHttpHeader(string.Empty, out verb);
+            }
+
             int maxScanLength = length > 2048 ? 2048 : length;
-
             string httpHeader = Encoding.UTF8.GetString(data, 0, maxScanLength);
-
             return IsHttpHeader(httpHeader, out verb);
         }
 
-        public static HttpHeaderType IsHttpHeader(string httpHeader, out string verb)
+        public static HttpHeaderType IsHttpHeader(string httpHeader, out string? verb)
         {
             int firstLineBreak = httpHeader.IndexOf('\n') + 1;
             if (firstLineBreak > 1)
@@ -53,9 +55,13 @@ namespace NetProxy.Service
                 httpHeader = httpHeader.Substring(0, firstLineBreak).ToUpper();
 
                 int headerTokPos = 0;
-                string token = GetNextHeaderToken(httpHeader, ref headerTokPos);
+                var token = GetNextHeaderToken(httpHeader, ref headerTokPos);
 
-                if (httpHeader.StartsWith("Http/"))
+                if (httpHeader == null)
+                {
+                    //Not much to do...
+                }
+                else if (httpHeader.StartsWith("Http/"))
                 {
                     //Is response header.
                     verb = string.Empty;
@@ -135,7 +141,7 @@ namespace NetProxy.Service
 
             Match existingMatch = fieldFidner.Match(headerText);
 
-            string newFieldValue = String.Format("{0}: {1}", name, value);
+            string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {
@@ -163,7 +169,7 @@ namespace NetProxy.Service
 
             Match existingMatch = fieldFidner.Match(headerText);
 
-            string newFieldValue = String.Format("{0}: {1}", name, value);
+            string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {
@@ -191,7 +197,7 @@ namespace NetProxy.Service
 
             Match existingMatch = fieldFidner.Match(headerText);
 
-            string newFieldValue = String.Format("{0}: {1}", name, value);
+            string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {

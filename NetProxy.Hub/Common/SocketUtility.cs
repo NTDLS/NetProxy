@@ -1,15 +1,12 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 
 namespace NetProxy.Hub.Common
 {
     internal static class SocketUtility
     {
-        public static IPAddress GetIPv4Address(string hostName)
+        public static IPAddress? GetIPv4Address(string hostName)
         {
-            string ip4Address = String.Empty;
-
             foreach (IPAddress ipAddress in Dns.GetHostAddresses(hostName))
             {
                 if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
@@ -20,6 +17,5 @@ namespace NetProxy.Hub.Common
 
             return null;
         }
-
     }
 }

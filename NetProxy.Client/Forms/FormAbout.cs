@@ -1,9 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using NetProxy.Library;
 using System.Reflection;
-using System.Windows.Forms;
-using NetProxy.Library;
 
 namespace NetProxy.Client.Forms
 {
@@ -22,26 +18,26 @@ namespace NetProxy.Client.Forms
 
             if (showInTaskbar)
             {
-                this.ShowInTaskbar = true;
-                this.StartPosition = FormStartPosition.CenterScreen;
-                this.TopMost = true;
+                ShowInTaskbar = true;
+                StartPosition = FormStartPosition.CenterScreen;
+                TopMost = true;
             }
             else
             {
-                this.ShowInTaskbar = false;
-                this.StartPosition = FormStartPosition.CenterParent;
-                this.TopMost = false;
+                ShowInTaskbar = false;
+                StartPosition = FormStartPosition.CenterParent;
+                TopMost = false;
             }
         }
 
-        private void FormAbout_Load(object sender, EventArgs e)
+        private void FormAbout_Load(object? sender, EventArgs e)
         {
-            this.AcceptButton = cmdOk;
-            this.CancelButton = cmdOk;
-            this.Text = "NetworkDLS " + Constants.TitleCaption + " : About";
+            AcceptButton = cmdOk;
+            CancelButton = cmdOk;
+            Text = "NetworkDLS " + Constants.TitleCaption + " : About";
 
-            var files = Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location), "*.dll", SearchOption.AllDirectories).ToList();
-            files.AddRange(Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location), "*.exe", SearchOption.AllDirectories).ToList());
+            var files = Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location) ?? "", "*.dll", SearchOption.AllDirectories).ToList();
+            files.AddRange(Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location) ?? "", "*.exe", SearchOption.AllDirectories).ToList());
 
             foreach (var file in files)
             {
@@ -57,14 +53,22 @@ namespace NetProxy.Client.Forms
             try
             {
                 AssemblyName componentAssembly = AssemblyName.GetAssemblyName(appPath);
-                listViewVersions.Items.Add(new ListViewItem(new string[] { componentAssembly.Name, componentAssembly.Version.ToString() }));
+                var assembly = Assembly.Load(componentAssembly);
+                var companyAttribute = Attribute.GetCustomAttribute(assembly, typeof(AssemblyCompanyAttribute)) as AssemblyCompanyAttribute;
+
+                if (companyAttribute?.Company.ToLower().Contains("networkdls") == false)
+                {
+                    return;
+                }
+
+                listViewVersions.Items.Add(new ListViewItem(new string[] { componentAssembly?.Name ?? "", componentAssembly?.Version?.ToString() ?? "" }));
             }
             catch
             {
             }
         }
 
-        private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void linkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start("http://www.NetworkDLS.com");
         }

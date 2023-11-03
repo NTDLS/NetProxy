@@ -1,26 +1,24 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Windows.Forms;
-using Microsoft.Win32;
-using NetProxy.Client.Classes;
+﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
-using NetProxy.Library.Win32;
+using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
+using NTDLS.Persistence;
+using System.ComponentModel;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormConnect : Form
     {
-        private ConnectionInfo _connectionInfo = new ConnectionInfo();
-        private FormProgress _formProgress = null;
-        private AutoResetEvent _loginConnectionEvent = null;
-        private BackgroundWorker _worker = null;
+        private ConnectionInfo _connectionInfo = new();
+        private FormProgress? _formProgress = null;
+        private AutoResetEvent? _loginConnectionEvent = null;
+        private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
         private bool _loginResult = false;
-        private Packeteer _packeteer = null;
+        private Packeteer? _packeteer = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -32,15 +30,22 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
         }
 
-        private void FormConnect_Load(object sender, EventArgs e)
+        private void FormConnect_Load(object? sender, EventArgs e)
         {
             AcceptButton = buttonConnect;
 
-            textBoxServer.Text = RegistryHelper.GetString(Registry.CurrentUser, Constants.RegsitryKey, "", "ServerName", "localhost");
-            textBoxUsername.Text = RegistryHelper.GetString(Registry.CurrentUser, Constants.RegsitryKey, "", "UserName", "administrator");
+            var prefs = CommonApplicationData.LoadFromDisk<LoginFormPreferences>(Constants.TitleCaption,
+                new LoginFormPreferences
+                {
+                    ServerName = "127.0.0.1",
+                    Username = "administrator"
+                });
+
+            textBoxServer.Text = prefs.ServerName;
+            textBoxUsername.Text = prefs.Username;
         }
 
-        private void buttonConnect_Click(object sender, EventArgs e)
+        private void buttonConnect_Click(object? sender, EventArgs e)
         {
             string verbatiumServername = textBoxServer.Text;
             string verbatiumUsername = textBoxUsername.Text;
@@ -67,10 +72,15 @@ namespace NetProxy.Client.Forms
 
             if (TestConnection())
             {
-                RegistryHelper.SetString(Registry.CurrentUser, Constants.RegsitryKey, "", "ServerName", verbatiumServername);
-                RegistryHelper.SetString(Registry.CurrentUser, Constants.RegsitryKey, "", "UserName", verbatiumUsername);
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                CommonApplicationData.SaveToDisk(Constants.TitleCaption,
+                    new LoginFormPreferences
+                    {
+                        ServerName = verbatiumServername,
+                        Username = verbatiumUsername
+                    });
+
+                DialogResult = DialogResult.OK;
+                Close();
             }
             else
             {
@@ -98,26 +108,24 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-        private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
-            _formProgress.UpdateStatus(e.UserState as ProgressFormStatus);
+            _formProgress?.UpdateStatus(e.UserState as ProgressFormStatus);
         }
 
-        private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void Worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
-            bool result = (bool)e.Result;
-
-            if (result)
+            if ((e.Result as bool?) == true)
             {
-                _formProgress.Close(DialogResult.OK);
+                _formProgress?.Close(DialogResult.OK);
             }
             else
             {
-                _formProgress.Close(DialogResult.Cancel);
+                _formProgress?.Close(DialogResult.Cancel);
             }
         }
 
-        private void Worker_DoWork(object sender, DoWorkEventArgs e)
+        private void Worker_DoWork(object? sender, DoWorkEventArgs e)
         {
             e.Result = false;
             _loginResult = false;
@@ -125,6 +133,8 @@ namespace NetProxy.Client.Forms
 
             _packeteer = new Packeteer();
             _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+
+            Utility.EnsureNotNull(_worker);
 
             try
             {
@@ -138,7 +148,7 @@ namespace NetProxy.Client.Forms
                     UserLogin userLogin = new UserLogin()
                     {
                         UserName = _connectionInfo.UserName,
-                        PasswordHash = Library.Crypto.Hashing.Sha256(_connectionInfo.Password)
+                        PasswordHash = Utility.Sha256(_connectionInfo.Password)
                     };
 
                     _packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
@@ -168,23 +178,27 @@ namespace NetProxy.Client.Forms
             _packeteer.Disconnect();
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Frame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestLogin)
             {
-                GenericBooleanResult result = JsonConvert.DeserializeObject<GenericBooleanResult>(packet.Payload);
+                var result = JsonConvert.DeserializeObject<GenericBooleanResult>(packet.Payload);
+                Utility.EnsureNotNull(result);
+
+                Utility.EnsureNotNull(_loginConnectionEvent);
+
                 _loginResult = result.Value;
                 _loginConnectionEvent.Set();
             }
         }
 
-        private void buttonCancel_Click(object sender, EventArgs e)
+        private void buttonCancel_Click(object? sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
 
-        private void FormConnect_Shown(object sender, EventArgs e)
+        private void FormConnect_Shown(object? sender, EventArgs e)
         {
             if (textBoxServer.Text.Length > 0 && textBoxUsername.Text.Length > 0)
             {

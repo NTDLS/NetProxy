@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace NetProxy.Library.Utility
+namespace NetProxy.Library.Utilities
 {
     public static class Exceptions
     {

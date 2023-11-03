@@ -3,7 +3,7 @@ using NetProxy.Client.Properties;
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
-using NetProxy.Library.Utility;
+using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -11,10 +11,9 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormMain : Form
     {
-        private List<RouteGridItem> _routes = null;
-        private ConnectionInfo _connectionInfo = null;
-        private Packeteer _packeteer = null;
-        private readonly System.Windows.Forms.Timer _statsTimer = null;
+        private ConnectionInfo? _connectionInfo = null;
+        private Packeteer? _packeteer = null;
+        private readonly System.Windows.Forms.Timer? _statsTimer = null;
 
         public FormMain()
         {
@@ -39,12 +38,12 @@ namespace NetProxy.Client.Forms
 
         private void StatsTimer_Tick(object? sender, EventArgs e)
         {
-            _packeteer.SendAll(Constants.CommandLables.GuiRequestRouteStatsList);
+            _packeteer?.SendAll(Constants.CommandLables.GuiRequestRouteStatsList);
         }
 
         private bool ChangeConnection()
         {
-            _statsTimer.Stop();
+            _statsTimer?.Stop();
 
             using (var formConnect = new FormConnect())
             {
@@ -58,17 +57,20 @@ namespace NetProxy.Client.Forms
                     _connectionInfo = formConnect.GetConnectionInfo();
 
                     _packeteer = LoginPacketeerFactory.GetNewPacketeer(_connectionInfo);
-                    _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
-                    _packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
+                    if (_packeteer != null)
+                    {
+                        _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+                        _packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
 
-                    RefreshRouteList();
+                        RefreshRouteList();
 
-                    _statsTimer.Start();
-                    return true;
+                        _statsTimer?.Start();
+                        return true;
+                    }
                 }
             }
 
-            _statsTimer.Start();
+            _statsTimer?.Start();
             return false;
         }
 
@@ -79,8 +81,6 @@ namespace NetProxy.Client.Forms
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
-            Console.WriteLine("{0}{1}", packet.Label, packet.Payload);
-
             if (packet.Label == Constants.CommandLables.GuiRequestRouteList)
             {
                 this.Invoke(_populateRouteList, JsonConvert.DeserializeObject<List<RouteGridItem>>(packet.Payload));
@@ -97,6 +97,7 @@ namespace NetProxy.Client.Forms
 
         private void RefreshRouteList()
         {
+            Utility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiRequestRouteList);
         }
 
@@ -109,14 +110,14 @@ namespace NetProxy.Client.Forms
         {
             try
             {
-                _statsTimer.Stop();
+                _statsTimer?.Stop();
                 dataGridViewRoutes.DataSource = null;
                 if (ChangeConnection() == false)
                 {
-                    this.Close();
+                    Close();
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
@@ -134,22 +135,21 @@ namespace NetProxy.Client.Forms
         readonly PopulateRouteList _populateRouteList;
         public void OnPopulateRouteList(List<RouteGridItem> routes)
         {
-            string selectedRouteId = null;
+            string? selectedRouteId = null;
 
             //Save the current selected row:
             if (dataGridViewRoutes.CurrentRow != null)
             {
-                selectedRouteId = (dataGridViewRoutes.CurrentRow.Cells[ColumnId.Index].Value ?? "").ToString();
+                selectedRouteId = dataGridViewRoutes.CurrentRow.Cells[ColumnId.Index].Value?.ToString() ?? "";
             }
 
-            this._routes = routes;
             dataGridViewRoutes.AutoGenerateColumns = false;
             dataGridViewRoutes.DataSource = routes.OrderBy(o => o.Name).ToList();
 
             //Set the status icons and re-select the previously selected row.
             foreach (DataGridViewRow row in dataGridViewRoutes.Rows)
             {
-                string routeId = (row.Cells[ColumnId.Index].Value ?? "").ToString();
+                string routeId = row.Cells[ColumnId.Index].Value?.ToString() ?? "";
 
                 if (routeId == selectedRouteId)
                 {
@@ -209,7 +209,7 @@ namespace NetProxy.Client.Forms
 
             foreach (DataGridViewRow row in dataGridViewRoutes.Rows)
             {
-                string routeId = (row.Cells[ColumnId.Index].Value ?? "").ToString();
+                string routeId = row.Cells[ColumnId.Index].Value?.ToString() ?? "";
 
                 var stat = (from o in stats where o.Id.ToString() == routeId select o).FirstOrDefault();
                 if (stat != null)
@@ -242,9 +242,10 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            string routeId = dataGridViewRoutes.Rows[e.RowIndex].Cells["ColumnId"].Value.ToString();
+            string routeId = dataGridViewRoutes.Rows[e.RowIndex].Cells["ColumnId"]?.Value?.ToString() ?? "";
 
-            using (FormRoute formRoute = new FormRoute(_connectionInfo, routeId))
+            Utility.EnsureNotNull(_connectionInfo);
+            using (var formRoute = new FormRoute(_connectionInfo, routeId))
             {
                 if (formRoute.ShowDialog() == DialogResult.OK)
                 {
@@ -255,6 +256,7 @@ namespace NetProxy.Client.Forms
 
         private void configurationToolStripMenuItem_Click(object? sender, EventArgs e)
         {
+            Utility.EnsureNotNull(_connectionInfo);
             using (var formServerSettings = new FormServerSettings(_connectionInfo))
             {
                 formServerSettings.ShowDialog();
@@ -265,7 +267,7 @@ namespace NetProxy.Client.Forms
         {
             if (e.Button == MouseButtons.Right)
             {
-                RouteGridItem route = null;
+                RouteGridItem? route = null;
                 var hti = dataGridViewRoutes.HitTest(e.X, e.Y);
                 if (hti.RowIndex >= 0)
                 {
@@ -288,6 +290,7 @@ namespace NetProxy.Client.Forms
                     ToolStripMenuItem bindingMenu = new ToolStripMenuItem("Browse");
                     if (route.ListenOnAllAddresses)
                     {
+                        Utility.EnsureNotNull(_connectionInfo);
                         IPHostEntry iphostentry = Dns.GetHostEntry(_connectionInfo.ServerName);
                         foreach (IPAddress ipaddress in iphostentry.AddressList)
                         {
@@ -296,7 +299,7 @@ namespace NetProxy.Client.Forms
                                 || (route.BindingProtocal == BindingProtocal.Pv6 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                                 )
                             {
-                                string address = null;
+                                string? address = null;
                                 if (route.BindingProtocal == BindingProtocal.Pv4)
                                 {
                                     address = ipaddress.ToString();
@@ -319,7 +322,7 @@ namespace NetProxy.Client.Forms
                         {
                             if (binding.Enabled == true)
                             {
-                                string address = null;
+                                string? address = null;
                                 if (route.BindingProtocal == BindingProtocal.Pv4)
                                 {
                                     address = binding.Address;
@@ -355,7 +358,7 @@ namespace NetProxy.Client.Forms
             var senderObject = (sender as ToolStripMenuItem);
             if (senderObject != null && senderObject.Tag != null)
             {
-                System.Diagnostics.Process.Start(senderObject.Tag.ToString());
+                System.Diagnostics.Process.Start(senderObject.Tag.ToString() ?? "");
             }
         }
 
@@ -365,17 +368,18 @@ namespace NetProxy.Client.Forms
 
             if (dataGridViewRoutes.CurrentRow != null)
             {
-                routeId = (dataGridViewRoutes.CurrentRow.Cells[ColumnId.Index].Value ?? "").ToString();
+                routeId = dataGridViewRoutes.CurrentRow.Cells[ColumnId.Index].Value?.ToString() ?? "";
             }
 
-            if (e.ClickedItem.Text != "Browse")
+            if (e.ClickedItem?.Text != "Browse")
             {
                 (sender as ContextMenuStrip)?.Hide();
             }
 
-            switch (e.ClickedItem.Text)
+            switch (e.ClickedItem?.Text)
             {
                 case "Add":
+                    Utility.EnsureNotNull(_connectionInfo);
                     using (FormRoute formRoute = new FormRoute(_connectionInfo, null))
                     {
                         if (formRoute.ShowDialog() == DialogResult.OK)
@@ -388,10 +392,14 @@ namespace NetProxy.Client.Forms
                     RefreshRouteList();
                     break;
                 case "Start":
+                    Utility.EnsureNotNull(_packeteer);
+                    Utility.EnsureNotNull(routeId);
                     _packeteer.SendAll(Constants.CommandLables.GuiPersistStartRoute, routeId);
                     RefreshRouteList();
                     break;
                 case "Stop":
+                    Utility.EnsureNotNull(_packeteer);
+                    Utility.EnsureNotNull(routeId);
                     if (MessageBox.Show(@"Stop the selected route?", Constants.TitleCaption, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
@@ -401,6 +409,8 @@ namespace NetProxy.Client.Forms
 
                     break;
                 case "Edit":
+                    Utility.EnsureNotNull(_connectionInfo);
+                    Utility.EnsureNotNull(routeId);
                     using (FormRoute formRoute = new FormRoute(_connectionInfo, routeId))
                     {
                         if (formRoute.ShowDialog() == DialogResult.OK)
@@ -410,7 +420,10 @@ namespace NetProxy.Client.Forms
                     }
                     break;
                 case "Delete":
-                    if (MessageBox.Show(@"Delete the selected route?", Constants.TitleCaption, MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                    Utility.EnsureNotNull(routeId);
+                    Utility.EnsureNotNull(_packeteer);
+                    if (MessageBox.Show(@"Delete the selected route?", Constants.TitleCaption,
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         _packeteer.SendAll(Constants.CommandLables.GuiPersistDeleteRoute, routeId);
                         RefreshRouteList();

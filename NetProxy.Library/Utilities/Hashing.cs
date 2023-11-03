@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace NetProxy.Library.Crypto
+namespace NetProxy.Library.Utilities
 {
     public static class Hashing
     {

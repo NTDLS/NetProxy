@@ -1,6 +1,6 @@
 ﻿using NetProxy.Library;
 using NetProxy.Library.Routing;
-using NetProxy.Library.Utility;
+using NetProxy.Library.Utilities;
 using NTDLS.FastMemoryCache;
 using System.Net;
 using System.Net.Sockets;
@@ -209,8 +209,6 @@ namespace NetProxy.Service.Routing
 
                     if (_route.EncryptBindingTunnel)
                     {
-                        connection.KeyNegotiator = new();
-
                         SendPacketEnvelope(connection, new PacketEnvelope
                         {
                             Label = IntraServiceLables.ApplyNegotiationToken,
@@ -236,7 +234,7 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        public SocketState Connect(string hostName, int port)
+        public SocketState? Connect(string hostName, int port)
         {
             IPAddress ipAddress = GetIpAddress(hostName);
             if (ipAddress != null)
@@ -246,7 +244,7 @@ namespace NetProxy.Service.Routing
             return null;
         }
 
-        public SocketState Connect(IPAddress ipAddress, int port)
+        public SocketState? Connect(IPAddress ipAddress, int port)
         {
             try
             {
@@ -284,7 +282,6 @@ namespace NetProxy.Service.Routing
         {
             if (envelope.Label == IntraServiceLables.ApplyNegotiationToken)
             {
-                connection.KeyNegotiator = new();
                 byte[] replyToken = connection.KeyNegotiator.ApplyNegotiationToken(envelope.Payload);
 
                 SendPacketEnvelope(connection, new PacketEnvelope
@@ -312,7 +309,7 @@ namespace NetProxy.Service.Routing
                 connection.IsEncryptionNegotationComplete = true;
                 //Console.WriteLine("--{0} Shared Secret: {1}", connection.Route.Name, connection.KeyNegotiator.SharedSecretString);
 
-                string sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
+                string? sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
 
                 string commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
@@ -341,7 +338,7 @@ namespace NetProxy.Service.Routing
         {
             SocketState accpetedConnection = (SocketState)connectionObject;
 
-            SocketState foreignConnection = null;
+            SocketState? foreignConnection = null;
 
             Endpoint foreignConnectionEndpoint = null;
             string stickeySessionKey = _route.Name + ":" + _route.Endpoints.ConnectionPattern + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address.ToString();
@@ -680,8 +677,8 @@ namespace NetProxy.Service.Routing
             {
                 HttpHeaderType httpHeaderType = HttpHeaderType.None;
 
-                string httpHeader = null;
-                string httpRequestVerb = string.Empty;
+                string? httpHeader = null;
+                string? httpRequestVerb = string.Empty;
 
                 if (connection.HttpHeaderBuilder != string.Empty)
                 {
@@ -699,7 +696,7 @@ namespace NetProxy.Service.Routing
                     }
                 }
 
-                if (httpHeaderType != HttpHeaderType.None)
+                if (httpHeaderType != HttpHeaderType.None && httpHeader != null)
                 {
                     string lineBreak = "";
                     int endOfHeaderPos = HttpUtility.GetHttpHeaderEnd(httpHeader, out lineBreak);
@@ -713,6 +710,10 @@ namespace NetProxy.Service.Routing
                     {
                         throw new InvalidOperationException(); //Not sure what to do yet.
                     }
+
+
+                    Utility.EnsureNotNull(httpRequestVerb);
+                    Utility.EnsureNotNull(connection.HttpHeaderBuilder);
 
                     httpHeader = httpHeader.Substring(0, endOfHeaderPos).Trim(new char[] { '\r', '\n', ' ', '\0' });
                     httpHeader = ApplyHttpHeaderRules(httpHeader, httpHeaderType, httpRequestVerb, lineBreak);
@@ -735,6 +736,7 @@ namespace NetProxy.Service.Routing
 
                         byte[] sendBuffer = Packetizer.AssembleMessagePacket(fullReponse, fullReponse.Length, connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
                         Stats.BytesSent += (ulong)sendBuffer.Length;
+                        Utility.EnsureNotNull(connection?.Peer?.Socket);
                         connection.Peer.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
                         WaitForData(connection);
                     }
@@ -743,6 +745,8 @@ namespace NetProxy.Service.Routing
                         //Console.WriteLine("--Send:{0}, Raw: {1}", route.Name, Encoding.UTF8.GetString(fullReponse.Take(fullReponse.Length).ToArray()));
 
                         Stats.BytesSent += (ulong)fullReponse.Length;
+
+                        Utility.EnsureNotNull(connection?.Peer?.Socket);
                         connection.Peer.Socket.Send(fullReponse, fullReponse.Length, SocketFlags.None);
                     }
 
@@ -754,8 +758,11 @@ namespace NetProxy.Service.Routing
             {
                 //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
-                byte[] sendBuffer = Packetizer.AssembleMessagePacket(buffer, bufferSize, connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
+                byte[] sendBuffer = Packetizer.AssembleMessagePacket(buffer, bufferSize,
+                    connection.Peer.UseCompression, connection.Peer.UseEncryption, sharedSecretString, commonSalt);
                 Stats.BytesSent += (ulong)sendBuffer.Length;
+
+                Utility.EnsureNotNull(connection?.Peer?.Socket);
                 connection.Peer.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
             }
             else
@@ -763,32 +770,42 @@ namespace NetProxy.Service.Routing
                 //Console.WriteLine("--Send:{0}, Raw: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
                 Stats.BytesSent += (ulong)bufferSize;
+
+                Utility.EnsureNotNull(connection?.Peer?.Socket);
                 connection.Peer.Socket.Send(buffer, bufferSize, SocketFlags.None);
             }
         }
 
-        private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, string encryptionKey, string salt)
+        private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope, string? encryptionKey, string? salt)
         {
+            Utility.EnsureNotNull(connection.Socket);
+
             byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, true, encryptionKey, salt);
             Stats.BytesSent += (ulong)sendBuffer.Length;
             connection.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
         }
+
         private void SendPacketEnvelope(SocketState connection, PacketEnvelope envelope)
         {
+            Utility.EnsureNotNull(connection.Socket);
+
             byte[] sendBuffer = Packetizer.AssembleMessagePacket(envelope, connection.UseCompression, false, null, null);
             Stats.BytesSent += (ulong)sendBuffer.Length;
             connection.Socket.Send(sendBuffer, sendBuffer.Length, SocketFlags.None);
         }
 
-        private void CleanupConnection(SocketState connection)
+        private void CleanupConnection(SocketState? connection)
         {
             try
             {
-                CleanupSocket(connection.Socket);
+                CleanupSocket(connection?.Socket);
 
-                lock (_connections)
+                if (connection != null)
                 {
-                    _connections.Remove(connection);
+                    lock (_connections)
+                    {
+                        _connections.Remove(connection);
+                    }
                 }
 
                 if (connection.Peer != null)
@@ -812,34 +829,16 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        private void CleanupSocket(Socket socket)
+        private void CleanupSocket(Socket? socket)
         {
-            try
-            {
-                socket.Shutdown(SocketShutdown.Both);
-            }
-            catch
-            {
-            }
-            try
-            {
-                socket.Disconnect(false);
-            }
-            catch
-            {
-            }
-            try
-            {
-                socket.Close();
-            }
-            catch
-            {
-            }
+            try { socket?.Shutdown(SocketShutdown.Both); } catch { }
+            try { socket?.Disconnect(false); } catch { }
+            try { socket?.Close(); } catch { }
         }
 
         #region Utility.
 
-        public static IPAddress GetIpAddress(string hostName)
+        public static IPAddress? GetIpAddress(string hostName)
         {
             try
             {

@@ -2,17 +2,17 @@
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Routing;
+using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private ConnectionInfo _connectionInfo = null;
-        private Packeteer _packeteer = null;
+        private Packeteer? _packeteer = null;
 
         private delegate void PopulateGrid(Users users);
-        private PopulateGrid _populateGrid = null;
+        private PopulateGrid? _populateGrid = null;
         private void OnPopulateGrid(Users users)
         {
             foreach (var user in users.List)
@@ -37,15 +37,19 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
 
             _populateGrid = OnPopulateGrid;
-            this._connectionInfo = connectionInfo;
 
             _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            if (_packeteer == null)
+            {
+                this.Close();
+                return;
+            }
             _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
         }
 
-
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
+            Utility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
         }
 
@@ -53,13 +57,16 @@ namespace NetProxy.Client.Forms
         {
             if (packet.Label == Constants.CommandLables.GuiRequestUserList)
             {
+                Utility.EnsureNotNull(_populateGrid);
                 var collection = JsonConvert.DeserializeObject<Users>(packet.Payload);
+                Utility.EnsureNotNull(collection);
                 this.Invoke(_populateGrid, new object[] { collection });
             }
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
         {
+            Utility.EnsureNotNull(_packeteer);
             _packeteer.Disconnect();
         }
 
@@ -74,7 +81,7 @@ namespace NetProxy.Client.Forms
                     string hash = (string)row.Cells[ColumnPassword.Index].Value;
                     if (hash == null || hash == string.Empty)
                     {
-                        hash = Library.Crypto.Hashing.Sha256(string.Empty);
+                        hash = Hashing.Sha256(string.Empty);
                     }
 
                     users.Add(new User
@@ -87,6 +94,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
+            Utility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
 
             DialogResult = DialogResult.OK;

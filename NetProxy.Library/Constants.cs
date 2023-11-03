@@ -25,8 +25,6 @@
             public const string TunnelNegotationComplete = "TunnelNegotationComplete";
         }
 
-        public const string RegsitryKey = "SOFTWARE\\NetworkDLS\\NetProxy";
-        public const string ServiceName = "NetworkDLSNetProxyService";
         public const string TitleCaption = "NetProxy";
         public const int DefaultManagementPort = 5854;
         public const int DefaultInitialBufferSize = 4096;
@@ -35,8 +33,6 @@
         public const int DefaultSpinLockCount = 1000000;
         public const int DefaultEncryptionInitilizationTimeoutMs = 10000;
         public const int DefaultAcceptBacklogSize = 10;
-        public const string RoutesConfigFileName = "routes.json";
-        public const string ServerConfigFileName = "service.json";
     }
 
     public enum HttpVerb

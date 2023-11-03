@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace NetProxy.Library.Utility
+namespace NetProxy.Library.Utilities
 {
     public class Logging
     {
@@ -17,9 +17,9 @@ namespace NetProxy.Library.Utility
         public class EventPayload
         {
             public Severity Severity { get; set; }
-            public Exception Exception { get; set; }
-            public string CustomText { get; set; }
-            public object UserData { get; set; }
+            public Exception? Exception { get; set; }
+            public string CustomText { get; set; } = string.Empty;
+            public object UserData { get; set; } = string.Empty;
         }
 
         public string ApplicationName { get; set; }
@@ -50,7 +50,7 @@ namespace NetProxy.Library.Utility
             {
                 System.Text.StringBuilder errorMessage = new System.Text.StringBuilder();
 
-                if ((string)Helpers.IsNull(payload.CustomText, string.Empty) != string.Empty)
+                if ((string)Utility.IsNull(payload.CustomText, string.Empty) != string.Empty)
                 {
                     errorMessage.AppendFormat("{0}\r\n", payload.CustomText);
                 }
@@ -64,7 +64,7 @@ namespace NetProxy.Library.Utility
                     {
                         if (payload.Exception.HResult != 0)
                         {
-                            Exception hresultEx = null;
+                            Exception? hresultEx = null;
 
                             try
                             {
@@ -95,8 +95,8 @@ namespace NetProxy.Library.Utility
                 if (payload.Exception != null && payload.Severity == Severity.Error)
                 {
                     StackTrace stackTrace = new StackTrace();
-                    MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
-                    errorMessage.AppendFormat("Calling Method: {0}\r\n", methodBase.Name);
+                    MethodBase? methodBase = stackTrace?.GetFrame(1)?.GetMethod();
+                    errorMessage.AppendFormat("Calling Method: {0}\r\n", methodBase?.Name ?? "");
 
                     if (payload.Exception != null && payload.Exception.StackTrace != null)
                     {
@@ -116,7 +116,7 @@ namespace NetProxy.Library.Utility
         {
             try
             {
-                Console.WriteLine(string.Format("<{0}> {1}", severity.ToString(), eventText));
+                Console.WriteLine($"<{severity}> {eventText}");
 
                 if (severity == Severity.Verbose && !_writeVerboseLogging)
                 {

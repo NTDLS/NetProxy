@@ -8,7 +8,7 @@ namespace NetProxy.Client.Controls
         private Color _mActiveColour = Color.FromArgb(35, 146, 33);
         private Color _mTransistionColour = Color.FromArgb(129, 242, 121);
 
-        private Region _innerBackgroundRegion;
+        private Region? _innerBackgroundRegion;
         private GraphicsPath[] _segmentPaths = new GraphicsPath[12];
 
         private bool _mAutoIncrement = true;
@@ -16,7 +16,7 @@ namespace NetProxy.Client.Controls
         private bool _mBehindIsActive = true;
         private int _mTransitionSegment = 0;
 
-        private System.Timers.Timer _mAutoRotateTimer = null;
+        private System.Timers.Timer? _mAutoRotateTimer = null;
 
         public SpinningProgress()
         {
@@ -204,6 +204,10 @@ namespace NetProxy.Client.Controls
 
         private void ProgressDisk_Paint(object? sender, System.Windows.Forms.PaintEventArgs e)
         {
+            if (_innerBackgroundRegion == null)
+            {
+                return;
+            }
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.ExcludeClip(_innerBackgroundRegion);
 

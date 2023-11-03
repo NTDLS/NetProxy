@@ -1,4 +1,4 @@
-﻿namespace NetProxy.Library.Utility
+﻿namespace NetProxy.Library.Utilities
 {
     public static class Formatters
     {
@@ -37,99 +37,7 @@
             }
             else
             {
-                return cleanedText;
-            }
-        }
-
-        public static string CleanControlName(string nameString)
-        {
-            return Strings.RemoveSpecialCharacters(nameString).Replace("_", string.Empty).Replace(".", string.Empty);
-        }
-
-        public static string FormatAs1St2Nd3Rd(int number)
-        {
-            string stringNumber = number.ToString("#,0");
-
-            int absNumber = Math.Abs(number);
-            if (absNumber == 1)
-            {
-                stringNumber += "st";
-            }
-            else if (absNumber == 2)
-            {
-                stringNumber += "nd";
-            }
-            else if (absNumber == 3)
-            {
-                stringNumber += "rd";
-            }
-            else
-            {
-                stringNumber += "th";
-            }
-
-            return stringNumber;
-        }
-
-        public static string FormatNumberToAbbreviation(string numberString)
-        {
-            const string trillionSuffix = "T";
-            const string billionSuffix = "B";
-            const string millionSuffix = "M";
-            const string thousandSuffix = "K";
-
-            decimal number = 0.0m;
-            int decimalPlaces = 2;
-            if (decimal.TryParse(numberString, System.Globalization.NumberStyles.Any, null, out number) == false)
-            {
-                return numberString;
-            }
-            else
-            {
-                long divideBy = 1;
-                string suffix = "";
-                bool negative = false;
-
-                if (number < 0)
-                {
-                    negative = true;
-                    number *= -1;
-                }
-
-                if (number >= Trillion)
-                {
-                    divideBy = Trillion;
-                    suffix = trillionSuffix;
-                }
-                else if (number >= Billion)
-                {
-                    divideBy = Billion;
-                    suffix = billionSuffix;
-                }
-                else if (number >= Million)
-                {
-                    divideBy = Million;
-                    suffix = millionSuffix;
-                }
-                else if (number >= Thousand)
-                {
-                    divideBy = Thousand;
-                    suffix = thousandSuffix;
-                }
-                else
-                {
-                    divideBy = 1;
-                    suffix = string.Empty;
-                }
-
-                double friendlyNumber = ((double)number) / ((double)divideBy);
-
-                if (negative)
-                {
-                    friendlyNumber *= -1;
-                }
-
-                return friendlyNumber.ToString("N" + decimalPlaces.ToString()) + suffix;
+                return cleanedText ?? "";
             }
         }
 
@@ -235,7 +143,7 @@
                 suffix = suffix.Substring(0, 1);
             }
 
-            double friendlyFileSize = ((double)fileSize) / ((double)divideBy);
+            double friendlyFileSize = (double)fileSize / divideBy;
 
             if (negative)
             {
@@ -306,7 +214,7 @@
                 suffix = suffix.Substring(0, 1);
             }
 
-            double friendlyFileSize = ((double)fileSize) / ((double)divideBy);
+            double friendlyFileSize = (double)fileSize / divideBy;
 
             return friendlyFileSize.ToString("N" + decimalPlaces.ToString()) + " " + suffix;
         }
@@ -378,7 +286,7 @@
                 suffix = suffix.Substring(0, 1);
             }
 
-            double friendlyFileSize = ((double)fileSize) / ((double)divideBy);
+            double friendlyFileSize = (double)fileSize / (double)divideBy;
 
             if (negative)
             {
@@ -455,7 +363,7 @@
                 suffix = suffix.Substring(0, 1);
             }
 
-            double friendlyFileSize = ((double)fileSize) / ((double)divideBy);
+            double friendlyFileSize = (double)fileSize / (double)divideBy;
 
             if (negative)
             {
@@ -514,7 +422,7 @@
 
             suffix += "bps";
 
-            double friendlySpeed = ((double)speed) / ((double)divideBy);
+            double friendlySpeed = (double)speed / divideBy;
 
             if (negative)
             {
@@ -522,72 +430,6 @@
             }
 
             return friendlySpeed.ToString("N" + decimalPlaces.ToString()) + " " + suffix;
-        }
-
-        public static string FormatClockSpeed(long? clockSpeed)
-        {
-            return FormatClockSpeed(clockSpeed, 2);
-        }
-
-        public static string FormatClockSpeed(long? clockSpeed, int decimalPlaces)
-        {
-            if (clockSpeed == null)
-            {
-                return string.Empty;
-            }
-
-            long divideBy = 1;
-            string suffix = "";
-            bool negative = false;
-
-            if (clockSpeed < 0)
-            {
-                negative = true;
-                clockSpeed *= -1;
-            }
-
-            if (clockSpeed >= Terahertz)
-            {
-                divideBy = Terahertz;
-                suffix = "THz";
-            }
-            else if (clockSpeed >= Gigahertz)
-            {
-                divideBy = Gigahertz;
-                suffix = "GHz";
-            }
-            else if (clockSpeed >= Megahertz)
-            {
-                divideBy = Megahertz;
-                suffix = "MHz";
-            }
-            else
-            {
-                divideBy = 1;
-                suffix = "Hz";
-            }
-
-            double friendlyClockSpeed = ((double)clockSpeed) / ((double)divideBy);
-
-            if (negative)
-            {
-                friendlyClockSpeed *= -1;
-            }
-
-            return friendlyClockSpeed.ToString("N" + decimalPlaces.ToString()) + " " + suffix;
-        }
-
-        public static string FormatAdUserName(string adUsername)
-        {
-            //http://msdn.microsoft.com/en-us/library/windows/desktop/aa380525(v=vs.85).aspx
-
-            string[] stringArray = adUsername.Split('\\');
-            if (stringArray.Count() > 1)
-            {
-                return stringArray[0].ToUpper() + "\\"
-                    + string.Join("\\", stringArray, 1, stringArray.Count() - 1).ToLower();
-            }
-            return adUsername;
         }
     }
 }

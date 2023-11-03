@@ -2,7 +2,7 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
-using NetProxy.Library.Utility;
+using NetProxy.Library.Utilities;
 using NetProxy.Service.Routing;
 using Newtonsoft.Json;
 using NTDLS.Persistence;
@@ -241,6 +241,7 @@ namespace NetProxy.Service
                 try
                 {
                     var value = JsonConvert.DeserializeObject<Route>(packet.Payload);
+                    Utility.EnsureNotNull(value);
 
                     lock (_config)
                     {
@@ -407,10 +408,10 @@ namespace NetProxy.Service
                 defaultConfiguration.Users.Add(new User() { UserName = "administrator", PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" });
 
                 Console.WriteLine("Server configuration...");
-                _config = CommonApplicationData.LoadFromDisk<Configuration>("NetworkDLS NetProxy", defaultConfiguration);
+                _config = CommonApplicationData.LoadFromDisk<Configuration>(Constants.TitleCaption, defaultConfiguration);
 
                 Console.WriteLine("Route configuration...");
-                var routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetworkDLS NetProxy", new List<Route>());
+                var routes = CommonApplicationData.LoadFromDisk<List<Route>>(Constants.TitleCaption, new List<Route>());
                 foreach (var route in routes)
                 {
                     Console.WriteLine("Adding route {0}.", route.Name);

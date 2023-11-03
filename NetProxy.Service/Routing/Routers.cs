@@ -1,11 +1,11 @@
 ﻿using NetProxy.Library.Routing;
-using NetProxy.Library.Utility;
+using NetProxy.Library.Utilities;
 
 namespace NetProxy.Service.Routing
 {
     public class Routers
     {
-        public List<Router> List = new List<Router>();
+        public List<Router> List = new();
 
         public List<Route> Routes()
         {
@@ -19,13 +19,8 @@ namespace NetProxy.Service.Routing
             return routes;
         }
 
-        public Router this[System.Guid routeId]
-        {
-            get
-            {
-                return (from o in List where o.Route.Id == routeId select o).FirstOrDefault();
-            }
-        }
+        public Router? this[Guid routeId]
+            => List.Where(o => o.Route.Id == routeId).FirstOrDefault();
 
         public void Add(Router router)
         {
@@ -74,6 +69,5 @@ namespace NetProxy.Service.Routing
                 }
             }
         }
-
     }
 }

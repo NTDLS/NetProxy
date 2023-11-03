@@ -15,13 +15,13 @@ namespace NetProxy.Service.Routing
         /// The connection was made by the proxy to a remote peer.
         /// </summary>
         public bool IsOutgoing { get; set; }
-        public Route Route { get; set; }
-        public SocketState Peer { get; set; }
+        public Route? Route { get; set; }
+        public SocketState? Peer { get; set; }
         public int BytesReceived { get; set; }
-        public Socket Socket { get; set; }
+        public Socket? Socket { get; set; }
         public byte[] Buffer { get; set; }
         public byte[] PayloadBuilder;
-        public CompoundNegotiator KeyNegotiator { get; set; }
+        public CompoundNegotiator KeyNegotiator { get; set; } = new CompoundNegotiator();
         public bool IsEncryptionNegotationComplete { get; set; }
         public int PayloadBuilderLength { get; set; }
         public string HttpHeaderBuilder { get; set; }
@@ -32,32 +32,32 @@ namespace NetProxy.Service.Routing
         {
             get
             {
-                if (((this.IsIncomming && Route.BindingIsTunnel == false) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel == false))
-                    || ((this.IsOutgoing && Route.EndpointIsTunnel == false) && (this.Peer.IsIncomming && Route.BindingIsTunnel == false)))
+                if (((IsIncomming && Route?.BindingIsTunnel == false) && (Peer?.IsOutgoing == true && Route?.EndpointIsTunnel == false))
+                    || ((IsOutgoing && Route?.EndpointIsTunnel == false) && (Peer?.IsIncomming == true && Route?.BindingIsTunnel == false)))
                 {
                     return true; //No tunneling.
                 }
-                else if (((this.IsOutgoing && Route.EndpointIsTunnel) && (this.Peer.IsIncomming && Route.BindingIsTunnel))
-                    || ((this.IsIncomming && Route.BindingIsTunnel) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel)))
+                else if (((IsOutgoing && Route?.EndpointIsTunnel == true) && (Peer?.IsIncomming == true && Route?.BindingIsTunnel == true))
+                    || ((IsIncomming == true && Route?.BindingIsTunnel == true) && (Peer?.IsOutgoing == true && Route?.EndpointIsTunnel == true)))
                 {
                     //Both connections are tunnel endpoints.
-                    return _isTunnelNegotationComplete && this.Peer._isTunnelNegotationComplete;
+                    return _isTunnelNegotationComplete == true && Peer?._isTunnelNegotationComplete == true;
                 }
-                else if (((this.IsOutgoing && Route.EndpointIsTunnel) && (this.Peer.IsIncomming && Route.BindingIsTunnel == false))
-                    || ((this.IsIncomming && Route.BindingIsTunnel) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel == false)))
+                else if (((IsOutgoing == true && Route?.EndpointIsTunnel == true) && (Peer?.IsIncomming == true && Route?.BindingIsTunnel == false))
+                    || ((IsIncomming == true && Route?.BindingIsTunnel == true) && (Peer?.IsOutgoing == true && Route?.EndpointIsTunnel == false)))
                 {
                     //Only the current connection is a tunnel.
                     return _isTunnelNegotationComplete;
                 }
-                else if (((this.IsOutgoing && Route.EndpointIsTunnel == false) && (this.Peer.IsIncomming && Route.BindingIsTunnel))
-                    || ((this.IsIncomming && Route.BindingIsTunnel == false) && (this.Peer.IsOutgoing && Route.EndpointIsTunnel)))
+                else if (((IsOutgoing && Route?.EndpointIsTunnel == false) && (Peer?.IsIncomming == true && Route?.BindingIsTunnel == true))
+                    || ((IsIncomming && Route?.BindingIsTunnel == false) && (Peer?.IsOutgoing == true && Route?.EndpointIsTunnel == true)))
                 {
                     //Only the peer connection is a tunnel.
-                    return this.Peer._isTunnelNegotationComplete;
+                    return Peer?._isTunnelNegotationComplete == true;
                 }
 
                 //Seriously, shouldn't ever get here...
-                return _isTunnelNegotationComplete && this.Peer.IsTunnelNegotationComplete;
+                return _isTunnelNegotationComplete == true && Peer?.IsTunnelNegotationComplete == true;
             }
         }
 
@@ -70,8 +70,8 @@ namespace NetProxy.Service.Routing
         {
             get
             {
-                return (this.IsOutgoing && Route.EndpointIsTunnel && Route.EncryptEndpointTunnel)
-                || (this.IsIncomming && Route.BindingIsTunnel && Route.EncryptBindingTunnel);
+                return (IsOutgoing && Route?.EndpointIsTunnel == true && Route.EncryptEndpointTunnel)
+                || (IsIncomming && Route?.BindingIsTunnel == true && Route.EncryptBindingTunnel);
             }
         }
 
@@ -79,8 +79,8 @@ namespace NetProxy.Service.Routing
         {
             get
             {
-                return (this.IsOutgoing && Route.EndpointIsTunnel && Route.CompressEndpointTunnel)
-                || (this.IsIncomming && Route.BindingIsTunnel && Route.CompressBindingTunnel);
+                return (IsOutgoing && Route?.EndpointIsTunnel == true && Route.CompressEndpointTunnel)
+                || (IsIncomming && Route?.BindingIsTunnel == true && Route.CompressBindingTunnel);
             }
         }
 
@@ -88,8 +88,8 @@ namespace NetProxy.Service.Routing
         {
             get
             {
-                return (this.IsOutgoing && Route.EndpointIsTunnel)
-                            || (this.IsIncomming && Route.BindingIsTunnel);
+                return (IsOutgoing && Route?.EndpointIsTunnel == true)
+                    || (IsIncomming && Route?.BindingIsTunnel == true);
             }
         }
 
@@ -97,7 +97,7 @@ namespace NetProxy.Service.Routing
         {
             HttpHeaderBuilder = string.Empty;
             Buffer = new byte[Constants.DefaultBufferSize];
-            PayloadBuilder = new byte[0];
+            PayloadBuilder = Array.Empty<byte>();
         }
 
         public SocketState(Socket socket, int initialBufferSize)
@@ -105,7 +105,7 @@ namespace NetProxy.Service.Routing
             HttpHeaderBuilder = string.Empty;
             Socket = socket;
             Buffer = new byte[initialBufferSize];
-            PayloadBuilder = new byte[0];
+            PayloadBuilder = Array.Empty<byte>();
         }
     }
 }

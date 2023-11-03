@@ -1,4 +1,4 @@
-﻿using NetProxy.Library.Utility;
+﻿using NetProxy.Library.Utilities;
 
 namespace NetProxy.Service
 {

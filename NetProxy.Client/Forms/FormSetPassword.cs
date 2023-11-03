@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using NetProxy.Library.Utilities;
 
 namespace NetProxy.Client.Forms
 {
@@ -8,7 +9,7 @@ namespace NetProxy.Client.Forms
         {
             get
             {
-                return Library.Crypto.Hashing.Sha256(textBoxPassword1.Text);
+                return Hashing.Sha256(textBoxPassword1.Text);
             }
         }
 

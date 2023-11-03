@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace NetProxy.Library.Utility
+namespace NetProxy.Library.Utilities
 {
     public static class Strings
     {
@@ -23,7 +23,7 @@ namespace NetProxy.Library.Utility
             int numeric;
             if (int.TryParse(value, out numeric))
             {
-                return (numeric >= min) && (numeric <= max);
+                return numeric >= min && numeric <= max;
             }
 
             return false;

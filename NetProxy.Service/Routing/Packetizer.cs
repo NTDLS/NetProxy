@@ -7,7 +7,7 @@ namespace NetProxy.Service.Routing
     internal static class Packetizer
     {
 
-        public static byte[] AssembleMessagePacket(byte[] payload, int payloadLength, bool compress, bool encrypt, string encryptPacketKey, string keySalt)
+        public static byte[] AssembleMessagePacket(byte[] payload, int payloadLength, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
         {
             var envelope = new PacketEnvelope
             {
@@ -18,41 +18,32 @@ namespace NetProxy.Service.Routing
             return AssembleMessagePacket(envelope, compress, encrypt, encryptPacketKey, keySalt);
         }
 
-        public static byte[] AssembleMessagePacket(PacketEnvelope envelope, bool compress, bool encrypt, string encryptPacketKey, string keySalt)
+        public static byte[] AssembleMessagePacket(PacketEnvelope envelope, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
         {
-            try
+            byte[] payloadBody = Serialization.SerializeToByteArray(envelope);
+
+            if (compress)
             {
-                byte[] payloadBody = Serialization.SerializeToByteArray(envelope);
-
-                if (compress)
-                {
-                    payloadBody = Zip(payloadBody);
-                }
-
-                if (encrypt)
-                {
-                    //payloadBody = Encrypt(encryptPacketKey, keySalt, payloadBody);
-                }
-
-                int grossPacketSize = payloadBody.Length + Constants.PayloadHeaderSize;
-
-                byte[] packetBytes = new byte[grossPacketSize];
-
-                ushort payloadCrc = Crc16.ComputeChecksum(payloadBody);
-
-                Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
-                Buffer.BlockCopy(payloadBody, 0, packetBytes, Constants.PayloadHeaderSize, payloadBody.Length);
-
-                return packetBytes;
-            }
-            catch (Exception ex)
-            {
-                //TODO: allow this to be logged.
+                payloadBody = Zip(payloadBody);
             }
 
-            return null;
+            if (encrypt)
+            {
+                //payloadBody = Encrypt(encryptPacketKey, keySalt, payloadBody);
+            }
+
+            int grossPacketSize = payloadBody.Length + Constants.PayloadHeaderSize;
+
+            byte[] packetBytes = new byte[grossPacketSize];
+
+            ushort payloadCrc = Crc16.ComputeChecksum(payloadBody);
+
+            Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
+            Buffer.BlockCopy(payloadBody, 0, packetBytes, Constants.PayloadHeaderSize, payloadBody.Length);
+
+            return packetBytes;
         }
 
         private static void SkipPacket(ref SocketState state)

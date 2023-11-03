@@ -2,7 +2,7 @@
 {
     public class HttpHeaderRules
     {
-        public List<HttpHeaderRule> List = new List<HttpHeaderRule>();
+        public List<HttpHeaderRule> List = new();
 
         public void Add(HttpHeaderRule rule)
         {

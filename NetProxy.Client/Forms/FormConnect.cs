@@ -2,6 +2,7 @@
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
+using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
 using NTDLS.Persistence;
 using System.ComponentModel;
@@ -10,13 +11,13 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormConnect : Form
     {
-        private ConnectionInfo _connectionInfo = new ConnectionInfo();
-        private FormProgress _formProgress = null;
-        private AutoResetEvent _loginConnectionEvent = null;
-        private BackgroundWorker _worker = null;
+        private ConnectionInfo _connectionInfo = new();
+        private FormProgress? _formProgress = null;
+        private AutoResetEvent? _loginConnectionEvent = null;
+        private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
         private bool _loginResult = false;
-        private Packeteer _packeteer = null;
+        private Packeteer? _packeteer = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -32,7 +33,7 @@ namespace NetProxy.Client.Forms
         {
             AcceptButton = buttonConnect;
 
-            var prefs = CommonApplicationData.LoadFromDisk<LoginFormPreferences>("NetworkDLS NetProxy",
+            var prefs = CommonApplicationData.LoadFromDisk<LoginFormPreferences>(Constants.TitleCaption,
                 new LoginFormPreferences
                 {
                     ServerName = "127.0.0.1",
@@ -70,7 +71,7 @@ namespace NetProxy.Client.Forms
 
             if (TestConnection())
             {
-                CommonApplicationData.SaveToDisk("NetworkDLS NetProxy",
+                CommonApplicationData.SaveToDisk(Constants.TitleCaption,
                     new LoginFormPreferences
                     {
                         ServerName = verbatiumServername,
@@ -108,20 +109,18 @@ namespace NetProxy.Client.Forms
 
         private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
-            _formProgress.UpdateStatus(e.UserState as ProgressFormStatus);
+            _formProgress?.UpdateStatus(e.UserState as ProgressFormStatus);
         }
 
         private void Worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
-            bool result = (bool)e.Result;
-
-            if (result)
+            if ((e.Result as bool?) == true)
             {
-                _formProgress.Close(DialogResult.OK);
+                _formProgress?.Close(DialogResult.OK);
             }
             else
             {
-                _formProgress.Close(DialogResult.Cancel);
+                _formProgress?.Close(DialogResult.Cancel);
             }
         }
 
@@ -133,6 +132,8 @@ namespace NetProxy.Client.Forms
 
             _packeteer = new Packeteer();
             _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+
+            Utility.EnsureNotNull(_worker);
 
             try
             {
@@ -146,7 +147,7 @@ namespace NetProxy.Client.Forms
                     UserLogin userLogin = new UserLogin()
                     {
                         UserName = _connectionInfo.UserName,
-                        PasswordHash = Library.Crypto.Hashing.Sha256(_connectionInfo.Password)
+                        PasswordHash = Hashing.Sha256(_connectionInfo.Password)
                     };
 
                     _packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
@@ -180,7 +181,11 @@ namespace NetProxy.Client.Forms
         {
             if (packet.Label == Constants.CommandLables.GuiRequestLogin)
             {
-                GenericBooleanResult result = JsonConvert.DeserializeObject<GenericBooleanResult>(packet.Payload);
+                var result = JsonConvert.DeserializeObject<GenericBooleanResult>(packet.Payload);
+                Utility.EnsureNotNull(result);
+
+                Utility.EnsureNotNull(_loginConnectionEvent);
+
                 _loginResult = result.Value;
                 _loginConnectionEvent.Set();
             }
@@ -188,8 +193,8 @@ namespace NetProxy.Client.Forms
 
         private void buttonCancel_Click(object? sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
 
         private void FormConnect_Shown(object? sender, EventArgs e)

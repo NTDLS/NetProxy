@@ -21,7 +21,7 @@
         }
 
         public delegate void EventOnCancel(object? sender, OnCancelInfo e);
-        public event EventOnCancel OnCancel;
+        public event EventOnCancel? OnCancel;
 
         #endregion
 
@@ -42,7 +42,7 @@
         {
             if (OnCancel != null)
             {
-                OnCancelInfo onCancelInfo = new OnCancelInfo();
+                OnCancelInfo onCancelInfo = new();
                 OnCancel(this, onCancelInfo);
                 if (onCancelInfo.Cancel)
                 {
@@ -131,7 +131,7 @@
             this.Close();
         }
 
-        public void UpdateStatus(ProgressFormStatus status)
+        public void UpdateStatus(ProgressFormStatus? status)
         {
             if (status != null)
             {

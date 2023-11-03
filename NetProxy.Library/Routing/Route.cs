@@ -11,7 +11,7 @@ namespace NetProxy.Library.Routing
         public TrafficType TrafficType { get; set; }
         public bool AutoStart { get; set; }
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int ListenPort { get; set; }
         public int SpinLockCount { get; set; }
         public bool UseStickySessions { get; set; }
@@ -19,8 +19,8 @@ namespace NetProxy.Library.Routing
         public bool CompressEndpointTunnel { get; set; }
         public bool EncryptBindingTunnel { get; set; }
         public bool EncryptEndpointTunnel { get; set; }
-        public string BindingPreSharedKey { get; set; }
-        public string EndpointPreSharedKey { get; set; }
+        public string BindingPreSharedKey { get; set; } = string.Empty;
+        public string EndpointPreSharedKey { get; set; } = string.Empty;
         public bool BindingIsTunnel { get; set; }
         public bool EndpointIsTunnel { get; set; }
         public int AcceptBacklogSize { get; set; }
@@ -28,7 +28,7 @@ namespace NetProxy.Library.Routing
         public int InitialBufferSize { get; set; }
         public int StickySessionCacheExpiration { get; set; }
         public int MaxBufferSize { get; set; }
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
         public List<Binding> Bindings { get; set; }
         public bool ListenOnAllAddresses { get; set; }
 

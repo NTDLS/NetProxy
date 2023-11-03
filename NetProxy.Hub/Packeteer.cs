@@ -17,10 +17,10 @@ namespace NetProxy.Hub
 
         #region Backend Variables.
 
-        private int _listenBacklog = 4;
-        private Socket _listenSocket;
-        private List<Peer> _peers = new List<Peer>();
-        private AsyncCallback _onDataReceivedCallback;
+        private readonly int _listenBacklog = 4;
+        private Socket? _listenSocket;
+        private readonly List<Peer> _peers = new();
+        private AsyncCallback? _onDataReceivedCallback;
 
         #endregion
 
@@ -255,7 +255,7 @@ namespace NetProxy.Hub
             }
         }
 
-        private void CleanupConnection(Socket socket)
+        private void CleanupConnection(Socket? socket)
         {
             lock (this)
             {

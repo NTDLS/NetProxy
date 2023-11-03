@@ -3,22 +3,24 @@ using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.General;
 using NetProxy.Library.Routing;
-using NetProxy.Library.Utility;
 using Newtonsoft.Json;
+using NetProxy.Library.Utilities;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormRoute : Form
     {
-        private Packeteer _packeteer = null;
-        private string _routeId = null;
+        private Packeteer? _packeteer = null;
+        private string? _routeId = null;
+        private delegate void PopulateRouteInformation(Route route);
+        private PopulateRouteInformation? _populateRouteInformation;
 
         public FormRoute()
         {
             InitializeComponent();
         }
 
-        public FormRoute(ConnectionInfo connectionInfo, string routeId)
+        public FormRoute(ConnectionInfo connectionInfo, string? routeId)
         {
             InitializeComponent();
 
@@ -26,29 +28,41 @@ namespace NetProxy.Client.Forms
 
             this._routeId = routeId ?? Guid.NewGuid().ToString();
             _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            if (_packeteer == null)
+            {
+                Close();
+                return;
+            }
+
             _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
 
-            var trafficTypes = new List<ComboItem>();
-            trafficTypes.Add(new ComboItem("Binary", TrafficType.Binary));
-            trafficTypes.Add(new ComboItem("HTTP", TrafficType.Http));
-            trafficTypes.Add(new ComboItem("HTTPS", TrafficType.Https));
+            var trafficTypes = new List<ComboItem>
+            {
+                new ComboItem("Binary", TrafficType.Binary),
+                new ComboItem("HTTP", TrafficType.Http),
+                new ComboItem("HTTPS", TrafficType.Https)
+            };
 
             comboBoxTrafficType.DisplayMember = "Display";
             comboBoxTrafficType.ValueMember = "Value";
             comboBoxTrafficType.DataSource = trafficTypes;
 
-            var bindingProtocol = new List<ComboItem>();
-            bindingProtocol.Add(new ComboItem("TCP/IP v4", BindingProtocal.Pv4));
-            bindingProtocol.Add(new ComboItem("TCP/IP v6", BindingProtocal.Pv6));
+            var bindingProtocol = new List<ComboItem>
+            {
+                new ComboItem("TCP/IP v4", BindingProtocal.Pv4),
+                new ComboItem("TCP/IP v6", BindingProtocal.Pv6)
+            };
 
             comboBoxBindingProtocol.DisplayMember = "Display";
             comboBoxBindingProtocol.ValueMember = "Value";
             comboBoxBindingProtocol.DataSource = bindingProtocol;
 
-            var connectionPatterns = new List<ComboItem>();
-            //connectionPatterns.Add(new ComboItem("Balanced", ConnectionPattern.Balanced)); //Not yet implemented.
-            connectionPatterns.Add(new ComboItem("Fail-Over", ConnectionPattern.FailOver));
-            connectionPatterns.Add(new ComboItem("Round-Robbin", ConnectionPattern.RoundRobbin));
+            var connectionPatterns = new List<ComboItem>
+            {
+                //connectionPatterns.Add(new ComboItem("Balanced", ConnectionPattern.Balanced)); //Not yet implemented.
+                new ComboItem("Fail-Over", ConnectionPattern.FailOver),
+                new ComboItem("Round-Robbin", ConnectionPattern.RoundRobbin)
+            };
 
             comboBoxConnectionPattern.DisplayMember = "Display";
             comboBoxConnectionPattern.ValueMember = "Value";
@@ -78,12 +92,11 @@ namespace NetProxy.Client.Forms
         {
             if (_routeId != null)
             {
+                Utility.EnsureNotNull(_packeteer);
                 _packeteer.SendAll(Constants.CommandLables.GuiRequestRoute, _routeId);
             }
         }
 
-        private delegate void PopulateRouteInformation(Route route);
-        private PopulateRouteInformation _populateRouteInformation;
         private void OnPopulateRouteInformation(Route route)
         {
             textBoxDescription.Text = route.Description;
@@ -134,10 +147,11 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Hub.Common.Packet packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestRoute)
             {
+                Utility.EnsureNotNull(_populateRouteInformation);
                 this.Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<Route>(packet.Payload));
             }
         }
@@ -190,17 +204,19 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
+            Utility.EnsureNotNull(_routeId);
+
             route.Id = Guid.Parse(_routeId);
             route.Name = textBoxRouteName.Text;
             route.Description = textBoxDescription.Text;
-            route.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue.ToString());
-            route.BindingProtocal = (BindingProtocal)Enum.Parse(typeof(BindingProtocal), comboBoxBindingProtocol.SelectedValue.ToString());
+            route.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue?.ToString() ?? "");
+            route.BindingProtocal = (BindingProtocal)Enum.Parse(typeof(BindingProtocal), comboBoxBindingProtocol.SelectedValue?.ToString() ?? "");
             route.ListenPort = int.Parse(textBoxListenPort.Text);
             route.ListenOnAllAddresses = checkBoxListenOnAllAddresses.Checked;
             route.InitialBufferSize = int.Parse(textBoxInitialBufferSize.Text);
             route.MaxBufferSize = int.Parse(textBoxMaxBufferSize.Text);
             route.AcceptBacklogSize = int.Parse(textBoxAcceptBacklogSize.Text);
-            route.Endpoints.ConnectionPattern = (ConnectionPattern)Enum.Parse(typeof(ConnectionPattern), comboBoxConnectionPattern.SelectedValue.ToString());
+            route.Endpoints.ConnectionPattern = (ConnectionPattern)Enum.Parse(typeof(ConnectionPattern), comboBoxConnectionPattern.SelectedValue?.ToString() ?? "");
             route.AutoStart = checkBoxListenAutoStart.Checked;
             route.UseStickySessions = checkBoxUseStickySessions.Checked;
 
@@ -242,10 +258,10 @@ namespace NetProxy.Client.Forms
                 {
                     route.Endpoints.Add(new Endpoint()
                     {
-                        Enabled = bool.Parse((row.Cells[ColumnEndpointsEnabled.Index].Value ?? "True").ToString()),
-                        Address = (row.Cells[ColumnEndpointsAddress.Index].Value ?? "").ToString(),
-                        Port = int.Parse((row.Cells[ColumnEndpointsPort.Index].Value ?? "0").ToString()),
-                        Description = (row.Cells[ColumnEndpointsDescription.Index].Value ?? "").ToString()
+                        Enabled = bool.Parse(row.Cells[ColumnEndpointsEnabled.Index].Value?.ToString() ?? "True"),
+                        Address = row.Cells[ColumnEndpointsAddress.Index].Value?.ToString() ?? "",
+                        Port = int.Parse(row.Cells[ColumnEndpointsPort.Index].Value?.ToString() ?? "0"),
+                        Description = row.Cells[ColumnEndpointsDescription.Index].Value?.ToString() ?? ""
                     });
                 }
             }
@@ -254,11 +270,13 @@ namespace NetProxy.Client.Forms
             {
                 if (((string)(row.Cells[ColumnBindingsIPAddress.Index].Value ?? "")) != string.Empty)
                 {
+
+
                     route.Bindings.Add(new Library.Routing.Binding()
                     {
-                        Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value ?? "True").ToString()),
-                        Address = (row.Cells[ColumnBindingsIPAddress.Index].Value ?? "").ToString(),
-                        Description = (row.Cells[ColumnBindingsDescription.Index].Value ?? "").ToString()
+                        Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value?.ToString()) ?? "True"),
+                        Address = row.Cells[ColumnBindingsIPAddress.Index].Value?.ToString() ?? "",
+                        Description = row.Cells[ColumnBindingsDescription.Index].Value?.ToString() ?? ""
                     });
                 }
             }
@@ -269,13 +287,13 @@ namespace NetProxy.Client.Forms
                 {
                     route.HttpHeaderRules.Add(new HttpHeaderRule
                     {
-                        Enabled = bool.Parse((row.Cells[ColumnHTTPHeadersEnabled.Index].Value ?? "True").ToString()),
-                        Action = (HttpHeaderAction)Enum.Parse(typeof(HttpHeaderAction), (row.Cells[ColumnHTTPHeadersAction.Index].Value ?? "").ToString()),
-                        Description = (row.Cells[ColumnHTTPHeadersDescription.Index].Value ?? "").ToString(),
-                        HeaderType = (HttpHeaderType)Enum.Parse(typeof(HttpHeaderType), (row.Cells[ColumnHTTPHeadersType.Index].Value ?? "").ToString()),
-                        Name = (row.Cells[ColumnHTTPHeadersHeader.Index].Value ?? "").ToString(),
-                        Value = (row.Cells[ColumnHTTPHeadersValue.Index].Value ?? "").ToString(),
-                        Verb = (HttpVerb)Enum.Parse(typeof(HttpVerb), (row.Cells[ColumnHTTPHeadersVerb.Index].Value ?? "").ToString())
+                        Enabled = bool.Parse(row.Cells[ColumnHTTPHeadersEnabled.Index].Value?.ToString() ?? "True"),
+                        Action = (HttpHeaderAction)Enum.Parse(typeof(HttpHeaderAction), row.Cells[ColumnHTTPHeadersAction.Index].Value?.ToString() ?? ""),
+                        Description = row.Cells[ColumnHTTPHeadersDescription.Index].Value?.ToString() ?? "",
+                        HeaderType = (HttpHeaderType)Enum.Parse(typeof(HttpHeaderType), row.Cells[ColumnHTTPHeadersType.Index].Value?.ToString() ?? ""),
+                        Name = row.Cells[ColumnHTTPHeadersHeader.Index].Value?.ToString() ?? "",
+                        Value = row.Cells[ColumnHTTPHeadersValue.Index].Value?.ToString() ?? "",
+                        Verb = (HttpVerb)Enum.Parse(typeof(HttpVerb), row.Cells[ColumnHTTPHeadersVerb.Index].Value?.ToString() ?? "")
                     });
                 }
             }
@@ -298,9 +316,10 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
+            Utility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertRoute, JsonConvert.SerializeObject(route));
 
-            System.Threading.Thread.Sleep(500);
+            Thread.Sleep(500);
 
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -314,6 +333,7 @@ namespace NetProxy.Client.Forms
 
         private void FormRoute_FormClosed(object? sender, FormClosedEventArgs e)
         {
+            Utility.EnsureNotNull(_packeteer);
             _packeteer.Disconnect();
         }
 

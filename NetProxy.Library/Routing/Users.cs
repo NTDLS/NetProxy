@@ -2,16 +2,8 @@
 {
     public class Users
     {
-        public List<User> List { get; set; }
+        public List<User> List { get; set; } = new();
 
-        public Users()
-        {
-            List = new List<User>();
-        }
-
-        public void Add(User user)
-        {
-            List.Add(user);
-        }
+        public void Add(User user) => List.Add(user);
     }
 }

@@ -9,30 +9,21 @@ namespace NetProxy.Hub.Common
 
         public static byte[] AssembleMessagePacket(Packet packet)
         {
-            try
-            {
-                byte[] payloadBody = Serialization.SerializeToByteArray(packet);
+            byte[] payloadBody = Serialization.SerializeToByteArray(packet);
 
-                byte[] payloadBytes = Zip(payloadBody);
-                int grossPacketSize = payloadBytes.Length + Constants.PayloadHeaderSize;
+            byte[] payloadBytes = Zip(payloadBody);
+            int grossPacketSize = payloadBytes.Length + Constants.PayloadHeaderSize;
 
-                byte[] packetBytes = new byte[grossPacketSize];
+            byte[] packetBytes = new byte[grossPacketSize];
 
-                ushort payloadCrc = Crc16.ComputeChecksum(payloadBytes);
+            ushort payloadCrc = Crc16.ComputeChecksum(payloadBytes);
 
-                Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
-                Buffer.BlockCopy(payloadBytes, 0, packetBytes, Constants.PayloadHeaderSize, payloadBytes.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, packetBytes, 8, 2);
+            Buffer.BlockCopy(payloadBytes, 0, packetBytes, Constants.PayloadHeaderSize, payloadBytes.Length);
 
-                return packetBytes;
-            }
-            catch
-            {
-                //TODO: allow this to be logged.
-            }
-
-            return null;
+            return packetBytes;
         }
 
         private static void SkipPacket(ref SocketState state)

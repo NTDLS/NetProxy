@@ -1,4 +1,5 @@
-﻿using Topshelf;
+﻿using NetProxy.Library;
+using Topshelf;
 
 namespace NetProxy.Service
 {
@@ -24,7 +25,7 @@ namespace NetProxy.Service
                 x.RunAsLocalSystem();
 
                 x.SetDescription("Provides TCP/IP v4/v6/tunneling and routing services.");
-                x.SetDisplayName("NetworkDLS NetProxy");
+                x.SetDisplayName(Constants.TitleCaption);
                 x.SetServiceName("NtNetProxy");
             });
         }

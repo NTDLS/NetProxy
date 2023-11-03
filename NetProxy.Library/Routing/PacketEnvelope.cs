@@ -10,9 +10,9 @@ namespace NetProxy.Library.Routing
         public DateTime CreatedTime = DateTime.UtcNow;
 
         [ProtoMember(2)]
-        public string Label { get; set; } = string.Empty;
+        public string? Label { get; set; }
 
         [ProtoMember(3)]
-        public byte[] Payload { get; set; } = new byte[0];
+        public byte[]? Payload { get; set; }
     }
 }

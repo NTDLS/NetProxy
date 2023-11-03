@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetProxy.Library.Routing
+﻿namespace NetProxy.Library.Routing
 {
     public static class Crc16
     {

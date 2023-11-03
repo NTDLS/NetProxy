@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetProxy.Library.Routing
+﻿namespace NetProxy.Library.Routing
 {
     [Serializable]
     public class PacketEnvelope

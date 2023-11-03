@@ -1,10 +1,10 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using NetProxy.Library;
+﻿using NetProxy.Library;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utility;
 using NTDLS.FastMemoryCache;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using static NetProxy.Library.Constants;
 
 namespace NetProxy.Service.Routing

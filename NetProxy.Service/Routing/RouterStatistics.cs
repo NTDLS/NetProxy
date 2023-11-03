@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetProxy.Service.Routing
+﻿namespace NetProxy.Service.Routing
 {
     public class RouterStatistics
     {

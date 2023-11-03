@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace NetProxy.Library.Utility
+﻿namespace NetProxy.Library.Utility
 {
     public static class Formatters
     {

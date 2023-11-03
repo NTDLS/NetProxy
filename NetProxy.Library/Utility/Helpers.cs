@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetProxy.Library.Utility
+﻿namespace NetProxy.Library.Utility
 {
     public static class Helpers
     {

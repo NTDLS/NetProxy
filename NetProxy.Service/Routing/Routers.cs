@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NetProxy.Library.Routing;
+﻿using NetProxy.Library.Routing;
 using NetProxy.Library.Utility;
 
 namespace NetProxy.Service.Routing
@@ -77,6 +74,6 @@ namespace NetProxy.Service.Routing
                 }
             }
         }
-   
+
     }
 }

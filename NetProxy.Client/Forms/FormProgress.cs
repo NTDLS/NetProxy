@@ -1,7 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
-
-namespace NetProxy.Client.Forms
+﻿namespace NetProxy.Client.Forms
 {
     public partial class FormProgress : Form
     {
@@ -47,7 +44,7 @@ namespace NetProxy.Client.Forms
             {
                 OnCancelInfo onCancelInfo = new OnCancelInfo();
                 OnCancel(this, onCancelInfo);
-                if(onCancelInfo.Cancel)
+                if (onCancelInfo.Cancel)
                 {
                     return;
                 }
@@ -55,7 +52,7 @@ namespace NetProxy.Client.Forms
 
             this.DialogResult = DialogResult.Cancel;
             this.Close();
-        
+
         }
 
         #region Properties.

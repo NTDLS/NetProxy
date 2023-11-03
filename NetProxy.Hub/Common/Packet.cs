@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetProxy.Hub.Common
+﻿namespace NetProxy.Hub.Common
 {
     [Serializable]
     public class Packet

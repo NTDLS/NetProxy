@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NetProxy.Library.Payloads
+﻿namespace NetProxy.Library.Payloads
 {
     public class RouteGridStats
     {

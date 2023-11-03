@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Win32;
-using NetProxy.Hub;
+﻿using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
@@ -407,7 +402,7 @@ namespace NetProxy.Service
 
                 var defaultConfiguration = new Configuration()
                 {
-                     ManagementPort = 5854
+                    ManagementPort = 5854
                 };
                 defaultConfiguration.Users.Add(new User() { UserName = "administrator", PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" });
 
@@ -415,14 +410,11 @@ namespace NetProxy.Service
                 _config = CommonApplicationData.LoadFromDisk<Configuration>("NetProxy.Service", defaultConfiguration);
 
                 Console.WriteLine("Route configuration...");
-                List<Route> routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetProxy.Service");
-                if (routes != null)
+                var routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetProxy.Service", new List<Route>());
+                foreach (var route in routes)
                 {
-                    foreach (var route in routes)
-                    {
-                        Console.WriteLine("Adding route {0}.", route.Name);
-                        _routers.Add(new Router(route));
-                    }
+                    Console.WriteLine("Adding route {0}.", route.Name);
+                    _routers.Add(new Router(route));
                 }
             }
             catch (Exception ex)
@@ -451,7 +443,7 @@ namespace NetProxy.Service
                     ListenOnAllAddresses = false,
                     AutoStart = true,
                     Description = "Default example route."
-               
+
                 };
 
                 route.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
@@ -531,7 +523,7 @@ namespace NetProxy.Service
                     Exception = ex
                 });
             }
-        }        
+        }
 
         public void Stop()
         {

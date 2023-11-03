@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using NetProxy.Library.Routing;
 using System.IO.Compression;
-using NetProxy.Library.Routing;
 
 namespace NetProxy.Hub.Common
 {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace NetProxy.Library.Routing
+﻿namespace NetProxy.Library.Routing
 {
     public class Users
     {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using NetProxy.Client.Classes;
+﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.General;

@@ -8,13 +8,13 @@ namespace NetProxy.Library.Utilities
     {
         public enum Severity
         {
-            Verbose = 0, //Not written to the event log unless (_WriteVerboseLogging==true).
+            Verbose = 0,
             Information = 1,
             Warning = 2,
             Error = 3
         }
 
-        public class EventPayload
+        public class LoggingPayload
         {
             public Severity Severity { get; set; }
             public Exception? Exception { get; set; }
@@ -22,29 +22,14 @@ namespace NetProxy.Library.Utilities
             public object UserData { get; set; } = string.Empty;
         }
 
-        public string ApplicationName { get; set; }
+        public bool WriteVerboseLogging { get; set; }
 
-        private bool _writeVerboseLogging;
-
-        public bool WriteVerboseLogging
+        public Logging(bool writeVerboseLogging)
         {
-            get
-            {
-                return _writeVerboseLogging;
-            }
-            set
-            {
-                _writeVerboseLogging = value;
-            }
+            WriteVerboseLogging = writeVerboseLogging;
         }
 
-        public Logging(string applicationName, bool writeVerboseLogging)
-        {
-            _writeVerboseLogging = writeVerboseLogging;
-            ApplicationName = applicationName;
-        }
-
-        public void WriteEvent(EventPayload payload)
+        public void WriteLog(LoggingPayload payload)
         {
             try
             {
@@ -57,7 +42,7 @@ namespace NetProxy.Library.Utilities
 
                 if (payload.Exception != null)
                 {
-                    string exceptionMessage = Exceptions.GetExceptionText(payload.Exception);
+                    string exceptionMessage = Utility.GetExceptionText(payload.Exception);
 
                     //If we do not have a message, then we have to find something to report on.
                     if (exceptionMessage == null || exceptionMessage == string.Empty)
@@ -77,7 +62,7 @@ namespace NetProxy.Library.Utilities
 
                             if (hresultEx != null)
                             {
-                                exceptionMessage = string.Format("{0}\r\n", Exceptions.GetExceptionText(hresultEx));
+                                exceptionMessage = string.Format("{0}\r\n", Utility.GetExceptionText(hresultEx));
                             }
                             else
                             {
@@ -104,7 +89,7 @@ namespace NetProxy.Library.Utilities
                     }
                 }
 
-                WriteEvent(payload.Severity, errorMessage.ToString());
+                WriteLog(payload.Severity, errorMessage.ToString());
             }
             catch
             {
@@ -112,13 +97,13 @@ namespace NetProxy.Library.Utilities
             }
         }
 
-        public void WriteEvent(Severity severity, string eventText)
+        public void WriteLog(Severity severity, string eventText)
         {
             try
             {
                 Console.WriteLine($"<{severity}> {eventText}");
 
-                if (severity == Severity.Verbose && !_writeVerboseLogging)
+                if (severity == Severity.Verbose && !WriteVerboseLogging)
                 {
                     return;
                 }

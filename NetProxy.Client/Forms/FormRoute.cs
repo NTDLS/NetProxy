@@ -110,14 +110,6 @@ namespace NetProxy.Client.Forms
             textBoxAcceptBacklogSize.Text = route.AcceptBacklogSize.ToString();
             comboBoxConnectionPattern.SelectedValue = route.Endpoints.ConnectionPattern;
             checkBoxListenAutoStart.Checked = route.AutoStart;
-            checkBoxBindingIsTunnel.Checked = route.BindingIsTunnel;
-            checkBoxEndpointIsTunnel.Checked = route.EndpointIsTunnel;
-            checkBoxBindingIsTunnel.Checked = route.BindingIsTunnel;
-            checkBoxTunnelBindingUseCompression.Checked = route.CompressBindingTunnel;
-            checkBoxTunnelBindingUseEncryption.Checked = route.EncryptBindingTunnel;
-            checkBoxEndpointIsTunnel.Checked = route.EndpointIsTunnel;
-            checkBoxTunnelEndpointUseCompression.Checked = route.CompressEndpointTunnel;
-            checkBoxTunnelEndpointUseEncryption.Checked = route.EncryptEndpointTunnel;
             checkBoxUseStickySessions.Checked = route.UseStickySessions;
             textBoxEncryptionInitTimeout.Text = route.EncryptionInitilizationTimeoutMs.ToString();
             textBoxStickySessionCacheExpiration.Text = route.StickySessionCacheExpiration.ToString();
@@ -163,40 +155,40 @@ namespace NetProxy.Client.Forms
                 MessageBox.Show("The route name is required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Strings.ValidateInt32(textBoxListenPort.Text, 1, 65535) == false)
+            if (Utility.ValidateInt32(textBoxListenPort.Text, 1, 65535) == false)
             {
                 MessageBox.Show("The listen port is required (between 1 and 65,535).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Strings.ValidateInt32(textBoxInitialBufferSize.Text, 1024, 1073741824) == false)
+            if (Utility.ValidateInt32(textBoxInitialBufferSize.Text, 1024, 1073741824) == false)
             {
                 MessageBox.Show("The initial buffer size is required (between 1024 and 1,073,741,824).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Strings.ValidateInt32(textBoxMaxBufferSize.Text) == false)
+            if (Utility.ValidateInt32(textBoxMaxBufferSize.Text) == false)
             {
                 MessageBox.Show("The max buffer size is required (between 1024 and 1,073,741,824).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Strings.ValidateInt32(textBoxAcceptBacklogSize.Text, 0, 10000) == false)
+            if (Utility.ValidateInt32(textBoxAcceptBacklogSize.Text, 0, 10000) == false)
             {
                 MessageBox.Show("The accept backlog size is required (between 0 and 10,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
-            if (Strings.ValidateInt32(textBoxEncryptionInitTimeout.Text, 1, 60000) == false)
+            if (Utility.ValidateInt32(textBoxEncryptionInitTimeout.Text, 1, 60000) == false)
             {
                 MessageBox.Show("The encryption initilization timeout (ms) is required (between 1 and 60000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
-            if (Strings.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
+            if (Utility.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
             {
                 MessageBox.Show("The sticky session cach expiration (s) is required (between 1 and 2,592,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
-            if (Strings.ValidateInt32(textBoxSpinLockCount.Text, 1000, 100000000) == false)
+            if (Utility.ValidateInt32(textBoxSpinLockCount.Text, 1000, 100000000) == false)
             {
                 MessageBox.Show("The spin-lock count is required (between 1000 and 100,000,000.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
@@ -221,14 +213,6 @@ namespace NetProxy.Client.Forms
             route.EncryptionInitilizationTimeoutMs = int.Parse(textBoxEncryptionInitTimeout.Text);
             route.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
             route.SpinLockCount = int.Parse(textBoxSpinLockCount.Text);
-
-            route.BindingIsTunnel = checkBoxBindingIsTunnel.Checked;
-            route.CompressBindingTunnel = checkBoxTunnelBindingUseCompression.Checked;
-            route.EncryptBindingTunnel = checkBoxTunnelBindingUseEncryption.Checked;
-
-            route.EndpointIsTunnel = checkBoxEndpointIsTunnel.Checked;
-            route.CompressEndpointTunnel = checkBoxTunnelEndpointUseCompression.Checked;
-            route.EncryptEndpointTunnel = checkBoxTunnelEndpointUseEncryption.Checked;
 
             if (route.InitialBufferSize > route.MaxBufferSize)
             {
@@ -354,18 +338,6 @@ namespace NetProxy.Client.Forms
             {
                 MessageBox.Show("Bindings cannot be added because [listen on all addresses] is selected.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
-        }
-
-        private void checkBoxBindingIsTunnel_CheckStateChanged(object? sender, EventArgs e)
-        {
-            checkBoxTunnelBindingUseCompression.Enabled = checkBoxBindingIsTunnel.Checked;
-            checkBoxTunnelBindingUseEncryption.Enabled = checkBoxBindingIsTunnel.Checked;
-        }
-
-        private void checkBoxEndpointIsTunnel_CheckedChanged(object? sender, EventArgs e)
-        {
-            checkBoxTunnelEndpointUseCompression.Enabled = checkBoxEndpointIsTunnel.Checked;
-            checkBoxTunnelEndpointUseEncryption.Enabled = checkBoxEndpointIsTunnel.Checked;
         }
     }
 }

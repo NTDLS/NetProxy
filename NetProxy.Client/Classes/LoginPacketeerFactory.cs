@@ -17,7 +17,7 @@ namespace NetProxy.Client.Classes
                 var userLogin = new UserLogin()
                 {
                     UserName = connectionInfo.UserName,
-                    PasswordHash = Hashing.Sha256(connectionInfo.Password)
+                    PasswordHash = Utility.Sha256(connectionInfo.Password)
                 };
 
                 packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));

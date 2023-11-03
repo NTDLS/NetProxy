@@ -81,7 +81,7 @@ namespace NetProxy.Client.Forms
                     string hash = (string)row.Cells[ColumnPassword.Index].Value;
                     if (hash == null || hash == string.Empty)
                     {
-                        hash = Hashing.Sha256(string.Empty);
+                        hash = Utility.Sha256(string.Empty);
                     }
 
                     users.Add(new User

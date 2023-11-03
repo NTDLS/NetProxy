@@ -17,14 +17,6 @@
             public const string GuiRequestRouteStatsList = "GUIRequestRouteStatsList";
         }
 
-        public static class IntraServiceLables
-        {
-            public const string ApplyNegotiationToken = "ApplyNegotiationToken";
-            public const string ApplyResponseNegotiationToken = "ApplyResponseNegotiationToken";
-            public const string EncryptionNegotationComplete = "EncryptionNegotationComplete";
-            public const string TunnelNegotationComplete = "TunnelNegotationComplete";
-        }
-
         public const string TitleCaption = "NetProxy";
         public const int DefaultManagementPort = 5854;
         public const int DefaultInitialBufferSize = 4096;

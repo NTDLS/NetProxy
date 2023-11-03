@@ -67,7 +67,7 @@ namespace NetProxy.Service
                     }
                     catch (Exception ex)
                     {
-                        Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                        Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                         {
                             Severity = Logging.Severity.Error,
                             CustomText = "An error occured while logging in.",
@@ -113,7 +113,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to get route list.",
@@ -151,7 +151,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to get route stats list.",
@@ -177,7 +177,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to get route.",
@@ -199,7 +199,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to get user list.",
@@ -230,7 +230,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to save user list.",
@@ -273,7 +273,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to upsert route.",
@@ -305,7 +305,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to get delete route.",
@@ -335,7 +335,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to get stop route.",
@@ -368,7 +368,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to start route.",
@@ -388,7 +388,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                 {
                     Severity = Logging.Severity.Error,
                     CustomText = "Failed to save configuration.",
@@ -424,7 +424,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                 {
                     Severity = Logging.Severity.Error,
                     CustomText = "Failed to load configuration.",
@@ -522,7 +522,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                 {
                     Severity = Logging.Severity.Error,
                     CustomText = "Failed to start router.",
@@ -542,7 +542,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                 {
                     Severity = Logging.Severity.Error,
                     CustomText = "Failed to stop router.",

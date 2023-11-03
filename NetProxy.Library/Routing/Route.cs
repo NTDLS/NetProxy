@@ -15,12 +15,6 @@ namespace NetProxy.Library.Routing
         public int ListenPort { get; set; }
         public int SpinLockCount { get; set; }
         public bool UseStickySessions { get; set; }
-        public bool CompressBindingTunnel { get; set; }
-        public bool CompressEndpointTunnel { get; set; }
-        public bool EncryptBindingTunnel { get; set; }
-        public bool EncryptEndpointTunnel { get; set; }
-        public bool BindingIsTunnel { get; set; }
-        public bool EndpointIsTunnel { get; set; }
         public int AcceptBacklogSize { get; set; }
         public int EncryptionInitilizationTimeoutMs { get; set; }
         public int InitialBufferSize { get; set; }

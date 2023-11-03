@@ -9,7 +9,7 @@ namespace NetProxy.Service
         {
             get
             {
-                _eventLog ??= new Logging(Library.Constants.TitleCaption, false);
+                _eventLog ??= new Logging(false);
                 return _eventLog;
             }
         }

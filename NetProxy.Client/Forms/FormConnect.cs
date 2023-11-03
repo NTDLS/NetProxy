@@ -147,7 +147,7 @@ namespace NetProxy.Client.Forms
                     UserLogin userLogin = new UserLogin()
                     {
                         UserName = _connectionInfo.UserName,
-                        PasswordHash = Hashing.Sha256(_connectionInfo.Password)
+                        PasswordHash = Utility.Sha256(_connectionInfo.Password)
                     };
 
                     _packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));

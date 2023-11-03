@@ -39,7 +39,7 @@ namespace NetProxy.Service.Routing
                     }
                     catch (Exception ex)
                     {
-                        Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                        Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                         {
                             Severity = Logging.Severity.Error,
                             CustomText = "Failed to start route.",
@@ -60,7 +60,7 @@ namespace NetProxy.Service.Routing
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
+                    Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
                         Severity = Logging.Severity.Error,
                         CustomText = "Failed to stop route.",

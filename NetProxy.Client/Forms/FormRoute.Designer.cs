@@ -74,15 +74,6 @@
             label8 = new Label();
             label9 = new Label();
             comboBoxConnectionPattern = new ComboBox();
-            tabPageTunneling = new TabPage();
-            groupBox3 = new GroupBox();
-            checkBoxTunnelEndpointUseEncryption = new CheckBox();
-            checkBoxEndpointIsTunnel = new CheckBox();
-            checkBoxTunnelEndpointUseCompression = new CheckBox();
-            groupBox2 = new GroupBox();
-            checkBoxTunnelBindingUseEncryption = new CheckBox();
-            checkBoxTunnelBindingUseCompression = new CheckBox();
-            checkBoxBindingIsTunnel = new CheckBox();
             tabPageAdvanced = new TabPage();
             groupBox4 = new GroupBox();
             textBoxEncryptionInitTimeout = new TextBox();
@@ -105,9 +96,6 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewHTTPHeaders).BeginInit();
             tabPageEndpoints.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewEndpoints).BeginInit();
-            tabPageTunneling.SuspendLayout();
-            groupBox3.SuspendLayout();
-            groupBox2.SuspendLayout();
             tabPageAdvanced.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBox1.SuspendLayout();
@@ -201,7 +189,6 @@
             tabControl.Controls.Add(tabPageBindings);
             tabControl.Controls.Add(tabPageHTTPHeaders);
             tabControl.Controls.Add(tabPageEndpoints);
-            tabControl.Controls.Add(tabPageTunneling);
             tabControl.Controls.Add(tabPageAdvanced);
             tabControl.Location = new Point(14, 14);
             tabControl.Margin = new Padding(4, 3, 4, 3);
@@ -522,119 +509,6 @@
             comboBoxConnectionPattern.Size = new Size(140, 23);
             comboBoxConnectionPattern.TabIndex = 13;
             // 
-            // tabPageTunneling
-            // 
-            tabPageTunneling.Controls.Add(groupBox3);
-            tabPageTunneling.Controls.Add(groupBox2);
-            tabPageTunneling.Location = new Point(4, 24);
-            tabPageTunneling.Margin = new Padding(4, 3, 4, 3);
-            tabPageTunneling.Name = "tabPageTunneling";
-            tabPageTunneling.Padding = new Padding(4, 3, 4, 3);
-            tabPageTunneling.Size = new Size(682, 316);
-            tabPageTunneling.TabIndex = 5;
-            tabPageTunneling.Text = "Tunneling";
-            tabPageTunneling.UseVisualStyleBackColor = true;
-            // 
-            // groupBox3
-            // 
-            groupBox3.Controls.Add(checkBoxTunnelEndpointUseEncryption);
-            groupBox3.Controls.Add(checkBoxEndpointIsTunnel);
-            groupBox3.Controls.Add(checkBoxTunnelEndpointUseCompression);
-            groupBox3.Location = new Point(370, 7);
-            groupBox3.Margin = new Padding(4, 3, 4, 3);
-            groupBox3.Name = "groupBox3";
-            groupBox3.Padding = new Padding(4, 3, 4, 3);
-            groupBox3.Size = new Size(303, 113);
-            groupBox3.TabIndex = 21;
-            groupBox3.TabStop = false;
-            groupBox3.Text = "Outgoing / Endpoints";
-            // 
-            // checkBoxTunnelEndpointUseEncryption
-            // 
-            checkBoxTunnelEndpointUseEncryption.AutoSize = true;
-            checkBoxTunnelEndpointUseEncryption.Enabled = false;
-            checkBoxTunnelEndpointUseEncryption.Location = new Point(7, 75);
-            checkBoxTunnelEndpointUseEncryption.Margin = new Padding(4, 3, 4, 3);
-            checkBoxTunnelEndpointUseEncryption.Name = "checkBoxTunnelEndpointUseEncryption";
-            checkBoxTunnelEndpointUseEncryption.Size = new Size(110, 19);
-            checkBoxTunnelEndpointUseEncryption.TabIndex = 22;
-            checkBoxTunnelEndpointUseEncryption.Text = "Use Encryption?";
-            checkBoxTunnelEndpointUseEncryption.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxEndpointIsTunnel
-            // 
-            checkBoxEndpointIsTunnel.AutoSize = true;
-            checkBoxEndpointIsTunnel.Location = new Point(7, 22);
-            checkBoxEndpointIsTunnel.Margin = new Padding(4, 3, 4, 3);
-            checkBoxEndpointIsTunnel.Name = "checkBoxEndpointIsTunnel";
-            checkBoxEndpointIsTunnel.Size = new Size(217, 19);
-            checkBoxEndpointIsTunnel.TabIndex = 20;
-            checkBoxEndpointIsTunnel.Text = "Is Tunnel? (Connecting to NetProxy)";
-            checkBoxEndpointIsTunnel.UseVisualStyleBackColor = true;
-            checkBoxEndpointIsTunnel.CheckedChanged += checkBoxEndpointIsTunnel_CheckedChanged;
-            // 
-            // checkBoxTunnelEndpointUseCompression
-            // 
-            checkBoxTunnelEndpointUseCompression.AutoSize = true;
-            checkBoxTunnelEndpointUseCompression.Enabled = false;
-            checkBoxTunnelEndpointUseCompression.Location = new Point(7, 48);
-            checkBoxTunnelEndpointUseCompression.Margin = new Padding(4, 3, 4, 3);
-            checkBoxTunnelEndpointUseCompression.Name = "checkBoxTunnelEndpointUseCompression";
-            checkBoxTunnelEndpointUseCompression.Size = new Size(123, 19);
-            checkBoxTunnelEndpointUseCompression.TabIndex = 21;
-            checkBoxTunnelEndpointUseCompression.Text = "Use Compression?";
-            checkBoxTunnelEndpointUseCompression.UseVisualStyleBackColor = true;
-            // 
-            // groupBox2
-            // 
-            groupBox2.Controls.Add(checkBoxTunnelBindingUseEncryption);
-            groupBox2.Controls.Add(checkBoxTunnelBindingUseCompression);
-            groupBox2.Controls.Add(checkBoxBindingIsTunnel);
-            groupBox2.Location = new Point(7, 7);
-            groupBox2.Margin = new Padding(4, 3, 4, 3);
-            groupBox2.Name = "groupBox2";
-            groupBox2.Padding = new Padding(4, 3, 4, 3);
-            groupBox2.Size = new Size(303, 113);
-            groupBox2.TabIndex = 20;
-            groupBox2.TabStop = false;
-            groupBox2.Text = "Incoming / Binding";
-            // 
-            // checkBoxTunnelBindingUseEncryption
-            // 
-            checkBoxTunnelBindingUseEncryption.AutoSize = true;
-            checkBoxTunnelBindingUseEncryption.Enabled = false;
-            checkBoxTunnelBindingUseEncryption.Location = new Point(7, 75);
-            checkBoxTunnelBindingUseEncryption.Margin = new Padding(4, 3, 4, 3);
-            checkBoxTunnelBindingUseEncryption.Name = "checkBoxTunnelBindingUseEncryption";
-            checkBoxTunnelBindingUseEncryption.Size = new Size(110, 19);
-            checkBoxTunnelBindingUseEncryption.TabIndex = 18;
-            checkBoxTunnelBindingUseEncryption.Text = "Use Encryption?";
-            checkBoxTunnelBindingUseEncryption.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxTunnelBindingUseCompression
-            // 
-            checkBoxTunnelBindingUseCompression.AutoSize = true;
-            checkBoxTunnelBindingUseCompression.Enabled = false;
-            checkBoxTunnelBindingUseCompression.Location = new Point(7, 48);
-            checkBoxTunnelBindingUseCompression.Margin = new Padding(4, 3, 4, 3);
-            checkBoxTunnelBindingUseCompression.Name = "checkBoxTunnelBindingUseCompression";
-            checkBoxTunnelBindingUseCompression.Size = new Size(123, 19);
-            checkBoxTunnelBindingUseCompression.TabIndex = 17;
-            checkBoxTunnelBindingUseCompression.Text = "Use Compression?";
-            checkBoxTunnelBindingUseCompression.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxBindingIsTunnel
-            // 
-            checkBoxBindingIsTunnel.AutoSize = true;
-            checkBoxBindingIsTunnel.Location = new Point(7, 22);
-            checkBoxBindingIsTunnel.Margin = new Padding(4, 3, 4, 3);
-            checkBoxBindingIsTunnel.Name = "checkBoxBindingIsTunnel";
-            checkBoxBindingIsTunnel.Size = new Size(232, 19);
-            checkBoxBindingIsTunnel.TabIndex = 16;
-            checkBoxBindingIsTunnel.Text = "Is Tunnel? (Connection from NetProxy)";
-            checkBoxBindingIsTunnel.UseVisualStyleBackColor = true;
-            checkBoxBindingIsTunnel.CheckStateChanged += checkBoxBindingIsTunnel_CheckStateChanged;
-            // 
             // tabPageAdvanced
             // 
             tabPageAdvanced.Controls.Add(groupBox4);
@@ -811,11 +685,6 @@
             tabPageEndpoints.ResumeLayout(false);
             tabPageEndpoints.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewEndpoints).EndInit();
-            tabPageTunneling.ResumeLayout(false);
-            groupBox3.ResumeLayout(false);
-            groupBox3.PerformLayout();
-            groupBox2.ResumeLayout(false);
-            groupBox2.PerformLayout();
             tabPageAdvanced.ResumeLayout(false);
             groupBox4.ResumeLayout(false);
             groupBox4.PerformLayout();
@@ -874,15 +743,6 @@
         private DataGridViewTextBoxColumn ColumnEndpointsDescription;
         private ComboBox comboBoxBindingProtocol;
         private Label label10;
-        private TabPage tabPageTunneling;
-        private GroupBox groupBox3;
-        private CheckBox checkBoxTunnelEndpointUseEncryption;
-        private CheckBox checkBoxEndpointIsTunnel;
-        private CheckBox checkBoxTunnelEndpointUseCompression;
-        private GroupBox groupBox2;
-        private CheckBox checkBoxTunnelBindingUseEncryption;
-        private CheckBox checkBoxTunnelBindingUseCompression;
-        private CheckBox checkBoxBindingIsTunnel;
         private CheckBox checkBoxUseStickySessions;
         private TextBox textBoxSpinLockCount;
         private Label label14;

@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormRoute));
             label1 = new Label();
             label2 = new Label();
@@ -51,6 +51,9 @@
             comboBoxBindingProtocol = new ComboBox();
             label10 = new Label();
             dataGridViewBindings = new DataGridView();
+            ColumnBindingsEnabled = new DataGridViewCheckBoxColumn();
+            ColumnBindingsIPAddress = new DataGridViewTextBoxColumn();
+            ColumnBindingsDescription = new DataGridViewTextBoxColumn();
             textBoxListenPort = new TextBox();
             tabPageHTTPHeaders = new TabPage();
             dataGridViewHTTPHeaders = new DataGridView();
@@ -83,9 +86,6 @@
             textBoxInitialBufferSize = new TextBox();
             buttonCancel = new Button();
             buttonSave = new Button();
-            ColumnBindingsEnabled = new DataGridViewCheckBoxColumn();
-            ColumnBindingsIPAddress = new DataGridViewTextBoxColumn();
-            ColumnBindingsDescription = new DataGridViewTextBoxColumn();
             tabControl.SuspendLayout();
             tabPageGeneral.SuspendLayout();
             tabPageBindings.SuspendLayout();
@@ -189,7 +189,7 @@
             tabControl.Controls.Add(tabPageEndpoints);
             tabControl.Controls.Add(tabPageAdvanced);
             tabControl.Location = new Point(14, 14);
-            tabControl.Margin = new Padding(4, 3, 4, 3);
+            tabControl.Margin = new Padding(0);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
             tabControl.Size = new Size(596, 344);
@@ -197,6 +197,7 @@
             // 
             // tabPageGeneral
             // 
+            tabPageGeneral.BackColor = SystemColors.Control;
             tabPageGeneral.Controls.Add(textBoxDescription);
             tabPageGeneral.Controls.Add(label6);
             tabPageGeneral.Controls.Add(checkBoxListenAutoStart);
@@ -205,12 +206,11 @@
             tabPageGeneral.Controls.Add(label1);
             tabPageGeneral.Controls.Add(label2);
             tabPageGeneral.Location = new Point(4, 24);
-            tabPageGeneral.Margin = new Padding(4, 3, 4, 3);
+            tabPageGeneral.Margin = new Padding(0);
             tabPageGeneral.Name = "tabPageGeneral";
             tabPageGeneral.Size = new Size(588, 316);
             tabPageGeneral.TabIndex = 0;
             tabPageGeneral.Text = "General";
-            tabPageGeneral.UseVisualStyleBackColor = true;
             // 
             // textBoxDescription
             // 
@@ -265,6 +265,7 @@
             // 
             // tabPageBindings
             // 
+            tabPageBindings.BackColor = SystemColors.Control;
             tabPageBindings.Controls.Add(comboBoxBindingProtocol);
             tabPageBindings.Controls.Add(label10);
             tabPageBindings.Controls.Add(dataGridViewBindings);
@@ -273,12 +274,11 @@
             tabPageBindings.Controls.Add(checkBoxListenOnAllAddresses);
             tabPageBindings.Controls.Add(label7);
             tabPageBindings.Location = new Point(4, 24);
-            tabPageBindings.Margin = new Padding(4, 3, 4, 3);
+            tabPageBindings.Margin = new Padding(0);
             tabPageBindings.Name = "tabPageBindings";
             tabPageBindings.Size = new Size(588, 316);
             tabPageBindings.TabIndex = 1;
             tabPageBindings.Text = "Bindings";
-            tabPageBindings.UseVisualStyleBackColor = true;
             // 
             // comboBoxBindingProtocol
             // 
@@ -312,6 +312,27 @@
             dataGridViewBindings.TabIndex = 7;
             dataGridViewBindings.Click += dataGridViewBindings_Click;
             // 
+            // ColumnBindingsEnabled
+            // 
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnBindingsEnabled.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnBindingsEnabled.Frozen = true;
+            ColumnBindingsEnabled.HeaderText = "Enabled";
+            ColumnBindingsEnabled.Name = "ColumnBindingsEnabled";
+            ColumnBindingsEnabled.Width = 55;
+            // 
+            // ColumnBindingsIPAddress
+            // 
+            ColumnBindingsIPAddress.HeaderText = "IP Address";
+            ColumnBindingsIPAddress.Name = "ColumnBindingsIPAddress";
+            ColumnBindingsIPAddress.Width = 125;
+            // 
+            // ColumnBindingsDescription
+            // 
+            ColumnBindingsDescription.HeaderText = "Description";
+            ColumnBindingsDescription.Name = "ColumnBindingsDescription";
+            ColumnBindingsDescription.Width = 250;
+            // 
             // textBoxListenPort
             // 
             textBoxListenPort.Location = new Point(115, 15);
@@ -322,14 +343,14 @@
             // 
             // tabPageHTTPHeaders
             // 
+            tabPageHTTPHeaders.BackColor = SystemColors.Control;
             tabPageHTTPHeaders.Controls.Add(dataGridViewHTTPHeaders);
             tabPageHTTPHeaders.Location = new Point(4, 24);
-            tabPageHTTPHeaders.Margin = new Padding(4, 3, 4, 3);
+            tabPageHTTPHeaders.Margin = new Padding(0);
             tabPageHTTPHeaders.Name = "tabPageHTTPHeaders";
             tabPageHTTPHeaders.Size = new Size(588, 316);
             tabPageHTTPHeaders.TabIndex = 2;
             tabPageHTTPHeaders.Text = "HTTPHeaders";
-            tabPageHTTPHeaders.UseVisualStyleBackColor = true;
             // 
             // dataGridViewHTTPHeaders
             // 
@@ -397,18 +418,18 @@
             // 
             // tabPageEndpoints
             // 
+            tabPageEndpoints.BackColor = SystemColors.Control;
             tabPageEndpoints.Controls.Add(checkBoxUseStickySessions);
             tabPageEndpoints.Controls.Add(dataGridViewEndpoints);
             tabPageEndpoints.Controls.Add(label8);
             tabPageEndpoints.Controls.Add(label9);
             tabPageEndpoints.Controls.Add(comboBoxConnectionPattern);
             tabPageEndpoints.Location = new Point(4, 24);
-            tabPageEndpoints.Margin = new Padding(4, 3, 4, 3);
+            tabPageEndpoints.Margin = new Padding(0);
             tabPageEndpoints.Name = "tabPageEndpoints";
             tabPageEndpoints.Size = new Size(588, 316);
             tabPageEndpoints.TabIndex = 4;
             tabPageEndpoints.Text = "Endpoints";
-            tabPageEndpoints.UseVisualStyleBackColor = true;
             // 
             // checkBoxUseStickySessions
             // 
@@ -490,15 +511,15 @@
             // 
             // tabPageAdvanced
             // 
+            tabPageAdvanced.BackColor = SystemColors.Control;
             tabPageAdvanced.Controls.Add(groupBox4);
             tabPageAdvanced.Controls.Add(groupBox1);
             tabPageAdvanced.Location = new Point(4, 24);
-            tabPageAdvanced.Margin = new Padding(4, 3, 4, 3);
+            tabPageAdvanced.Margin = new Padding(0);
             tabPageAdvanced.Name = "tabPageAdvanced";
             tabPageAdvanced.Size = new Size(588, 316);
             tabPageAdvanced.TabIndex = 3;
             tabPageAdvanced.Text = "Advanced";
-            tabPageAdvanced.UseVisualStyleBackColor = true;
             // 
             // groupBox4
             // 
@@ -613,27 +634,6 @@
             buttonSave.Text = "Save";
             buttonSave.UseVisualStyleBackColor = true;
             buttonSave.Click += buttonSave_Click;
-            // 
-            // ColumnBindingsEnabled
-            // 
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            ColumnBindingsEnabled.DefaultCellStyle = dataGridViewCellStyle1;
-            ColumnBindingsEnabled.Frozen = true;
-            ColumnBindingsEnabled.HeaderText = "Enabled";
-            ColumnBindingsEnabled.Name = "ColumnBindingsEnabled";
-            ColumnBindingsEnabled.Width = 55;
-            // 
-            // ColumnBindingsIPAddress
-            // 
-            ColumnBindingsIPAddress.HeaderText = "IP Address";
-            ColumnBindingsIPAddress.Name = "ColumnBindingsIPAddress";
-            ColumnBindingsIPAddress.Width = 125;
-            // 
-            // ColumnBindingsDescription
-            // 
-            ColumnBindingsDescription.HeaderText = "Description";
-            ColumnBindingsDescription.Name = "ColumnBindingsDescription";
-            ColumnBindingsDescription.Width = 250;
             // 
             // FormRoute
             // 

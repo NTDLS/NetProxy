@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormRoute));
             label1 = new Label();
             label2 = new Label();
@@ -51,9 +51,6 @@
             comboBoxBindingProtocol = new ComboBox();
             label10 = new Label();
             dataGridViewBindings = new DataGridView();
-            ColumnBindingsEnabled = new DataGridViewCheckBoxColumn();
-            ColumnBindingsIPAddress = new DataGridViewTextBoxColumn();
-            ColumnBindingsDescription = new DataGridViewTextBoxColumn();
             textBoxListenPort = new TextBox();
             tabPageHTTPHeaders = new TabPage();
             dataGridViewHTTPHeaders = new DataGridView();
@@ -76,9 +73,7 @@
             comboBoxConnectionPattern = new ComboBox();
             tabPageAdvanced = new TabPage();
             groupBox4 = new GroupBox();
-            textBoxEncryptionInitTimeout = new TextBox();
             textBoxStickySessionCacheExpiration = new TextBox();
-            label13 = new Label();
             label15 = new Label();
             label14 = new Label();
             textBoxSpinLockCount = new TextBox();
@@ -88,6 +83,9 @@
             textBoxInitialBufferSize = new TextBox();
             buttonCancel = new Button();
             buttonSave = new Button();
+            ColumnBindingsEnabled = new DataGridViewCheckBoxColumn();
+            ColumnBindingsIPAddress = new DataGridViewTextBoxColumn();
+            ColumnBindingsDescription = new DataGridViewTextBoxColumn();
             tabControl.SuspendLayout();
             tabPageGeneral.SuspendLayout();
             tabPageBindings.SuspendLayout();
@@ -104,7 +102,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(37, 16);
+            label1.Location = new Point(34, 16);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(39, 15);
@@ -114,7 +112,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(4, 46);
+            label2.Location = new Point(7, 48);
             label2.Margin = new Padding(4, 0, 4, 0);
             label2.Name = "label2";
             label2.Size = new Size(66, 15);
@@ -124,7 +122,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(64, 29);
+            label3.Location = new Point(102, 28);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(59, 15);
@@ -144,7 +142,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(69, 59);
+            label5.Location = new Point(108, 57);
             label5.Margin = new Padding(4, 0, 4, 0);
             label5.Name = "label5";
             label5.Size = new Size(53, 15);
@@ -154,7 +152,7 @@
             // labelAcceptBacklogSize
             // 
             labelAcceptBacklogSize.AutoSize = true;
-            labelAcceptBacklogSize.Location = new Point(4, 89);
+            labelAcceptBacklogSize.Location = new Point(49, 87);
             labelAcceptBacklogSize.Margin = new Padding(4, 0, 4, 0);
             labelAcceptBacklogSize.Name = "labelAcceptBacklogSize";
             labelAcceptBacklogSize.Size = new Size(112, 15);
@@ -194,7 +192,7 @@
             tabControl.Margin = new Padding(4, 3, 4, 3);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new Size(690, 344);
+            tabControl.Size = new Size(596, 344);
             tabControl.TabIndex = 10;
             // 
             // tabPageGeneral
@@ -209,7 +207,7 @@
             tabPageGeneral.Location = new Point(4, 24);
             tabPageGeneral.Margin = new Padding(4, 3, 4, 3);
             tabPageGeneral.Name = "tabPageGeneral";
-            tabPageGeneral.Size = new Size(682, 316);
+            tabPageGeneral.Size = new Size(588, 316);
             tabPageGeneral.TabIndex = 0;
             tabPageGeneral.Text = "General";
             tabPageGeneral.UseVisualStyleBackColor = true;
@@ -222,13 +220,13 @@
             textBoxDescription.Multiline = true;
             textBoxDescription.Name = "textBoxDescription";
             textBoxDescription.ScrollBars = ScrollBars.Both;
-            textBoxDescription.Size = new Size(577, 175);
+            textBoxDescription.Size = new Size(484, 175);
             textBoxDescription.TabIndex = 4;
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(8, 114);
+            label6.Location = new Point(6, 114);
             label6.Margin = new Padding(4, 0, 4, 0);
             label6.Name = "label6";
             label6.Size = new Size(67, 15);
@@ -238,7 +236,7 @@
             // checkBoxListenAutoStart
             // 
             checkBoxListenAutoStart.AutoSize = true;
-            checkBoxListenAutoStart.Location = new Point(85, 74);
+            checkBoxListenAutoStart.Location = new Point(85, 76);
             checkBoxListenAutoStart.Margin = new Padding(4, 3, 4, 3);
             checkBoxListenAutoStart.Name = "checkBoxListenAutoStart";
             checkBoxListenAutoStart.Size = new Size(84, 19);
@@ -250,7 +248,7 @@
             // 
             comboBoxTrafficType.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxTrafficType.FormattingEnabled = true;
-            comboBoxTrafficType.Location = new Point(85, 43);
+            comboBoxTrafficType.Location = new Point(85, 45);
             comboBoxTrafficType.Margin = new Padding(4, 3, 4, 3);
             comboBoxTrafficType.Name = "comboBoxTrafficType";
             comboBoxTrafficType.Size = new Size(140, 23);
@@ -262,7 +260,7 @@
             textBoxRouteName.Location = new Point(85, 13);
             textBoxRouteName.Margin = new Padding(4, 3, 4, 3);
             textBoxRouteName.Name = "textBoxRouteName";
-            textBoxRouteName.Size = new Size(577, 23);
+            textBoxRouteName.Size = new Size(484, 23);
             textBoxRouteName.TabIndex = 1;
             // 
             // tabPageBindings
@@ -277,7 +275,7 @@
             tabPageBindings.Location = new Point(4, 24);
             tabPageBindings.Margin = new Padding(4, 3, 4, 3);
             tabPageBindings.Name = "tabPageBindings";
-            tabPageBindings.Size = new Size(682, 316);
+            tabPageBindings.Size = new Size(588, 316);
             tabPageBindings.TabIndex = 1;
             tabPageBindings.Text = "Bindings";
             tabPageBindings.UseVisualStyleBackColor = true;
@@ -307,32 +305,12 @@
             dataGridViewBindings.BackgroundColor = SystemColors.ButtonFace;
             dataGridViewBindings.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewBindings.Columns.AddRange(new DataGridViewColumn[] { ColumnBindingsEnabled, ColumnBindingsIPAddress, ColumnBindingsDescription });
-            dataGridViewBindings.Location = new Point(14, 105);
+            dataGridViewBindings.Location = new Point(10, 105);
             dataGridViewBindings.Margin = new Padding(4, 3, 4, 3);
             dataGridViewBindings.Name = "dataGridViewBindings";
-            dataGridViewBindings.Size = new Size(643, 173);
+            dataGridViewBindings.Size = new Size(565, 173);
             dataGridViewBindings.TabIndex = 7;
             dataGridViewBindings.Click += dataGridViewBindings_Click;
-            // 
-            // ColumnBindingsEnabled
-            // 
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            ColumnBindingsEnabled.DefaultCellStyle = dataGridViewCellStyle1;
-            ColumnBindingsEnabled.Frozen = true;
-            ColumnBindingsEnabled.HeaderText = "Enabled";
-            ColumnBindingsEnabled.Name = "ColumnBindingsEnabled";
-            ColumnBindingsEnabled.Width = 50;
-            // 
-            // ColumnBindingsIPAddress
-            // 
-            ColumnBindingsIPAddress.HeaderText = "IP Address";
-            ColumnBindingsIPAddress.Name = "ColumnBindingsIPAddress";
-            // 
-            // ColumnBindingsDescription
-            // 
-            ColumnBindingsDescription.HeaderText = "Description";
-            ColumnBindingsDescription.Name = "ColumnBindingsDescription";
-            ColumnBindingsDescription.Width = 250;
             // 
             // textBoxListenPort
             // 
@@ -348,7 +326,7 @@
             tabPageHTTPHeaders.Location = new Point(4, 24);
             tabPageHTTPHeaders.Margin = new Padding(4, 3, 4, 3);
             tabPageHTTPHeaders.Name = "tabPageHTTPHeaders";
-            tabPageHTTPHeaders.Size = new Size(682, 316);
+            tabPageHTTPHeaders.Size = new Size(588, 316);
             tabPageHTTPHeaders.TabIndex = 2;
             tabPageHTTPHeaders.Text = "HTTPHeaders";
             tabPageHTTPHeaders.UseVisualStyleBackColor = true;
@@ -358,10 +336,11 @@
             dataGridViewHTTPHeaders.BackgroundColor = SystemColors.ButtonFace;
             dataGridViewHTTPHeaders.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewHTTPHeaders.Columns.AddRange(new DataGridViewColumn[] { ColumnHTTPHeadersEnabled, ColumnHTTPHeadersType, ColumnHTTPHeadersVerb, ColumnHTTPHeadersHeader, ColumnHTTPHeadersAction, ColumnHTTPHeadersValue, ColumnHTTPHeadersDescription });
-            dataGridViewHTTPHeaders.Location = new Point(8, 7);
+            dataGridViewHTTPHeaders.Dock = DockStyle.Fill;
+            dataGridViewHTTPHeaders.Location = new Point(0, 0);
             dataGridViewHTTPHeaders.Margin = new Padding(4, 3, 4, 3);
             dataGridViewHTTPHeaders.Name = "dataGridViewHTTPHeaders";
-            dataGridViewHTTPHeaders.Size = new Size(664, 295);
+            dataGridViewHTTPHeaders.Size = new Size(588, 316);
             dataGridViewHTTPHeaders.TabIndex = 9;
             dataGridViewHTTPHeaders.Click += dataGridViewHTTPHeaders_Click;
             // 
@@ -371,7 +350,7 @@
             ColumnHTTPHeadersEnabled.DefaultCellStyle = dataGridViewCellStyle2;
             ColumnHTTPHeadersEnabled.HeaderText = "Enabled";
             ColumnHTTPHeadersEnabled.Name = "ColumnHTTPHeadersEnabled";
-            ColumnHTTPHeadersEnabled.Width = 50;
+            ColumnHTTPHeadersEnabled.Width = 55;
             // 
             // ColumnHTTPHeadersType
             // 
@@ -426,7 +405,7 @@
             tabPageEndpoints.Location = new Point(4, 24);
             tabPageEndpoints.Margin = new Padding(4, 3, 4, 3);
             tabPageEndpoints.Name = "tabPageEndpoints";
-            tabPageEndpoints.Size = new Size(682, 316);
+            tabPageEndpoints.Size = new Size(588, 316);
             tabPageEndpoints.TabIndex = 4;
             tabPageEndpoints.Text = "Endpoints";
             tabPageEndpoints.UseVisualStyleBackColor = true;
@@ -450,7 +429,7 @@
             dataGridViewEndpoints.Location = new Point(16, 57);
             dataGridViewEndpoints.Margin = new Padding(4, 3, 4, 3);
             dataGridViewEndpoints.Name = "dataGridViewEndpoints";
-            dataGridViewEndpoints.Size = new Size(645, 238);
+            dataGridViewEndpoints.Size = new Size(559, 243);
             dataGridViewEndpoints.TabIndex = 14;
             // 
             // ColumnEndpointsEnabled
@@ -459,7 +438,7 @@
             ColumnEndpointsEnabled.DefaultCellStyle = dataGridViewCellStyle3;
             ColumnEndpointsEnabled.HeaderText = "Enabled";
             ColumnEndpointsEnabled.Name = "ColumnEndpointsEnabled";
-            ColumnEndpointsEnabled.Width = 50;
+            ColumnEndpointsEnabled.Width = 55;
             // 
             // ColumnEndpointsAddress
             // 
@@ -516,68 +495,48 @@
             tabPageAdvanced.Location = new Point(4, 24);
             tabPageAdvanced.Margin = new Padding(4, 3, 4, 3);
             tabPageAdvanced.Name = "tabPageAdvanced";
-            tabPageAdvanced.Size = new Size(682, 316);
+            tabPageAdvanced.Size = new Size(588, 316);
             tabPageAdvanced.TabIndex = 3;
             tabPageAdvanced.Text = "Advanced";
             tabPageAdvanced.UseVisualStyleBackColor = true;
             // 
             // groupBox4
             // 
-            groupBox4.Controls.Add(textBoxEncryptionInitTimeout);
             groupBox4.Controls.Add(textBoxStickySessionCacheExpiration);
-            groupBox4.Controls.Add(label13);
             groupBox4.Controls.Add(label15);
             groupBox4.Controls.Add(label14);
             groupBox4.Controls.Add(textBoxSpinLockCount);
-            groupBox4.Location = new Point(296, 17);
+            groupBox4.Location = new Point(14, 160);
             groupBox4.Margin = new Padding(4, 3, 4, 3);
             groupBox4.Name = "groupBox4";
             groupBox4.Padding = new Padding(4, 3, 4, 3);
-            groupBox4.Size = new Size(359, 137);
+            groupBox4.Size = new Size(309, 113);
             groupBox4.TabIndex = 18;
             groupBox4.TabStop = false;
             groupBox4.Text = "Misc. (Super Advanced)";
             // 
-            // textBoxEncryptionInitTimeout
-            // 
-            textBoxEncryptionInitTimeout.Location = new Point(220, 22);
-            textBoxEncryptionInitTimeout.Margin = new Padding(4, 3, 4, 3);
-            textBoxEncryptionInitTimeout.Name = "textBoxEncryptionInitTimeout";
-            textBoxEncryptionInitTimeout.Size = new Size(116, 23);
-            textBoxEncryptionInitTimeout.TabIndex = 13;
-            // 
             // textBoxStickySessionCacheExpiration
             // 
-            textBoxStickySessionCacheExpiration.Location = new Point(220, 85);
+            textBoxStickySessionCacheExpiration.Location = new Point(169, 56);
             textBoxStickySessionCacheExpiration.Margin = new Padding(4, 3, 4, 3);
             textBoxStickySessionCacheExpiration.Name = "textBoxStickySessionCacheExpiration";
             textBoxStickySessionCacheExpiration.Size = new Size(116, 23);
             textBoxStickySessionCacheExpiration.TabIndex = 17;
             // 
-            // label13
-            // 
-            label13.AutoSize = true;
-            label13.Location = new Point(14, 25);
-            label13.Margin = new Padding(4, 0, 4, 0);
-            label13.Name = "label13";
-            label13.Size = new Size(199, 15);
-            label13.TabIndex = 12;
-            label13.Text = "Encryption Initilization Timeout (ms)";
-            // 
             // label15
             // 
             label15.AutoSize = true;
-            label15.Location = new Point(12, 89);
+            label15.Location = new Point(9, 59);
             label15.Margin = new Padding(4, 0, 4, 0);
             label15.Name = "label15";
-            label15.Size = new Size(188, 15);
+            label15.Size = new Size(152, 15);
             label15.TabIndex = 16;
-            label15.Text = "Sticky Session Cache Expiration (s)";
+            label15.Text = "Sticky Session Expiration (s)";
             // 
             // label14
             // 
             label14.AutoSize = true;
-            label14.Location = new Point(113, 59);
+            label14.Location = new Point(65, 28);
             label14.Margin = new Padding(4, 0, 4, 0);
             label14.Name = "label14";
             label14.Size = new Size(96, 15);
@@ -586,7 +545,7 @@
             // 
             // textBoxSpinLockCount
             // 
-            textBoxSpinLockCount.Location = new Point(220, 55);
+            textBoxSpinLockCount.Location = new Point(169, 25);
             textBoxSpinLockCount.Margin = new Padding(4, 3, 4, 3);
             textBoxSpinLockCount.Name = "textBoxSpinLockCount";
             textBoxSpinLockCount.Size = new Size(116, 23);
@@ -604,14 +563,14 @@
             groupBox1.Margin = new Padding(4, 3, 4, 3);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(4, 3, 4, 3);
-            groupBox1.Size = new Size(275, 137);
+            groupBox1.Size = new Size(309, 137);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Buffers";
             // 
             // textBoxMaxBufferSize
             // 
-            textBoxMaxBufferSize.Location = new Point(134, 55);
+            textBoxMaxBufferSize.Location = new Point(169, 54);
             textBoxMaxBufferSize.Margin = new Padding(4, 3, 4, 3);
             textBoxMaxBufferSize.Name = "textBoxMaxBufferSize";
             textBoxMaxBufferSize.Size = new Size(116, 23);
@@ -619,7 +578,7 @@
             // 
             // textBoxAcceptBacklogSize
             // 
-            textBoxAcceptBacklogSize.Location = new Point(134, 85);
+            textBoxAcceptBacklogSize.Location = new Point(169, 84);
             textBoxAcceptBacklogSize.Margin = new Padding(4, 3, 4, 3);
             textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
             textBoxAcceptBacklogSize.Size = new Size(116, 23);
@@ -627,7 +586,7 @@
             // 
             // textBoxInitialBufferSize
             // 
-            textBoxInitialBufferSize.Location = new Point(134, 25);
+            textBoxInitialBufferSize.Location = new Point(169, 25);
             textBoxInitialBufferSize.Margin = new Padding(4, 3, 4, 3);
             textBoxInitialBufferSize.Name = "textBoxInitialBufferSize";
             textBoxInitialBufferSize.Size = new Size(116, 23);
@@ -635,7 +594,7 @@
             // 
             // buttonCancel
             // 
-            buttonCancel.Location = new Point(616, 368);
+            buttonCancel.Location = new Point(522, 368);
             buttonCancel.Margin = new Padding(4, 3, 4, 3);
             buttonCancel.Name = "buttonCancel";
             buttonCancel.Size = new Size(88, 27);
@@ -646,7 +605,7 @@
             // 
             // buttonSave
             // 
-            buttonSave.Location = new Point(522, 368);
+            buttonSave.Location = new Point(426, 368);
             buttonSave.Margin = new Padding(4, 3, 4, 3);
             buttonSave.Name = "buttonSave";
             buttonSave.Size = new Size(88, 27);
@@ -655,11 +614,32 @@
             buttonSave.UseVisualStyleBackColor = true;
             buttonSave.Click += buttonSave_Click;
             // 
+            // ColumnBindingsEnabled
+            // 
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnBindingsEnabled.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnBindingsEnabled.Frozen = true;
+            ColumnBindingsEnabled.HeaderText = "Enabled";
+            ColumnBindingsEnabled.Name = "ColumnBindingsEnabled";
+            ColumnBindingsEnabled.Width = 55;
+            // 
+            // ColumnBindingsIPAddress
+            // 
+            ColumnBindingsIPAddress.HeaderText = "IP Address";
+            ColumnBindingsIPAddress.Name = "ColumnBindingsIPAddress";
+            ColumnBindingsIPAddress.Width = 125;
+            // 
+            // ColumnBindingsDescription
+            // 
+            ColumnBindingsDescription.HeaderText = "Description";
+            ColumnBindingsDescription.Name = "ColumnBindingsDescription";
+            ColumnBindingsDescription.Width = 250;
+            // 
             // FormRoute
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(721, 407);
+            ClientSize = new Size(622, 407);
             Controls.Add(buttonSave);
             Controls.Add(buttonCancel);
             Controls.Add(tabControl);
@@ -727,6 +707,14 @@
         private CheckBox checkBoxListenAutoStart;
         private TextBox textBoxDescription;
         private Label label6;
+        private ComboBox comboBoxBindingProtocol;
+        private Label label10;
+        private CheckBox checkBoxUseStickySessions;
+        private TextBox textBoxSpinLockCount;
+        private Label label14;
+        private TextBox textBoxStickySessionCacheExpiration;
+        private Label label15;
+        private GroupBox groupBox4;
         private DataGridViewCheckBoxColumn ColumnHTTPHeadersEnabled;
         private DataGridViewComboBoxColumn ColumnHTTPHeadersType;
         private DataGridViewComboBoxColumn ColumnHTTPHeadersVerb;
@@ -734,22 +722,12 @@
         private DataGridViewComboBoxColumn ColumnHTTPHeadersAction;
         private DataGridViewTextBoxColumn ColumnHTTPHeadersValue;
         private DataGridViewTextBoxColumn ColumnHTTPHeadersDescription;
-        private DataGridViewCheckBoxColumn ColumnBindingsEnabled;
-        private DataGridViewTextBoxColumn ColumnBindingsIPAddress;
-        private DataGridViewTextBoxColumn ColumnBindingsDescription;
         private DataGridViewCheckBoxColumn ColumnEndpointsEnabled;
         private DataGridViewTextBoxColumn ColumnEndpointsAddress;
         private DataGridViewTextBoxColumn ColumnEndpointsPort;
         private DataGridViewTextBoxColumn ColumnEndpointsDescription;
-        private ComboBox comboBoxBindingProtocol;
-        private Label label10;
-        private CheckBox checkBoxUseStickySessions;
-        private TextBox textBoxSpinLockCount;
-        private Label label14;
-        private TextBox textBoxEncryptionInitTimeout;
-        private Label label13;
-        private TextBox textBoxStickySessionCacheExpiration;
-        private Label label15;
-        private GroupBox groupBox4;
+        private DataGridViewCheckBoxColumn ColumnBindingsEnabled;
+        private DataGridViewTextBoxColumn ColumnBindingsIPAddress;
+        private DataGridViewTextBoxColumn ColumnBindingsDescription;
     }
 }

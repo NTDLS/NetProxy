@@ -20,7 +20,6 @@ namespace NetProxy.Service.Routing
         public Socket? Socket { get; set; }
         public byte[] Buffer { get; set; }
         public byte[] PayloadBuilder;
-        public bool IsEncryptionNegotationComplete { get; set; }
         public int PayloadBuilderLength { get; set; }
         public string HttpHeaderBuilder { get; set; }
         public int MaxBufferSize { get; set; }

@@ -23,7 +23,6 @@
         public const int DefaultMaxBufferSize = 1048576;
         public const int DefaultStickySessionExpiration = 3600;
         public const int DefaultSpinLockCount = 1000000;
-        public const int DefaultEncryptionInitilizationTimeoutMs = 10000;
         public const int DefaultAcceptBacklogSize = 10;
     }
 

@@ -81,7 +81,6 @@ namespace NetProxy.Client.Forms
             textBoxMaxBufferSize.Text = Constants.DefaultMaxBufferSize.ToString();
             textBoxAcceptBacklogSize.Text = Constants.DefaultAcceptBacklogSize.ToString();
             comboBoxConnectionPattern.SelectedValue = ConnectionPattern.RoundRobbin;
-            textBoxEncryptionInitTimeout.Text = Constants.DefaultEncryptionInitilizationTimeoutMs.ToString();
             textBoxStickySessionCacheExpiration.Text = Constants.DefaultStickySessionExpiration.ToString();
             textBoxSpinLockCount.Text = Constants.DefaultSpinLockCount.ToString();
             checkBoxListenAutoStart.Checked = true;
@@ -111,7 +110,6 @@ namespace NetProxy.Client.Forms
             comboBoxConnectionPattern.SelectedValue = route.Endpoints.ConnectionPattern;
             checkBoxListenAutoStart.Checked = route.AutoStart;
             checkBoxUseStickySessions.Checked = route.UseStickySessions;
-            textBoxEncryptionInitTimeout.Text = route.EncryptionInitilizationTimeoutMs.ToString();
             textBoxStickySessionCacheExpiration.Text = route.StickySessionCacheExpiration.ToString();
             textBoxSpinLockCount.Text = route.SpinLockCount.ToString();
 
@@ -176,12 +174,6 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            if (Utility.ValidateInt32(textBoxEncryptionInitTimeout.Text, 1, 60000) == false)
-            {
-                MessageBox.Show("The encryption initilization timeout (ms) is required (between 1 and 60000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                return;
-            }
-
             if (Utility.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
             {
                 MessageBox.Show("The sticky session cach expiration (s) is required (between 1 and 2,592,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
@@ -209,8 +201,6 @@ namespace NetProxy.Client.Forms
             route.Endpoints.ConnectionPattern = (ConnectionPattern)Enum.Parse(typeof(ConnectionPattern), comboBoxConnectionPattern.SelectedValue?.ToString() ?? "");
             route.AutoStart = checkBoxListenAutoStart.Checked;
             route.UseStickySessions = checkBoxUseStickySessions.Checked;
-
-            route.EncryptionInitilizationTimeoutMs = int.Parse(textBoxEncryptionInitTimeout.Text);
             route.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
             route.SpinLockCount = int.Parse(textBoxSpinLockCount.Text);
 

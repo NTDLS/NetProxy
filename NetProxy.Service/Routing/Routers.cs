@@ -5,31 +5,24 @@ namespace NetProxy.Service.Routing
 {
     public class Routers
     {
-        public List<Router> List = new();
+        public List<Router> Collection = new();
 
         public List<Route> Routes()
         {
             var routes = new List<Route>();
-
-            foreach (var router in List)
-            {
-                routes.Add(router.Route);
-            }
-
+            Collection.ForEach(o => routes.Add(o.Route));
             return routes;
         }
 
         public Router? this[Guid routeId]
-            => List.Where(o => o.Route.Id == routeId).FirstOrDefault();
+            => Collection.Where(o => o.Route.Id == routeId).FirstOrDefault();
 
         public void Add(Router router)
-        {
-            List.Add(router);
-        }
+            => Collection.Add(router);
 
         public void Start()
         {
-            foreach (var router in List)
+            foreach (var router in Collection)
             {
                 if (router.Route.AutoStart)
                 {
@@ -52,7 +45,7 @@ namespace NetProxy.Service.Routing
 
         public void Stop()
         {
-            foreach (var router in List)
+            foreach (var router in Collection)
             {
                 try
                 {

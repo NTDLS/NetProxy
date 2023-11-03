@@ -16,7 +16,6 @@ namespace NetProxy.Library.Routing
         public int SpinLockCount { get; set; }
         public bool UseStickySessions { get; set; }
         public int AcceptBacklogSize { get; set; }
-        public int EncryptionInitilizationTimeoutMs { get; set; }
         public int InitialBufferSize { get; set; }
         public int StickySessionCacheExpiration { get; set; }
         public int MaxBufferSize { get; set; }
@@ -36,7 +35,6 @@ namespace NetProxy.Library.Routing
             MaxBufferSize = Constants.DefaultMaxBufferSize;
             StickySessionCacheExpiration = Constants.DefaultStickySessionExpiration;
             SpinLockCount = Constants.DefaultSpinLockCount;
-            EncryptionInitilizationTimeoutMs = Constants.DefaultEncryptionInitilizationTimeoutMs;
             Bindings = new List<Binding>();
         }
     }

@@ -90,7 +90,7 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        foreach (var router in _routers.List)
+                        foreach (var router in _routers.Collection)
                         {
                             RouteGridItem augmentedRoute = new()
                             {
@@ -132,7 +132,7 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        foreach (var router in _routers.List)
+                        foreach (var router in _routers.Collection)
                         {
                             RouteGridStats augmentedRoute = new RouteGridStats()
                             {
@@ -250,14 +250,14 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.List
+                        var existingRoute = (from o in _routers.Collection
                                              where o.Route.Id == value.Id
                                              select o).FirstOrDefault();
 
                         if (existingRoute != null)
                         {
                             existingRoute.Stop();
-                            _routers.List.Remove(existingRoute);
+                            _routers.Collection.Remove(existingRoute);
                         }
 
                         var newRouter = new Router(value);
@@ -292,14 +292,14 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.List
+                        var existingRoute = (from o in _routers.Collection
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
                         if (existingRoute != null)
                         {
                             existingRoute.Stop();
-                            _routers.List.Remove(existingRoute);
+                            _routers.Collection.Remove(existingRoute);
                         }
                         SaveConfiguration();
                     }
@@ -324,7 +324,7 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.List
+                        var existingRoute = (from o in _routers.Collection
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
@@ -354,7 +354,7 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.List
+                        var existingRoute = (from o in _routers.Collection
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 

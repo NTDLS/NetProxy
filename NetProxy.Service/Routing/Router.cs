@@ -18,9 +18,9 @@ namespace NetProxy.Service.Routing
         private readonly SingleMemoryCache _stickySessionCache = new();
         private int _lastRoundRobinIndex = 0;
         private readonly Route _route;
-        private Socket _listenSocket = null;
-        private readonly List<SocketState> _connections = new List<SocketState>();
-        private AsyncCallback _onDataReceivedCallback;
+        private Socket? _listenSocket = null;
+        private readonly List<SocketState> _connections = new();
+        private AsyncCallback? _onDataReceivedCallback;
 
         public int CurrentConnectionCount
         {
@@ -236,7 +236,7 @@ namespace NetProxy.Service.Routing
 
         public SocketState? Connect(string hostName, int port)
         {
-            IPAddress ipAddress = GetIpAddress(hostName);
+            IPAddress? ipAddress = GetIpAddress(hostName);
             if (ipAddress != null)
             {
                 return Connect(ipAddress, port);
@@ -311,7 +311,7 @@ namespace NetProxy.Service.Routing
 
                 string? sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
 
-                string commonSalt = null;
+                string? commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
                 {
                     commonSalt = _route.BindingPreSharedKey;
@@ -334,14 +334,19 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        void EstablishPeerConnection(object connectionObject)
+        void EstablishPeerConnection(object? connectionObject)
         {
-            SocketState accpetedConnection = (SocketState)connectionObject;
+            var accpetedConnection = connectionObject as SocketState;
+            Utility.EnsureNotNull(accpetedConnection);
+
+            Utility.EnsureNotNull(accpetedConnection.Socket);
+            Utility.EnsureNotNull(accpetedConnection.Socket.RemoteEndPoint);
 
             SocketState? foreignConnection = null;
 
-            Endpoint foreignConnectionEndpoint = null;
-            string stickeySessionKey = _route.Name + ":" + _route.Endpoints.ConnectionPattern + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address.ToString();
+            Endpoint? foreignConnectionEndpoint = null;
+            string stickeySessionKey = _route.Name + ":" + _route.Endpoints.ConnectionPattern
+                + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address?.ToString();
 
             if (_route.UseStickySessions)
             {
@@ -427,6 +432,8 @@ namespace NetProxy.Service.Routing
 
             if (_route.UseStickySessions)
             {
+                Utility.EnsureNotNull(foreignConnectionEndpoint);
+
                 lock (_stickySessionCache)
                 {
                     var stickySession = new StickySession()
@@ -471,6 +478,7 @@ namespace NetProxy.Service.Routing
 
                 Stats.BytesReceived += (ulong)connection.BytesReceived;
 
+                Utility.EnsureNotNull(connection?.Socket);
                 connection.Socket.BeginReceive(connection.Buffer, 0, connection.Buffer.Length, SocketFlags.None, _onDataReceivedCallback, connection);
             }
             catch (Exception ex)
@@ -534,11 +542,13 @@ namespace NetProxy.Service.Routing
 
         private void OnDataReceived(IAsyncResult asyn)
         {
-            SocketState connection = null;
+            SocketState? connection = null;
 
             try
             {
-                connection = (SocketState)asyn.AsyncState;
+                connection = asyn.AsyncState as SocketState;
+                Utility.EnsureNotNull(connection?.Socket);
+
                 connection.BytesReceived = connection.Socket.EndReceive(asyn);
 
                 if (connection.BytesReceived == 0)
@@ -547,9 +557,9 @@ namespace NetProxy.Service.Routing
                     return;
                 }
 
-                string sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
+                string? sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
 
-                string commonSalt = null;
+                string? commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
                 {
                     commonSalt = _route.BindingPreSharedKey;
@@ -563,7 +573,7 @@ namespace NetProxy.Service.Routing
                 {
                     //Console.WriteLine("--Recv:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(connection.Buffer.Take(connection.BytesReceived).ToArray()));
 
-                    List<PacketEnvelope> envelopes = Packetizer.DissasemblePacketData(this, connection, connection.UseCompression, connection.IsEncryptionNegotationComplete, sharedSecretString, commonSalt);
+                    var envelopes = Packetizer.DissasemblePacketData(this, connection, connection.UseCompression, connection.IsEncryptionNegotationComplete, sharedSecretString, commonSalt);
                     foreach (var envelope in envelopes)
                     {
                         if (envelope.Label == null)
@@ -571,7 +581,7 @@ namespace NetProxy.Service.Routing
                             if (connection.IsTunnelNegotationComplete)
                             {
                                 //Console.WriteLine("--Recv: {0} {1}", envelope.Payload.Length, Encoding.UTF8.GetString(envelope.Payload.Take(envelope.Payload.Length).ToArray()));
-                                ProcessReceivedData(connection, envelope.Payload, envelope.Payload.Length);
+                                ProcessReceivedData(connection, envelope.Payload, envelope.Payload?.Length ?? 0);
                             }
                             else
                             {
@@ -659,11 +669,18 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        void ProcessReceivedData(SocketState connection, byte[] buffer, int bufferSize)
+        void ProcessReceivedData(SocketState connection, byte[]? buffer, int bufferSize)
         {
-            string sharedSecretString = connection.Peer.IsEncryptionNegotationComplete ? connection.Peer.KeyNegotiator.SharedSecretHash : null;
+            if (buffer == null)
+            {
+                buffer = Array.Empty<byte>();
+            }
 
-            string commonSalt = null;
+            Utility.EnsureNotNull(connection.Peer);
+
+            string? sharedSecretString = connection.Peer.IsEncryptionNegotationComplete ? connection.Peer.KeyNegotiator.SharedSecretHash : null;
+
+            string? commonSalt = null;
             if (connection.Peer.IsIncomming && connection.Peer.IsEncryptionNegotationComplete)
             {
                 commonSalt = _route.BindingPreSharedKey;
@@ -808,7 +825,7 @@ namespace NetProxy.Service.Routing
                     }
                 }
 
-                if (connection.Peer != null)
+                if (connection?.Peer != null)
                 {
                     CleanupSocket(connection.Peer.Socket);
 

@@ -11,7 +11,7 @@ namespace NetProxy.Service
 {
     public class Management
     {
-        private Configuration _config;
+        private Configuration? _config;
         private readonly Packeteer _packeteer = new();
         private readonly Routers _routers = new();
         private readonly HashSet<Guid> _loggedInPeers = new();
@@ -24,6 +24,8 @@ namespace NetProxy.Service
 
         private void Packeteer_OnPeerDisconnected(Packeteer sender, NetProxy.Hub.Common.Peer peer)
         {
+            Utility.EnsureNotNull(_config);
+
             lock (_config)
             {
                 _loggedInPeers.Remove(peer.Id);
@@ -33,7 +35,7 @@ namespace NetProxy.Service
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
-            Console.WriteLine("{0}:{1}", packet.Label, packet.Payload);
+            Utility.EnsureNotNull(_config);
 
             if (_loggedInPeers.Contains(peer.Id) == false)
             {
@@ -46,18 +48,18 @@ namespace NetProxy.Service
                             var userLogin = JsonConvert.DeserializeObject<UserLogin>(packet.Payload);
 
                             var singleUser = (from o in _config.Users.List
-                                              where o.UserName.ToLower() == userLogin.UserName.ToLower()
+                                              where o.UserName.ToLower() == userLogin?.UserName?.ToLower()
                                               && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()
                                               select o).FirstOrDefault();
 
                             if (singleUser != null)
                             {
                                 _loggedInPeers.Add(peer.Id);
-                                Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin.UserName.ToLower(), _loggedInPeers.Count());
+                                Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin?.UserName?.ToLower(), _loggedInPeers.Count());
                             }
                             else
                             {
-                                Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin.UserName.ToLower(), _loggedInPeers.Count());
+                                Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin?.UserName?.ToLower(), _loggedInPeers.Count());
                             }
 
                             _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(new GenericBooleanResult() { Value = singleUser != null }));
@@ -83,13 +85,13 @@ namespace NetProxy.Service
             {
                 try
                 {
-                    List<RouteGridItem> routes = new List<RouteGridItem>();
+                    List<RouteGridItem> routes = new();
 
                     lock (_config)
                     {
                         foreach (var router in _routers.List)
                         {
-                            RouteGridItem augmentedRoute = new RouteGridItem()
+                            RouteGridItem augmentedRoute = new()
                             {
                                 Id = router.Route.Id,
                                 Name = router.Route.Name,
@@ -165,7 +167,7 @@ namespace NetProxy.Service
                     lock (_config)
                     {
                         Guid routerId = Guid.Parse(packet.Payload);
-                        Router router = _routers[routerId];
+                        var router = _routers[routerId];
                         if (router != null)
                         {
                             string value = JsonConvert.SerializeObject(router.Route);
@@ -212,16 +214,18 @@ namespace NetProxy.Service
                 try
                 {
                     var value = JsonConvert.DeserializeObject<Users>(packet.Payload);
-
-                    lock (_config)
+                    if (value != null)
                     {
-                        _config.Users.List.Clear();
-
-                        foreach (var user in value.List)
+                        lock (_config)
                         {
-                            _config.Users.Add(user);
+                            _config.Users.List.Clear();
+
+                            foreach (var user in value.List)
+                            {
+                                _config.Users.Add(user);
+                            }
+                            SaveConfiguration();
                         }
-                        SaveConfiguration();
                     }
                 }
                 catch (Exception ex)
@@ -431,7 +435,7 @@ namespace NetProxy.Service
 
         private void AddTestRoutes()
         {
-            Routers routers = new Routers();
+            Routers routers = new();
 
             //------------------------------------------------------------------------------------------------------------------
             {
@@ -508,6 +512,7 @@ namespace NetProxy.Service
             try
             {
                 LoadConfiguration();
+                Utility.EnsureNotNull(_config);
 
                 Console.WriteLine("Starting management interface on port {0}.", _config.ManagementPort);
                 _packeteer.Start(_config.ManagementPort);

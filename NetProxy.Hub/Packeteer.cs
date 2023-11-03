@@ -1,4 +1,5 @@
 ﻿using NetProxy.Hub.Common;
+using NetProxy.Library.Utilities;
 using System.Net;
 using System.Net.Sockets;
 
@@ -8,8 +9,8 @@ namespace NetProxy.Hub
     {
         #region Events.
 
-        public event PacketReceivedEvent OnMessageReceived;
-        public event PeerDisconnectedEvent OnPeerDisconnected;
+        public event PacketReceivedEvent? OnMessageReceived;
+        public event PeerDisconnectedEvent? OnPeerDisconnected;
         public delegate void PacketReceivedEvent(Packeteer sender, Peer peer, Packet packet);
         public delegate void PeerDisconnectedEvent(Packeteer sender, Peer peer);
 
@@ -102,7 +103,11 @@ namespace NetProxy.Hub
         /// <returns></returns>
         public bool Connect(string hostName, int port, bool retryInBackground)
         {
-            IPAddress ipAddress = SocketUtility.GetIPv4Address(hostName);
+            IPAddress? ipAddress = SocketUtility.GetIPv4Address(hostName);
+            if (ipAddress == null)
+            {
+                return false;
+            }
             return Connect(ipAddress, port, retryInBackground);
         }
 
@@ -160,9 +165,11 @@ namespace NetProxy.Hub
             {
                 try
                 {
-                    Socket socket = _listenSocket.EndAccept(asyn);
+                    Utility.EnsureNotNull(_listenSocket);
 
-                    Peer peer = new Peer(socket);
+                    var socket = _listenSocket.EndAccept(asyn);
+
+                    var peer = new Peer(socket);
 
                     _peers.Add(peer);
 
@@ -189,11 +196,12 @@ namespace NetProxy.Hub
 
         private void OnDataReceived(IAsyncResult asyn)
         {
-            Socket socket = null;
+            Socket? socket = null;
 
             try
             {
-                SocketState socketState = (SocketState)asyn.AsyncState;
+                var socketState = asyn.AsyncState as SocketState;
+                Utility.EnsureNotNull(socketState);
 
                 socket = socketState.Peer.Socket;
 
@@ -235,7 +243,6 @@ namespace NetProxy.Hub
             {
                 try
                 {
-
                     try
                     {
                         OnPeerDisconnected?.Invoke(this, peer);

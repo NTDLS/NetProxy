@@ -35,12 +35,15 @@ namespace NetProxy.Service
             return false;
         }
 
-        public static HttpHeaderType IsHttpHeader(byte[] data, int length, out string? verb)
+        public static HttpHeaderType IsHttpHeader(byte[]? data, int length, out string? verb)
         {
+            if (data == null)
+            {
+                return IsHttpHeader(string.Empty, out verb);
+            }
+
             int maxScanLength = length > 2048 ? 2048 : length;
-
             string httpHeader = Encoding.UTF8.GetString(data, 0, maxScanLength);
-
             return IsHttpHeader(httpHeader, out verb);
         }
 

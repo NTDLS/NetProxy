@@ -7,12 +7,12 @@ namespace NetProxy.Service.Routing
     internal static class Packetizer
     {
 
-        public static byte[] AssembleMessagePacket(byte[] payload, int payloadLength, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
+        public static byte[] AssembleMessagePacket(byte[]? payload, int payloadLength, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
         {
             var envelope = new PacketEnvelope
             {
                 Label = null,
-                Payload = payload.Take(payloadLength).ToArray()
+                Payload = payload?.Take(payloadLength).ToArray()
             };
 
             return AssembleMessagePacket(envelope, compress, encrypt, encryptPacketKey, keySalt);
@@ -75,7 +75,7 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        public static List<PacketEnvelope> DissasemblePacketData(Router router, SocketState state, bool compress, bool encrypt, string encryptPacketKey, string keySalt)
+        public static List<PacketEnvelope> DissasemblePacketData(Router router, SocketState state, bool compress, bool encrypt, string? encryptPacketKey, string? keySalt)
         {
             List<PacketEnvelope> envelopes = new List<PacketEnvelope>();
 

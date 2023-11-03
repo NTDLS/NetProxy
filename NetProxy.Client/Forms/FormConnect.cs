@@ -78,8 +78,8 @@ namespace NetProxy.Client.Forms
                         Username = verbatiumUsername
                     });
 
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                DialogResult = DialogResult.OK;
+                Close();
             }
             else
             {

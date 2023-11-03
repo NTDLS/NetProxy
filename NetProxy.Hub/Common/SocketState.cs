@@ -4,7 +4,7 @@
     {
         public SocketState(Peer peer)
         {
-            this.Peer = peer;
+            Peer = peer;
         }
 
         public bool Disconnected = false;

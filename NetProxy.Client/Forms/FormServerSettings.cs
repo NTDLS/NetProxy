@@ -41,7 +41,7 @@ namespace NetProxy.Client.Forms
             _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
             if (_packeteer == null)
             {
-                this.Close();
+                Close();
                 return;
             }
             _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
@@ -60,7 +60,7 @@ namespace NetProxy.Client.Forms
                 Utility.EnsureNotNull(_populateGrid);
                 var collection = JsonConvert.DeserializeObject<Users>(packet.Payload);
                 Utility.EnsureNotNull(collection);
-                this.Invoke(_populateGrid, new object[] { collection });
+                Invoke(_populateGrid, new object[] { collection });
             }
         }
 
@@ -98,13 +98,13 @@ namespace NetProxy.Client.Forms
             _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
 
             DialogResult = DialogResult.OK;
-            this.Close();
+            Close();
         }
 
         private void buttonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
-            this.Close();
+            Close();
         }
 
         private void dataGridViewUsers_CellClick(object? sender, DataGridViewCellEventArgs e)

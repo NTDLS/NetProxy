@@ -26,7 +26,7 @@ namespace NetProxy.Client.Forms
 
             _populateRouteInformation = OnPopulateRouteInformation;
 
-            this._routeId = routeId ?? Guid.NewGuid().ToString();
+            _routeId = routeId ?? Guid.NewGuid().ToString();
             _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
             if (_packeteer == null)
             {
@@ -142,7 +142,7 @@ namespace NetProxy.Client.Forms
             if (packet.Label == Constants.CommandLables.GuiRequestRoute)
             {
                 Utility.EnsureNotNull(_populateRouteInformation);
-                this.Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<Route>(packet.Payload));
+                Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<Route>(packet.Payload));
             }
         }
 
@@ -289,14 +289,14 @@ namespace NetProxy.Client.Forms
 
             Thread.Sleep(500);
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void buttonCancel_Click(object? sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
 
         private void FormRoute_FormClosed(object? sender, FormClosedEventArgs e)

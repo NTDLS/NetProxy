@@ -23,10 +23,10 @@ namespace NetProxy.Client.Controls
             InitializeComponent();
 
             // Add any initialization after the InitializeComponent() call.
-            this.CalculateSegments();
-            this.AutoIncrementFrequency = 100;
-            this.SetStyle(ControlStyles.DoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
-            this.AutoIncrement = true;
+            CalculateSegments();
+            AutoIncrementFrequency = 100;
+            SetStyle(ControlStyles.DoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
+            AutoIncrement = true;
         }
 
         Color InactiveSegmentColour
@@ -118,7 +118,7 @@ namespace NetProxy.Client.Controls
                 {
                     _mAutoRotateTimer = new System.Timers.Timer(_mIncrementFrequency);
 
-                    _mAutoRotateTimer.Elapsed += this.IncrementTransisionSegment;
+                    _mAutoRotateTimer.Elapsed += IncrementTransisionSegment;
                     _mAutoRotateTimer.Start();
                 }
             }
@@ -144,11 +144,11 @@ namespace NetProxy.Client.Controls
 
         private void CalculateSegments()
         {
-            Rectangle rctFull = new Rectangle(0, 0, this.Width, this.Height);
-            Rectangle rctInner = new Rectangle((int)(this.Width * (7.0 / 30.0)),
-                                                (int)(this.Height * (7.0 / 30.0)),
-                                                (int)(this.Width - (this.Width * (7.0 / 30.0) * 2.0)),
-                                                (int)(this.Height - (this.Height * (7.0 / 30.0) * 2.0)));
+            Rectangle rctFull = new Rectangle(0, 0, Width, Height);
+            Rectangle rctInner = new Rectangle((int)(Width * (7.0 / 30.0)),
+                                                (int)(Height * (7.0 / 30.0)),
+                                                (int)(Width - (Width * (7.0 / 30.0) * 2.0)),
+                                                (int)(Height - (Height * (7.0 / 30.0) * 2.0)));
             GraphicsPath pthInnerBackground;
 
             //Create 12 segment pieces
@@ -168,7 +168,7 @@ namespace NetProxy.Client.Controls
 
         private void SpinningProgress_EnabledChanged(object? sender, System.EventArgs e)
         {
-            if (this.Enabled)
+            if (Enabled)
             {
                 if (_mAutoRotateTimer != null)
                 {
@@ -213,7 +213,7 @@ namespace NetProxy.Client.Controls
 
             for (int intCount = 0; intCount < 12; intCount++)
             {
-                if (this.Enabled)
+                if (Enabled)
                 {
                     if (intCount == _mTransitionSegment)
                     {

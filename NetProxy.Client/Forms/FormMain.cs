@@ -32,7 +32,7 @@ namespace NetProxy.Client.Forms
         {
             if (ChangeConnection() == false)
             {
-                this.Close();
+                Close();
             }
         }
 
@@ -76,22 +76,22 @@ namespace NetProxy.Client.Forms
 
         private void Packeteer_OnPeerDisconnected(Packeteer sender, NetProxy.Hub.Common.Peer peer)
         {
-            this.Invoke(_connectionLost);
+            Invoke(_connectionLost);
         }
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestRouteList)
             {
-                this.Invoke(_populateRouteList, JsonConvert.DeserializeObject<List<RouteGridItem>>(packet.Payload));
+                Invoke(_populateRouteList, JsonConvert.DeserializeObject<List<RouteGridItem>>(packet.Payload));
             }
             else if (packet.Label == Constants.CommandLables.GuiSendMessage)
             {
-                this.Invoke(_sendMessage, packet.Payload);
+                Invoke(_sendMessage, packet.Payload);
             }
             if (packet.Label == Constants.CommandLables.GuiRequestRouteStatsList)
             {
-                this.Invoke(_populateRouteListStats, JsonConvert.DeserializeObject<List<RouteGridStats>>(packet.Payload));
+                Invoke(_populateRouteListStats, JsonConvert.DeserializeObject<List<RouteGridStats>>(packet.Payload));
             }
         }
 
@@ -450,7 +450,7 @@ namespace NetProxy.Client.Forms
 
         private void exitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         #endregion

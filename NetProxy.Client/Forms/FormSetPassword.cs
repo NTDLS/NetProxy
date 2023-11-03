@@ -18,7 +18,7 @@ namespace NetProxy.Client.Forms
         private void buttonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
-            this.Close();
+            Close();
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
@@ -30,7 +30,7 @@ namespace NetProxy.Client.Forms
             }
 
             DialogResult = DialogResult.OK;
-            this.Close();
+            Close();
         }
 
         private void FormSetPassword_Load(object? sender, EventArgs e)

@@ -13,7 +13,7 @@ namespace NetProxy.Service.Routing
         #region Backend Variables.
 
         public RouterStatistics Stats { get; set; }
-        private readonly MemoryCache _stickySessionCache = new (new MemoryCacheOptions());
+        private readonly MemoryCache _stickySessionCache = new(new MemoryCacheOptions());
         private int _lastRoundRobinIndex = 0;
         private readonly Route _route;
         private Socket? _listenSocket = null;
@@ -44,7 +44,7 @@ namespace NetProxy.Service.Routing
         public Router(Route route)
         {
             Stats = new RouterStatistics();
-            this._route = route;
+            _route = route;
         }
 
         public bool IsRunning

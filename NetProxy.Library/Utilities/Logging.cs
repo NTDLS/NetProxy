@@ -109,7 +109,7 @@ namespace NetProxy.Library.Utilities
                 }
 
                 //TODO: Write log to file...
-                //EventLog.WriteEntry(this.ApplicationName, eventText, eventLogEntryType);
+                //EventLog.WriteEntry(ApplicationName, eventText, eventLogEntryType);
             }
             catch
             {

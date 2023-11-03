@@ -1,6 +1,6 @@
-﻿using System;
+﻿using NetProxy.Library;
+using System;
 using System.Windows.Forms;
-using NetProxy.Library;
 
 namespace NetProxy.Client.Forms
 {

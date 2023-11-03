@@ -1,4 +1,7 @@
-﻿using System;
+﻿using NetProxy.Library;
+using NetProxy.Library.Routing;
+using NetProxy.Library.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,9 +9,6 @@ using System.Net.Sockets;
 using System.Runtime.Caching;
 using System.Text;
 using System.Threading;
-using NetProxy.Library;
-using NetProxy.Library.Routing;
-using NetProxy.Library.Win32;
 using static NetProxy.Library.Constants;
 
 namespace NetProxy.Service.Routing
@@ -671,7 +671,7 @@ namespace NetProxy.Service.Routing
             }
         }
 
-        void ProcessReceivedData(SocketState connection, byte[]buffer, int bufferSize)
+        void ProcessReceivedData(SocketState connection, byte[] buffer, int bufferSize)
         {
             string sharedSecretString = connection.Peer.IsEncryptionNegotationComplete ? connection.Peer.KeyNegotiator.SharedSecretString : null;
 
@@ -759,7 +759,7 @@ namespace NetProxy.Service.Routing
                 }
             }
 
-            if(connection.Peer.UsePackets)
+            if (connection.Peer.UsePackets)
             {
                 //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
@@ -847,7 +847,7 @@ namespace NetProxy.Service.Routing
         }
 
         #region Utility.
-        
+
         public static IPAddress GetIpAddress(string hostName)
         {
             try

@@ -1,10 +1,10 @@
-﻿using System;
+﻿using NetProxy.Library;
+using NetProxy.Library.Win32;
+using System;
 using System.Configuration.Install;
 using System.Diagnostics;
 using System.Reflection;
 using System.ServiceProcess;
-using NetProxy.Library;
-using NetProxy.Library.Win32;
 
 namespace NetProxy.Service
 {
@@ -120,7 +120,7 @@ namespace NetProxy.Service
                     routingServices.Stop();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
                 {

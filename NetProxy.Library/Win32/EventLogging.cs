@@ -1,8 +1,8 @@
-﻿using System;
+﻿using NetProxy.Library.Utility;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using NetProxy.Library.Utility;
 
 namespace NetProxy.Library.Win32
 {

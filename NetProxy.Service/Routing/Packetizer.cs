@@ -1,12 +1,12 @@
-﻿using System;
+﻿using NetProxy.Hub.Common;
+using NetProxy.Library.Routing;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Text;
-using NetProxy.Hub.Common;
-using NetProxy.Library.Routing;
 
 namespace NetProxy.Service.Routing
 {
@@ -95,7 +95,7 @@ namespace NetProxy.Service.Routing
 
                 return packetBytes;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //TODO: allow this to be logged.
             }
@@ -219,7 +219,7 @@ namespace NetProxy.Service.Routing
                     state.PayloadBuilderLength -= grossPayloadSize;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //TODO: allow this to be logged.
             }

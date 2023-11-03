@@ -1,14 +1,13 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Windows.Forms;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using NetProxy.Client.Classes;
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Win32;
-using Newtonsoft.Json;
+using System;
+using System.ComponentModel;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace NetProxy.Client.Forms
 {

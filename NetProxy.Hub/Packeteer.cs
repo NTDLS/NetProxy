@@ -1,9 +1,9 @@
-﻿using System;
+﻿using NetProxy.Hub.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using NetProxy.Hub.Common;
 
 namespace NetProxy.Hub
 {
@@ -149,7 +149,7 @@ namespace NetProxy.Hub
             catch
             {
             }
-            
+
             return false;
         }
 

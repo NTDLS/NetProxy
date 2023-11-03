@@ -1,10 +1,9 @@
-﻿using System;
-using System.Windows.Forms;
-using NetProxy.Client.Classes;
+﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Routing;
-using Newtonsoft.Json;
+using System;
+using System.Windows.Forms;
 
 namespace NetProxy.Client.Forms
 {
@@ -71,7 +70,7 @@ namespace NetProxy.Client.Forms
 
             foreach (DataGridViewRow row in dataGridViewUsers.Rows)
             {
-                if((((string)row.Cells[ColumnUsername.Index].Value) ?? string.Empty) != string.Empty)
+                if ((((string)row.Cells[ColumnUsername.Index].Value) ?? string.Empty) != string.Empty)
                 {
                     string hash = (string)row.Cells[ColumnPassword.Index].Value;
                     if (hash == null || hash == string.Empty)
@@ -89,7 +88,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users) );
+            _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
 
             DialogResult = DialogResult.OK;
             this.Close();

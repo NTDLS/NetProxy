@@ -1,7 +1,6 @@
 ﻿using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
-using Newtonsoft.Json;
 
 namespace NetProxy.Client.Classes
 {

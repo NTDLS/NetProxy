@@ -1,7 +1,7 @@
-﻿using System;
+﻿using NetProxy.Library.Routing;
+using System;
 using System.IO;
 using System.IO.Compression;
-using NetProxy.Library.Routing;
 
 namespace NetProxy.Hub.Common
 {
@@ -20,7 +20,7 @@ namespace NetProxy.Hub.Common
 
                 byte[] packetBytes = new byte[grossPacketSize];
 
-                UInt16 payloadCrc = Crc16.ComputeChecksum(payloadBytes);
+                ushort payloadCrc = Crc16.ComputeChecksum(payloadBytes);
 
                 Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, packetBytes, 0, 4);
                 Buffer.BlockCopy(BitConverter.GetBytes(grossPacketSize), 0, packetBytes, 4, 4);
@@ -41,7 +41,7 @@ namespace NetProxy.Hub.Common
         {
             try
             {
-                Byte[] payloadDelimiterBytes = new Byte[4];
+                byte[] payloadDelimiterBytes = new byte[4];
 
                 for (int offset = 1; offset < state.PayloadBuilderLength - payloadDelimiterBytes.Length; offset++)
                 {
@@ -81,9 +81,9 @@ namespace NetProxy.Hub.Common
 
                 while (state.PayloadBuilderLength > Constants.PayloadHeaderSize) //[PayloadSize] and [CRC16]
                 {
-                    Byte[] payloadDelimiterBytes = new Byte[4];
-                    Byte[] payloadSizeBytes = new Byte[4];
-                    Byte[] expectedCrc16Bytes = new Byte[2];
+                    byte[] payloadDelimiterBytes = new byte[4];
+                    byte[] payloadSizeBytes = new byte[4];
+                    byte[] expectedCrc16Bytes = new byte[2];
 
                     Buffer.BlockCopy(state.PayloadBuilder, 0, payloadDelimiterBytes, 0, payloadDelimiterBytes.Length);
                     Buffer.BlockCopy(state.PayloadBuilder, 4, payloadSizeBytes, 0, payloadSizeBytes.Length);
@@ -91,7 +91,7 @@ namespace NetProxy.Hub.Common
 
                     int payloadDelimiter = BitConverter.ToInt32(payloadDelimiterBytes, 0);
                     int grossPayloadSize = BitConverter.ToInt32(payloadSizeBytes, 0);
-                    UInt16 expectedCrc16 = BitConverter.ToUInt16(expectedCrc16Bytes, 0);
+                    ushort expectedCrc16 = BitConverter.ToUInt16(expectedCrc16Bytes, 0);
 
                     if (payloadDelimiter != Constants.PayloadDelimiter)
                     {
@@ -114,7 +114,7 @@ namespace NetProxy.Hub.Common
                         break;
                     }
 
-                    UInt16 actualCrc16 = Crc16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeaderSize, grossPayloadSize - Constants.PayloadHeaderSize);
+                    ushort actualCrc16 = Crc16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeaderSize, grossPayloadSize - Constants.PayloadHeaderSize);
 
                     if (actualCrc16 != expectedCrc16)
                     {
@@ -141,7 +141,7 @@ namespace NetProxy.Hub.Common
                     state.PayloadBuilderLength -= grossPayloadSize;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //TODO: allow this to be logged.
             }

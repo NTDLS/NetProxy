@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+﻿using Newtonsoft.Json.Converters;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace NetProxy.Library.Routing
 {

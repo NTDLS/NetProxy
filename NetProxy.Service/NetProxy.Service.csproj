@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="NTDLS.FastMemoryCache" Version="1.4.1" />
+    <PackageReference Include="NTDLS.NASCCL" Version="1.1.0" />
     <PackageReference Include="NTDLS.Persistence" Version="1.0.0" />
     <PackageReference Include="NTDLS.SecureKeyExchange" Version="2.2.0" />
     <PackageReference Include="NTDLS.Semaphore" Version="1.5.1" />

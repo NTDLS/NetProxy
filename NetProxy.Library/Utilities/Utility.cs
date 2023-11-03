@@ -1,6 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace NetProxy.Library.Utilities

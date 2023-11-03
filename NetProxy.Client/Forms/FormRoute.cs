@@ -3,8 +3,8 @@ using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.General;
 using NetProxy.Library.Routing;
-using Newtonsoft.Json;
 using NetProxy.Library.Utilities;
+using Newtonsoft.Json;
 
 namespace NetProxy.Client.Forms
 {

@@ -31,15 +31,13 @@ namespace NetProxy.Client.Controls
             this.SetStyle(ControlStyles.DoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
             this.AutoIncrement = true;
         }
-
+        
         Color InactiveSegmentColour
         {
-            get
-            {
+            get{
                 return _mInactiveColour;
             }
-            set
-            {
+            set {
                 _mInactiveColour = value;
                 Invalidate();
             }
@@ -47,12 +45,10 @@ namespace NetProxy.Client.Controls
 
         Color ActiveSegmentColour
         {
-            get
-            {
+            get{
                 return _mActiveColour;
             }
-            set
-            {
+            set {
                 _mActiveColour = value;
                 Invalidate();
             }
@@ -60,12 +56,10 @@ namespace NetProxy.Client.Controls
 
         Color TransistionSegmentColour
         {
-            get
-            {
+            get{
                 return _mTransistionColour;
             }
-            set
-            {
+            set{
                 _mTransistionColour = value;
                 Invalidate();
             }
@@ -73,12 +67,10 @@ namespace NetProxy.Client.Controls
 
         bool BehindTransistionSegmentIsActive
         {
-            get
-            {
+            get{
                 return _mBehindIsActive;
             }
-            set
-            {
+            set{
                 _mBehindIsActive = value;
                 Invalidate();
             }
@@ -86,13 +78,11 @@ namespace NetProxy.Client.Controls
 
         Int32 TransistionSegment
         {
-            get
-            {
+            get{
                 return _mTransitionSegment;
             }
-            set
-            {
-                if (value > 12 || value < -1)
+            set{
+                if(value > 12 || value < -1)
                 {
                     throw new ArgumentException("TransistionSegment must be between -1 and 12");
                 }
@@ -103,21 +93,19 @@ namespace NetProxy.Client.Controls
 
         bool AutoIncrement
         {
-            get
-            {
+            get{
                 return _mAutoIncrement;
             }
-            set
-            {
+            set{
                 _mAutoIncrement = value;
 
-                if (value == false && _mAutoRotateTimer != null)
+                if(value == false && _mAutoRotateTimer != null)
                 {
                     _mAutoRotateTimer.Dispose();
                     _mAutoRotateTimer = null;
                 }
 
-                if (value == true && _mAutoRotateTimer == null)
+                if(value == true && _mAutoRotateTimer == null)
                 {
                     _mAutoRotateTimer = new System.Timers.Timer(_mIncrementFrequency);
 
@@ -129,15 +117,13 @@ namespace NetProxy.Client.Controls
 
         public double AutoIncrementFrequency
         {
-            get
-            {
+            get{
                 return _mIncrementFrequency;
             }
-            set
-            {
+            set{
                 _mIncrementFrequency = value;
 
-                if (_mAutoRotateTimer != null)
+                if(_mAutoRotateTimer != null)
                 {
                     AutoIncrement = false;
                     AutoIncrement = true;
@@ -155,7 +141,7 @@ namespace NetProxy.Client.Controls
             GraphicsPath pthInnerBackground;
 
             //Create 12 segment pieces
-            for (int intCount = 0; intCount < 12; intCount++)
+            for(int intCount = 0; intCount < 12; intCount++)
             {
                 _segmentPaths[intCount] = new GraphicsPath();
 
@@ -171,16 +157,15 @@ namespace NetProxy.Client.Controls
 
         private void SpinningProgress_EnabledChanged(object sender, System.EventArgs e)
         {
-            if (this.Enabled)
+            if(this.Enabled)
             {
-                if (_mAutoRotateTimer != null)
+                if(_mAutoRotateTimer != null)
                 {
                     _mAutoRotateTimer.Start();
                 }
             }
-            else
-            {
-                if (_mAutoRotateTimer != null)
+            else {
+                if(_mAutoRotateTimer != null)
                 {
                     _mAutoRotateTimer.Stop();
                 }
@@ -210,56 +195,52 @@ namespace NetProxy.Client.Controls
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.ExcludeClip(_innerBackgroundRegion);
 
-            for (int intCount = 0; intCount < 12; intCount++)
+            for(int intCount = 0; intCount < 12; intCount++)
             {
-                if (this.Enabled)
+                if(this.Enabled)
                 {
-                    if (intCount == _mTransitionSegment)
+                    if(intCount == _mTransitionSegment)
                     {
                         //If this segment is the transistion segment, colour it differently
                         e.Graphics.FillPath(new SolidBrush(_mTransistionColour), _segmentPaths[intCount]);
                     }
-                    else if (intCount < _mTransitionSegment)
+                    else if(intCount < _mTransitionSegment)
                     {
                         //This segment is behind the transistion segment
-                        if (_mBehindIsActive)
+                        if(_mBehindIsActive)
                         {
                             //If behind the transistion should be active, 
                             //colour it with the active colour
                             e.Graphics.FillPath(new SolidBrush(_mActiveColour), _segmentPaths[intCount]);
                         }
-                        else
-                        {
+                        else{
                             //If behind the transistion should be in-active, 
                             //colour it with the in-active colour
                             e.Graphics.FillPath(new SolidBrush(_mInactiveColour), _segmentPaths[intCount]);
                         }
                     }
-                    else
-                    {
+                    else {
                         //This segment is ahead of the transistion segment
-                        if (_mBehindIsActive)
+                        if(_mBehindIsActive)
                         {
                             //If behind the the transistion should be active, 
                             //colour it with the in-active colour
                             e.Graphics.FillPath(new SolidBrush(_mInactiveColour), _segmentPaths[intCount]);
                         }
-                        else
-                        {
+                        else {
                             //If behind the the transistion should be in-active, 
                             //colour it with the active colour
                             e.Graphics.FillPath(new SolidBrush(_mActiveColour), _segmentPaths[intCount]);
                         }
                     }
                 }
-                else
-                {
+                else {
                     //Draw all segments in in-active colour if not enabled
                     e.Graphics.FillPath(new SolidBrush(_mInactiveColour), _segmentPaths[intCount]);
                 }
             }
         }
-
+    
         private void ProgressDisk_Resize(object sender, System.EventArgs e)
         {
             CalculateSegments();

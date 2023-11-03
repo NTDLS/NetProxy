@@ -1,6 +1,6 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Resources;
+using Microsoft.Win32;
 
 namespace NetProxy.Library.Win32
 {

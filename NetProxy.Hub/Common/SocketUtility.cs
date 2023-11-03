@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 
 namespace NetProxy.Hub.Common
@@ -7,7 +8,7 @@ namespace NetProxy.Hub.Common
     {
         public static IPAddress GetIPv4Address(string hostName)
         {
-            string ip4Address = string.Empty;
+            string ip4Address = String.Empty;
 
             foreach (IPAddress ipAddress in Dns.GetHostAddresses(hostName))
             {

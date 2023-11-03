@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace NetProxy.Hub.Common
@@ -6,7 +7,7 @@ namespace NetProxy.Hub.Common
     public static class Serialization
     {
         // Convert an object to a byte array
-        public static byte[] ObjectToByteArray(object obj)
+        public static byte[] ObjectToByteArray(Object obj)
         {
             BinaryFormatter bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
@@ -16,7 +17,7 @@ namespace NetProxy.Hub.Common
             }
         }
 
-        public static object ByteArrayToObject(byte[] arrBytes)
+        public static Object ByteArrayToObject(byte[] arrBytes)
         {
             using (var memStream = new MemoryStream())
             {

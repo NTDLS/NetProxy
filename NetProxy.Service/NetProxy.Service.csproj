@@ -42,8 +42,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
@@ -100,6 +101,10 @@
     <ProjectReference Include="..\NetProxy.Hub\NetProxy.Hub.csproj">
       <Project>{09eaa666-fa60-445d-82ce-d11d78146524}</Project>
       <Name>NetProxy.Hub</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Secure-Key-Exchange\C#\SecureKeyExchange.csproj">
+      <Project>{41d8a197-e709-4953-b17e-6b24be5a4f3a}</Project>
+      <Name>SecureKeyExchange</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

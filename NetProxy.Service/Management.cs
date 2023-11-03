@@ -1,14 +1,15 @@
-﻿using Microsoft.Win32;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.Win32;
 using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Win32;
 using NetProxy.Service.Routing;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using Newtonsoft.Json;
 
 namespace NetProxy.Service
 {
@@ -453,7 +454,7 @@ namespace NetProxy.Service
                     ListenOnAllAddresses = false,
                     AutoStart = true,
                     Description = "Default example route."
-
+               
                 };
 
                 route.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
@@ -536,7 +537,7 @@ namespace NetProxy.Service
                     Exception = ex
                 });
             }
-        }
+        }        
 
         public void Stop()
         {

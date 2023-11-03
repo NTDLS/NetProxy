@@ -1,7 +1,7 @@
-﻿using NetProxy.Library;
-using System;
+﻿using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using NetProxy.Library;
 
 namespace NetProxy.Service
 {

@@ -1,9 +1,9 @@
-﻿using NetProxy.Library;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using NetProxy.Library;
 
 namespace NetProxy.Client.Forms
 {

@@ -1,5 +1,6 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
@@ -15,7 +16,7 @@ namespace NetProxy.Client.Forms
         private PopulateGrid? _populateGrid = null;
         private void OnPopulateGrid(Users users)
         {
-            foreach (var user in users.List)
+            foreach (var user in users.Collection)
             {
                 object[] values = new object[5];
                 values[ColumnId.Index] = user.Id;
@@ -53,7 +54,7 @@ namespace NetProxy.Client.Forms
             _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, Frame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestUserList)
             {

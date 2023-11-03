@@ -1,6 +1,7 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Client.Properties;
 using NetProxy.Hub;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
@@ -79,7 +80,7 @@ namespace NetProxy.Client.Forms
             Invoke(_connectionLost);
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, Frame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestRouteList)
             {

@@ -2,8 +2,8 @@
 {
     public class Users
     {
-        public List<User> List { get; set; } = new();
+        public List<User> Collection { get; set; } = new();
 
-        public void Add(User user) => List.Add(user);
+        public void Add(User user) => Collection.Add(user);
     }
 }

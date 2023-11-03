@@ -1,4 +1,4 @@
-﻿namespace NetProxy.Library.General
+﻿namespace NetProxy.Client.Classes
 {
     public class ComboItem
     {

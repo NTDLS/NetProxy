@@ -1,5 +1,6 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
@@ -177,7 +178,7 @@ namespace NetProxy.Client.Forms
             _packeteer.Disconnect();
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Frame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestLogin)
             {

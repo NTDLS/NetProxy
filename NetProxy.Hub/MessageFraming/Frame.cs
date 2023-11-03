@@ -1,10 +1,10 @@
 ﻿using ProtoBuf;
 
-namespace NetProxy.Hub.Common
+namespace NetProxy.Hub.MessageFraming
 {
     [Serializable]
     [ProtoContract]
-    public class Packet
+    public class Frame
     {
         [ProtoMember(1)]
         public DateTime CreatedTime = DateTime.Now;

@@ -1,4 +1,5 @@
 ﻿using NetProxy.Hub.Common;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library.Utilities;
 using System.Net;
 using System.Net.Sockets;
@@ -11,7 +12,7 @@ namespace NetProxy.Hub
 
         public event PacketReceivedEvent? OnMessageReceived;
         public event PeerDisconnectedEvent? OnPeerDisconnected;
-        public delegate void PacketReceivedEvent(Packeteer sender, Peer peer, Packet packet);
+        public delegate void PacketReceivedEvent(Packeteer sender, Peer peer, Frame packet);
         public delegate void PeerDisconnectedEvent(Packeteer sender, Peer peer);
 
         #endregion
@@ -213,7 +214,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                Packetizer.DissasemblePacketData(socketState, ProcessPayloadHandler);
+                Framing.ProcessFrameBuffer(socketState, ProcessPayloadHandler);
 
                 WaitForData(socketState);
             }
@@ -232,7 +233,7 @@ namespace NetProxy.Hub
             }
         }
 
-        private void ProcessPayloadHandler(SocketState state, Packet packet)
+        private void ProcessPayloadHandler(SocketState state, Frame packet)
         {
             OnMessageReceived?.Invoke(this, state.Peer, packet);
         }
@@ -299,7 +300,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                byte[] packet = Packetizer.AssembleMessagePacket(new Packet()
+                byte[] packet = Framing.AssembleFrame(new Frame()
                 {
                     Label = label,
                     Payload = payload
@@ -333,7 +334,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                byte[] packet = Packetizer.AssembleMessagePacket(new Packet()
+                byte[] packet = Framing.AssembleFrame(new Frame()
                 {
                     Label = label,
                     Payload = payload

@@ -1,4 +1,4 @@
-﻿namespace NetProxy.Library.Routing
+﻿namespace NetProxy.Hub.MessageFraming
 {
     public static class Crc16
     {

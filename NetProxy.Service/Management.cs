@@ -1,4 +1,5 @@
 ﻿using NetProxy.Hub;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
@@ -33,7 +34,7 @@ namespace NetProxy.Service
             Console.WriteLine("Disconnected Session: {0} (Logged in users {1}).", peer.Id, _loggedInPeers.Count());
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, Frame packet)
         {
             Utility.EnsureNotNull(_config);
 
@@ -47,7 +48,7 @@ namespace NetProxy.Service
                         {
                             var userLogin = JsonConvert.DeserializeObject<UserLogin>(packet.Payload);
 
-                            var singleUser = (from o in _config.Users.List
+                            var singleUser = (from o in _config.Users.Collection
                                               where o.UserName.ToLower() == userLogin?.UserName?.ToLower()
                                               && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()
                                               select o).FirstOrDefault();
@@ -218,9 +219,9 @@ namespace NetProxy.Service
                     {
                         lock (_config)
                         {
-                            _config.Users.List.Clear();
+                            _config.Users.Collection.Clear();
 
-                            foreach (var user in value.List)
+                            foreach (var user in value.Collection)
                             {
                                 _config.Users.Add(user);
                             }

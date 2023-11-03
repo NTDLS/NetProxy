@@ -1,7 +1,7 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
+using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
-using NetProxy.Library.General;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
@@ -137,7 +137,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Hub.Common.Packet packet)
+        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Frame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestRoute)
             {

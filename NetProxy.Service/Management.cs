@@ -405,8 +405,14 @@ namespace NetProxy.Service
 
                 //AddTestRoutes();
 
+                var defaultConfiguration = new Configuration()
+                {
+                     ManagementPort = 5854
+                };
+                defaultConfiguration.Users.Add(new User() { UserName = "administrator", PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" });
+
                 Console.WriteLine("Server configuration...");
-                _config = CommonApplicationData.LoadFromDisk<Configuration>("NetProxy.Service");
+                _config = CommonApplicationData.LoadFromDisk<Configuration>("NetProxy.Service", defaultConfiguration);
 
                 Console.WriteLine("Route configuration...");
                 List<Route> routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetProxy.Service");

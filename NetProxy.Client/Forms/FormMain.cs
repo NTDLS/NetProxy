@@ -7,6 +7,7 @@ using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
 using System.Net;
+using static NetProxy.Client.Forms.FormMain;
 
 namespace NetProxy.Client.Forms
 {
@@ -52,6 +53,7 @@ namespace NetProxy.Client.Forms
                 {
                     if (_packeteer != null)
                     {
+                        _connectionLost = null;
                         _packeteer.Disconnect();
                     }
 
@@ -60,6 +62,7 @@ namespace NetProxy.Client.Forms
                     _packeteer = LoginPacketeerFactory.GetNewPacketeer(_connectionInfo);
                     if (_packeteer != null)
                     {
+                        _connectionLost = OnConnectionLost;
                         _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
                         _packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
 
@@ -77,7 +80,10 @@ namespace NetProxy.Client.Forms
 
         private void Packeteer_OnPeerDisconnected(Packeteer sender, NetProxy.Hub.Common.Peer peer)
         {
-            Invoke(_connectionLost);
+            if (_connectionLost != null)
+            {
+                Invoke(_connectionLost);
+            }
         }
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, Frame packet)
@@ -106,7 +112,7 @@ namespace NetProxy.Client.Forms
 
         public delegate void ConnectionLost();
 
-        readonly ConnectionLost _connectionLost;
+        private ConnectionLost? _connectionLost;
         public void OnConnectionLost()
         {
             try

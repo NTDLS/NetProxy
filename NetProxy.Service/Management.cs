@@ -384,8 +384,8 @@ namespace NetProxy.Service
         {
             try
             {
-                CommonApplicationData.SaveToDisk("NetProxy.Service", _config);
-                CommonApplicationData.SaveToDisk("NetProxy.Service", _routers.Routes());
+                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _config);
+                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _routers.Routes());
             }
             catch (Exception ex)
             {
@@ -505,7 +505,7 @@ namespace NetProxy.Service
             }
             //------------------------------------------------------------------------------------------------------------------
 
-            CommonApplicationData.SaveToDisk("NetProxy.Service", routers.Routes());
+            CommonApplicationData.SaveToDisk(Constants.TitleCaption, routers.Routes());
         }
 
         public void Start()

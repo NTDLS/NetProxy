@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using NetProxy.Library.Utility;
 
-namespace NetProxy.Library.Win32
+namespace NetProxy.Library.Utility
 {
-    public class EventLogging
+    public class Logging
     {
         public enum Severity
         {
@@ -40,16 +38,10 @@ namespace NetProxy.Library.Win32
             }
         }
 
-        public EventLogging(string applicationName, bool writeVerboseLogging)
+        public Logging(string applicationName, bool writeVerboseLogging)
         {
-            this._writeVerboseLogging = writeVerboseLogging;
-            this.ApplicationName = applicationName;
-
-            //This is required before events can be written.
-            if (!EventLog.SourceExists(this.ApplicationName))
-            {
-                EventLog.CreateEventSource(this.ApplicationName, "Application");
-            }
+            _writeVerboseLogging = writeVerboseLogging;
+            ApplicationName = applicationName;
         }
 
         public void WriteEvent(EventPayload payload)
@@ -58,7 +50,7 @@ namespace NetProxy.Library.Win32
             {
                 System.Text.StringBuilder errorMessage = new System.Text.StringBuilder();
 
-                if (((string)Helpers.IsNull(payload.CustomText, string.Empty)) != string.Empty)
+                if ((string)Helpers.IsNull(payload.CustomText, string.Empty) != string.Empty)
                 {
                     errorMessage.AppendFormat("{0}\r\n", payload.CustomText);
                 }
@@ -112,7 +104,7 @@ namespace NetProxy.Library.Win32
                     }
                 }
 
-                this.WriteEvent(payload.Severity, errorMessage.ToString());
+                WriteEvent(payload.Severity, errorMessage.ToString());
             }
             catch
             {
@@ -131,24 +123,8 @@ namespace NetProxy.Library.Win32
                     return;
                 }
 
-                EventLogEntryType eventLogEntryType = EventLogEntryType.Information;
-                switch (severity)
-                {
-                    case Severity.Verbose:
-                        eventLogEntryType = EventLogEntryType.Information;
-                        break;
-                    case Severity.Information:
-                        eventLogEntryType = EventLogEntryType.Information;
-                        break;
-                    case Severity.Warning:
-                        eventLogEntryType = EventLogEntryType.Warning;
-                        break;
-                    case Severity.Error:
-                        eventLogEntryType = EventLogEntryType.Error;
-                        break;
-                }
-
-                EventLog.WriteEntry(this.ApplicationName, eventText, eventLogEntryType);
+                //TODO: Write log to file...
+                //EventLog.WriteEntry(this.ApplicationName, eventText, eventLogEntryType);
             }
             catch
             {

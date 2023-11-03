@@ -13,7 +13,7 @@ namespace NetProxy.Hub.Common
         {
             try
             {
-                byte[] payloadBody = Serialization.ObjectToByteArray(packet);
+                byte[] payloadBody = Serialization.SerializeToByteArray(packet);
 
                 byte[] payloadBytes = Zip(payloadBody);
                 int grossPacketSize = payloadBytes.Length + Constants.PayloadHeaderSize;
@@ -130,7 +130,7 @@ namespace NetProxy.Hub.Common
 
                     byte[] payloadBody = Unzip(payloadBytes);
 
-                    Packet packet = (Packet)Serialization.ByteArrayToObject(payloadBody);
+                    Packet packet = Serialization.DeserializeToObject<Packet>(payloadBody);
 
                     processPayload(state, packet);
 
@@ -141,7 +141,7 @@ namespace NetProxy.Hub.Common
                     state.PayloadBuilderLength -= grossPayloadSize;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //TODO: allow this to be logged.
             }

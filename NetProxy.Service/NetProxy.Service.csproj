@@ -1,129 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7D5E2D00-6EEF-4B80-B88D-B6E0841822E2}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NetProxy.Service</RootNamespace>
-    <AssemblyName>NetProxy.Service</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration.Install" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="NTDLS.FastMemoryCache" Version="1.4.1" />
+    <PackageReference Include="NTDLS.Persistence" Version="1.0.0" />
+    <PackageReference Include="NTDLS.SecureKeyExchange" Version="2.2.0" />
+    <PackageReference Include="NTDLS.Semaphore" Version="1.5.1" />
+    <PackageReference Include="Topshelf" Version="4.3.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Configuration.cs" />
-    <Compile Include="HttpUtility.cs" />
-    <Compile Include="Management.cs" />
-    <Compile Include="NetProxyService.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="NetProxyService.Designer.cs">
-      <DependentUpon>NetProxyService.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="NetProxyServiceInstaller.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="NetProxyServiceInstaller.Designer.cs">
-      <DependentUpon>NetProxyServiceInstaller.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Routing\Keyset.cs" />
-    <Compile Include="Routing\Packet.cs" />
-    <Compile Include="Routing\Packetizer.cs" />
-    <Compile Include="Routing\Router.cs" />
-    <Compile Include="Routing\Routers.cs" />
-    <Compile Include="Routing\RouterStatistics.cs" />
-    <Compile Include="Routing\SocketState.cs" />
-    <Compile Include="RoutingServices.cs" />
-    <Compile Include="Routing\StickySession.cs" />
-    <Compile Include="Singletons.cs" />
+    <ProjectReference Include="..\NetProxy.Hub\NetProxy.Hub.csproj" />
+    <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="app.manifest" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj">
-      <Project>{5cd8c3b0-ba16-46d4-a844-93f5fdb0ada5}</Project>
-      <Name>NetProxy.Library</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\NetProxy.Hub\NetProxy.Hub.csproj">
-      <Project>{09eaa666-fa60-445d-82ce-d11d78146524}</Project>
-      <Name>NetProxy.Hub</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Secure-Key-Exchange\C#\SecureKeyExchange.csproj">
-      <Project>{41d8a197-e709-4953-b17e-6b24be5a4f3a}</Project>
-      <Name>SecureKeyExchange</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="NetProxyService.resx">
-      <DependentUpon>NetProxyService.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="NetProxyServiceInstaller.resx">
-      <DependentUpon>NetProxyServiceInstaller.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="AppIcon.ico" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

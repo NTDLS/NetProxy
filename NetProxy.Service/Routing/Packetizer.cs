@@ -1,67 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Runtime.Caching;
-using System.Text;
-using NetProxy.Hub.Common;
+﻿using NetProxy.Hub.Common;
 using NetProxy.Library.Routing;
+using System.IO.Compression;
 
 namespace NetProxy.Service.Routing
 {
     internal static class Packetizer
     {
-        private static readonly MemoryCache KeyCache = new MemoryCache("NetProxy.Service.Routing.Packetizer.KeySet");
-
-        private static Keyset GetKey(string textKey, string salt)
-        {
-            lock (KeyCache)
-            {
-                string lookupKey = Library.Crypto.Hashing.Sha1(textKey + salt);
-
-                if (KeyCache.Contains(lookupKey))
-                {
-                    return (Keyset)KeyCache[lookupKey];
-                }
-
-                var key = new Keyset(textKey, salt);
-
-                KeyCache.Add(lookupKey, key, new CacheItemPolicy()
-                {
-                    SlidingExpiration = new TimeSpan(0, 0, 10)
-                });
-                return key;
-            }
-        }
-
-        public static byte[] Encrypt(string textKey, string salt, byte[] inputbuffer)
-        {
-            var key = GetKey(textKey, salt);
-            using (var crypto = key.GetEncryptor())
-            {
-                return crypto.TransformFinalBlock(inputbuffer, 0, inputbuffer.Length);
-            }
-        }
-
-        public static byte[] Decrypt(string textKey, string salt, byte[] inputbuffer)
-        {
-            var key = GetKey(textKey, salt);
-            using (var crypto = key.CreateDecryptor())
-            {
-                string outbound = Encoding.UTF8.GetString(inputbuffer).Trim();
-
-
-                return crypto.TransformFinalBlock(inputbuffer, 0, inputbuffer.Length);
-            }
-        }
 
         public static byte[] AssembleMessagePacket(byte[] payload, int payloadLength, bool compress, bool encrypt, string encryptPacketKey, string keySalt)
         {
-            var envelope = new PacketEnvelope();
-
-            envelope.Label = null;
-            envelope.Payload = payload.Take(payloadLength).ToArray();
+            var envelope = new PacketEnvelope
+            {
+                Label = null,
+                Payload = payload.Take(payloadLength).ToArray()
+            };
 
             return AssembleMessagePacket(envelope, compress, encrypt, encryptPacketKey, keySalt);
         }
@@ -70,7 +22,7 @@ namespace NetProxy.Service.Routing
         {
             try
             {
-                byte[] payloadBody = Serialization.ObjectToByteArray(envelope);
+                byte[] payloadBody = Serialization.SerializeToByteArray(envelope);
 
                 if (compress)
                 {
@@ -79,7 +31,7 @@ namespace NetProxy.Service.Routing
 
                 if (encrypt)
                 {
-                    payloadBody = Encrypt(encryptPacketKey, keySalt, payloadBody);
+                    //payloadBody = Encrypt(encryptPacketKey, keySalt, payloadBody);
                 }
 
                 int grossPacketSize = payloadBody.Length + Constants.PayloadHeaderSize;
@@ -95,7 +47,7 @@ namespace NetProxy.Service.Routing
 
                 return packetBytes;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //TODO: allow this to be logged.
             }
@@ -202,7 +154,7 @@ namespace NetProxy.Service.Routing
 
                     if (encrypt)
                     {
-                        payloadBytes = Decrypt(encryptPacketKey, keySalt, payloadBytes);
+                        //payloadBytes = Decrypt(encryptPacketKey, keySalt, payloadBytes);
                     }
 
                     if (compress)
@@ -210,7 +162,7 @@ namespace NetProxy.Service.Routing
                         payloadBytes = Unzip(payloadBytes);
                     }
 
-                    envelopes.Add((PacketEnvelope)Serialization.ByteArrayToObject(payloadBytes));
+                    envelopes.Add(Serialization.DeserializeToObject<PacketEnvelope>(payloadBytes));
 
                     //Zero out the consumed portion of the payload buffer - more for fun than anything else.
                     Array.Clear(state.PayloadBuilder, 0, grossPayloadSize);
@@ -219,7 +171,7 @@ namespace NetProxy.Service.Routing
                     state.PayloadBuilderLength -= grossPayloadSize;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //TODO: allow this to be logged.
             }

@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using NetProxy.Hub.Common;
 using NetProxy.Library.Routing;
+using NTDLS.SecureKeyExchange;
 
 namespace NetProxy.Service.Routing
 {
@@ -20,7 +21,7 @@ namespace NetProxy.Service.Routing
         public Socket Socket { get; set; }
         public byte[] Buffer { get; set; }
         public byte[] PayloadBuilder;
-        public SecureKeyExchange.SecureKeyNegotiator KeyNegotiator { get; set; }
+        public CompoundNegotiator KeyNegotiator { get; set; }
         public bool IsEncryptionNegotationComplete { get; set; }
         public int PayloadBuilderLength { get; set; }
         public string HttpHeaderBuilder { get; set; }

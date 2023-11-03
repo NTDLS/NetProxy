@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NetProxy.Library.Routing;
-using NetProxy.Library.Win32;
+using NetProxy.Library.Utility;
 
 namespace NetProxy.Service.Routing
 {
@@ -47,9 +47,9 @@ namespace NetProxy.Service.Routing
                     }
                     catch (Exception ex)
                     {
-                        Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                        Singletons.EventLog.WriteEvent(new Logging.EventPayload
                         {
-                            Severity = EventLogging.Severity.Error,
+                            Severity = Logging.Severity.Error,
                             CustomText = "Failed to start route.",
                             Exception = ex
                         });
@@ -68,9 +68,9 @@ namespace NetProxy.Service.Routing
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to stop route.",
                         Exception = ex
                     });

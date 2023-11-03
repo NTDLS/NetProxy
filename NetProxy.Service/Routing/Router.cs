@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Caching;
 using System.Text;
-using System.Threading;
 using NetProxy.Library;
 using NetProxy.Library.Routing;
-using NetProxy.Library.Win32;
+using NetProxy.Library.Utility;
+using NTDLS.FastMemoryCache;
 using static NetProxy.Library.Constants;
 
 namespace NetProxy.Service.Routing
@@ -19,7 +15,7 @@ namespace NetProxy.Service.Routing
 
         public RouterStatistics Stats { get; set; }
 
-        private readonly MemoryCache _stickySessionCache = new MemoryCache("NetProxy.Service.Routing.Router.StickySessionCache");
+        private readonly SingleMemoryCache _stickySessionCache = new();
         private int _lastRoundRobinIndex = 0;
         private readonly Route _route;
         private Socket _listenSocket = null;
@@ -135,9 +131,9 @@ namespace NetProxy.Service.Routing
                 }
                 _listenSocket = null;
 
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to start route.",
                     Exception = ex
                 });
@@ -183,9 +179,9 @@ namespace NetProxy.Service.Routing
             {
                 _listenSocket = null;
 
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to stop route.",
                     Exception = ex
                 });
@@ -213,12 +209,12 @@ namespace NetProxy.Service.Routing
 
                     if (_route.EncryptBindingTunnel)
                     {
-                        connection.KeyNegotiator = new SecureKeyExchange.SecureKeyNegotiator();
+                        connection.KeyNegotiator = new();
 
                         SendPacketEnvelope(connection, new PacketEnvelope
                         {
                             Label = IntraServiceLables.ApplyNegotiationToken,
-                            Payload = connection.KeyNegotiator.GenerateNegotiationToken()
+                            Payload = connection.KeyNegotiator.GenerateNegotiationToken(8)
                         });
                     }
                     else if (_route.BindingIsTunnel)
@@ -288,7 +284,7 @@ namespace NetProxy.Service.Routing
         {
             if (envelope.Label == IntraServiceLables.ApplyNegotiationToken)
             {
-                connection.KeyNegotiator = new SecureKeyExchange.SecureKeyNegotiator();
+                connection.KeyNegotiator = new();
                 byte[] replyToken = connection.KeyNegotiator.ApplyNegotiationToken(envelope.Payload);
 
                 SendPacketEnvelope(connection, new PacketEnvelope
@@ -316,7 +312,7 @@ namespace NetProxy.Service.Routing
                 connection.IsEncryptionNegotationComplete = true;
                 //Console.WriteLine("--{0} Shared Secret: {1}", connection.Route.Name, connection.KeyNegotiator.SharedSecretString);
 
-                string sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretString : null;
+                string sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
 
                 string commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
@@ -354,10 +350,8 @@ namespace NetProxy.Service.Routing
             {
                 lock (_stickySessionCache)
                 {
-                    if (_stickySessionCache.Contains(stickeySessionKey))
+                    if (_stickySessionCache.TryGet(stickeySessionKey, out StickySession? cacheItem))
                     {
-                        var cacheItem = (StickySession)_stickySessionCache[stickeySessionKey];
-
                         foreignConnectionEndpoint = (from o in _route.Endpoints.List
                                                      where o.Address == cacheItem.DestinationAddress && o.Port == cacheItem.DestinationPort
                                                      select o).FirstOrDefault();
@@ -444,10 +438,7 @@ namespace NetProxy.Service.Routing
                         DestinationPort = foreignConnectionEndpoint.Port
                     };
 
-                    _stickySessionCache.Add(stickeySessionKey, stickySession, new CacheItemPolicy()
-                    {
-                        SlidingExpiration = new TimeSpan(0, 0, _route.StickySessionCacheExpiration)
-                    });
+                    _stickySessionCache.Upsert(stickeySessionKey, stickySession);
                 }
             }
 
@@ -487,9 +478,9 @@ namespace NetProxy.Service.Routing
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "An error occured while waiting on data.",
                     Exception = ex
                 });
@@ -533,9 +524,9 @@ namespace NetProxy.Service.Routing
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to process HTTP Header rules.",
                     Exception = ex
                 });
@@ -559,7 +550,7 @@ namespace NetProxy.Service.Routing
                     return;
                 }
 
-                string sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretString : null;
+                string sharedSecretString = connection.IsEncryptionNegotationComplete ? connection.KeyNegotiator.SharedSecretHash : null;
 
                 string commonSalt = null;
                 if (connection.IsIncomming && connection.IsEncryptionNegotationComplete)
@@ -662,18 +653,18 @@ namespace NetProxy.Service.Routing
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to process received data.",
                     Exception = ex
                 });
             }
         }
 
-        void ProcessReceivedData(SocketState connection, byte[]buffer, int bufferSize)
+        void ProcessReceivedData(SocketState connection, byte[] buffer, int bufferSize)
         {
-            string sharedSecretString = connection.Peer.IsEncryptionNegotationComplete ? connection.Peer.KeyNegotiator.SharedSecretString : null;
+            string sharedSecretString = connection.Peer.IsEncryptionNegotationComplete ? connection.Peer.KeyNegotiator.SharedSecretHash : null;
 
             string commonSalt = null;
             if (connection.Peer.IsIncomming && connection.Peer.IsEncryptionNegotationComplete)
@@ -759,7 +750,7 @@ namespace NetProxy.Service.Routing
                 }
             }
 
-            if(connection.Peer.UsePackets)
+            if (connection.Peer.UsePackets)
             {
                 //Console.WriteLine("--Send:{0}, Packet: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
@@ -812,9 +803,9 @@ namespace NetProxy.Service.Routing
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to clean up connection.",
                     Exception = ex
                 });
@@ -847,7 +838,7 @@ namespace NetProxy.Service.Routing
         }
 
         #region Utility.
-        
+
         public static IPAddress GetIpAddress(string hostName)
         {
             try
@@ -865,9 +856,9 @@ namespace NetProxy.Service.Routing
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to obtain IP address.",
                     Exception = ex
                 });

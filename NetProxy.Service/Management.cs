@@ -7,9 +7,10 @@ using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
-using NetProxy.Library.Win32;
+using NetProxy.Library.Utility;
 using NetProxy.Service.Routing;
 using Newtonsoft.Json;
+using NTDLS.Persistence;
 
 namespace NetProxy.Service
 {
@@ -69,9 +70,9 @@ namespace NetProxy.Service
                     }
                     catch (Exception ex)
                     {
-                        Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                        Singletons.EventLog.WriteEvent(new Logging.EventPayload
                         {
-                            Severity = EventLogging.Severity.Error,
+                            Severity = Logging.Severity.Error,
                             CustomText = "An error occured while logging in.",
                             Exception = ex
                         });
@@ -115,9 +116,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to get route list.",
                         Exception = ex
                     });
@@ -153,9 +154,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to get route stats list.",
                         Exception = ex
                     });
@@ -179,9 +180,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to get route.",
                         Exception = ex
                     });
@@ -201,9 +202,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to get user list.",
                         Exception = ex
                     });
@@ -230,9 +231,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to save user list.",
                         Exception = ex
                     });
@@ -272,9 +273,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to upsert route.",
                         Exception = ex
                     });
@@ -304,9 +305,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to get delete route.",
                         Exception = ex
                     });
@@ -334,9 +335,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to get stop route.",
                         Exception = ex
                     });
@@ -367,9 +368,9 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                    Singletons.EventLog.WriteEvent(new Logging.EventPayload
                     {
-                        Severity = EventLogging.Severity.Error,
+                        Severity = Logging.Severity.Error,
                         CustomText = "Failed to start route.",
                         Exception = ex
                     });
@@ -382,19 +383,14 @@ namespace NetProxy.Service
         {
             try
             {
-                string configPath = RegistryHelper.GetString(Registry.LocalMachine, Constants.RegsitryKey, "", "ConfigPath");
-
-                string configurationText = JsonConvert.SerializeObject(_config);
-                File.WriteAllText(Path.Combine(configPath, Constants.ServerConfigFileName), configurationText);
-
-                string routesText = JsonConvert.SerializeObject(_routers.Routes());
-                File.WriteAllText(Path.Combine(configPath, Constants.RoutesConfigFileName), routesText);
+                CommonApplicationData.SaveToDisk("NetProxy.Service", _config);
+                CommonApplicationData.SaveToDisk("NetProxy.Service", _routers.Routes());
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to save configuration.",
                     Exception = ex
                 });
@@ -409,16 +405,11 @@ namespace NetProxy.Service
 
                 //AddTestRoutes();
 
-                string configPath = RegistryHelper.GetString(Registry.LocalMachine, Constants.RegsitryKey, "", "ConfigPath");
-
                 Console.WriteLine("Server configuration...");
-                string configurationText = File.ReadAllText(Path.Combine(configPath, Constants.ServerConfigFileName));
-                _config = JsonConvert.DeserializeObject<Configuration>(configurationText);
+                _config = CommonApplicationData.LoadFromDisk<Configuration>("NetProxy.Service");
 
                 Console.WriteLine("Route configuration...");
-                string routesText = File.ReadAllText(Path.Combine(configPath, Constants.RoutesConfigFileName));
-                List<Route> routes = JsonConvert.DeserializeObject<List<Route>>(routesText);
-
+                List<Route> routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetProxy.Service");
                 if (routes != null)
                 {
                     foreach (var route in routes)
@@ -430,9 +421,9 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to load configuration.",
                     Exception = ex
                 });
@@ -510,10 +501,7 @@ namespace NetProxy.Service
             }
             //------------------------------------------------------------------------------------------------------------------
 
-            string routesText = JsonConvert.SerializeObject(routers.Routes());
-
-            string configPath = RegistryHelper.GetString(Registry.LocalMachine, Constants.RegsitryKey, "", "ConfigPath");
-            File.WriteAllText(Path.Combine(configPath, Constants.RoutesConfigFileName), routesText);
+            CommonApplicationData.SaveToDisk("NetProxy.Service", routers.Routes());
         }
 
         public void Start()
@@ -530,9 +518,9 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to start router.",
                     Exception = ex
                 });
@@ -550,9 +538,9 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteEvent(new EventLogging.EventPayload
+                Singletons.EventLog.WriteEvent(new Logging.EventPayload
                 {
-                    Severity = EventLogging.Severity.Error,
+                    Severity = Logging.Severity.Error,
                     CustomText = "Failed to stop router.",
                     Exception = ex
                 });

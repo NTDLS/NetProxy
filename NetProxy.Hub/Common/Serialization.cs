@@ -1,32 +1,23 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+﻿using ProtoBuf;
 
 namespace NetProxy.Hub.Common
 {
     public static class Serialization
     {
-        // Convert an object to a byte array
-        public static byte[] ObjectToByteArray(Object obj)
+        public static byte[] SerializeToByteArray(object obj)
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                bf.Serialize(ms, obj);
-                return ms.ToArray();
-            }
+            if (obj == null) return Array.Empty<byte>();
+            using var stream = new MemoryStream();
+            Serializer.Serialize(stream, obj);
+            return stream.ToArray();
         }
 
-        public static Object ByteArrayToObject(byte[] arrBytes)
+        public static T DeserializeToObject<T>(byte[] arrBytes)
         {
-            using (var memStream = new MemoryStream())
-            {
-                var binForm = new BinaryFormatter();
-                memStream.Write(arrBytes, 0, arrBytes.Length);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var obj = binForm.Deserialize(memStream);
-                return obj;
-            }
+            using var stream = new MemoryStream();
+            stream.Write(arrBytes, 0, arrBytes.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+            return Serializer.Deserialize<T>(stream);
         }
     }
 }

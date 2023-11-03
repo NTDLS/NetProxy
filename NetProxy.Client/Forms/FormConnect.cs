@@ -3,6 +3,7 @@ using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using Newtonsoft.Json;
+using NTDLS.Persistence;
 using System.ComponentModel;
 
 namespace NetProxy.Client.Forms
@@ -31,9 +32,15 @@ namespace NetProxy.Client.Forms
         {
             AcceptButton = buttonConnect;
 
-            //TODO: Reimplement;
-            //textBoxServer.Text = RegistryHelper.GetString(Registry.CurrentUser, Constants.RegsitryKey, "", "ServerName", "localhost");
-            //textBoxUsername.Text = RegistryHelper.GetString(Registry.CurrentUser, Constants.RegsitryKey, "", "UserName", "administrator");
+            var prefs = CommonApplicationData.LoadFromDisk<LoginFormPreferences>("NetworkDLS NetProxy",
+                new LoginFormPreferences
+                {
+                    ServerName = "127.0.0.1",
+                    Username = "administrator"
+                });
+
+            textBoxServer.Text = prefs.ServerName;
+            textBoxUsername.Text = prefs.Username;
         }
 
         private void buttonConnect_Click(object sender, EventArgs e)
@@ -63,9 +70,14 @@ namespace NetProxy.Client.Forms
 
             if (TestConnection())
             {
-                //TODO: Reimplement;
-                //RegistryHelper.SetString(Registry.CurrentUser, Constants.RegsitryKey, "", "ServerName", verbatiumServername);
-                //RegistryHelper.SetString(Registry.CurrentUser, Constants.RegsitryKey, "", "UserName", verbatiumUsername);
+
+                CommonApplicationData.SaveToDisk("NetworkDLS NetProxy",
+                    new LoginFormPreferences
+                    {
+                        ServerName = verbatiumServername,
+                        Username = verbatiumUsername
+                    });
+
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }

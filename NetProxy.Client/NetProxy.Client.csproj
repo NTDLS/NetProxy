@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NTDLS.Persistence" Version="1.0.0" />
     <PackageReference Include="WinForms.DataVisualization" Version="1.9.1" />
   </ItemGroup>
 

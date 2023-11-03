@@ -12,9 +12,9 @@ namespace NetProxy.Service
     public class Management
     {
         private Configuration _config;
-        private readonly Packeteer _packeteer = new Packeteer();
-        private readonly Routers _routers = new Routers();
-        private readonly HashSet<Guid> _loggedInPeers = new HashSet<Guid>();
+        private readonly Packeteer _packeteer = new();
+        private readonly Routers _routers = new();
+        private readonly HashSet<Guid> _loggedInPeers = new();
 
         public Management()
         {
@@ -33,7 +33,7 @@ namespace NetProxy.Service
 
         private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, NetProxy.Hub.Common.Packet packet)
         {
-            //Console.WriteLine("{0}:{1}", packet.Label, packet.Payload);
+            Console.WriteLine("{0}:{1}", packet.Label, packet.Payload);
 
             if (_loggedInPeers.Contains(peer.Id) == false)
             {
@@ -407,10 +407,10 @@ namespace NetProxy.Service
                 defaultConfiguration.Users.Add(new User() { UserName = "administrator", PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" });
 
                 Console.WriteLine("Server configuration...");
-                _config = CommonApplicationData.LoadFromDisk<Configuration>("NetProxy.Service", defaultConfiguration);
+                _config = CommonApplicationData.LoadFromDisk<Configuration>("NetworkDLS NetProxy", defaultConfiguration);
 
                 Console.WriteLine("Route configuration...");
-                var routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetProxy.Service", new List<Route>());
+                var routes = CommonApplicationData.LoadFromDisk<List<Route>>("NetworkDLS NetProxy", new List<Route>());
                 foreach (var route in routes)
                 {
                     Console.WriteLine("Adding route {0}.", route.Name);

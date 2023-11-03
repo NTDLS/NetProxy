@@ -70,7 +70,6 @@ namespace NetProxy.Client.Forms
 
             if (TestConnection())
             {
-
                 CommonApplicationData.SaveToDisk("NetworkDLS NetProxy",
                     new LoginFormPreferences
                     {

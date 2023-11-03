@@ -1,10 +1,18 @@
-﻿namespace NetProxy.Hub.Common
+﻿using ProtoBuf;
+
+namespace NetProxy.Hub.Common
 {
     [Serializable]
+    [ProtoContract]
     public class Packet
     {
+        [ProtoMember(1)]
         public DateTime CreatedTime = DateTime.Now;
-        public string Label { get; set; }
-        public string Payload { get; set; }
+
+        [ProtoMember(2)]
+        public string Label { get; set; } = string.Empty;
+
+        [ProtoMember(3)]
+        public string Payload { get; set; } = string.Empty;
     }
 }

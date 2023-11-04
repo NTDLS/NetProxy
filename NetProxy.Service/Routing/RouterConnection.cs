@@ -1,10 +1,12 @@
-﻿using System.Net.Sockets;
+﻿using NetProxy.Library.Routing;
+using System.Net;
+using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing
 {
     internal class RouterConnection
     {
-        private readonly TcpClient _client; //The TCP/IP connection associated with this connection.
+        private readonly TcpClient _tcpclient; //The TCP/IP connection associated with this connection.
         private readonly Thread _dataPumpThread; //The thread that receives data for this connection.
         private readonly NetworkStream _stream; //The stream for the TCP/IP connection (used for reading and writing).
         private readonly RouterListener _listener; //The listener which owns this connection.
@@ -18,7 +20,7 @@ namespace NetProxy.Service.Routing
         public RouterConnection(RouterListener listener, TcpClient tcpClient)
         {
             Id = Guid.NewGuid();
-            _client = tcpClient;
+            _tcpclient = tcpClient;
             _dataPumpThread = new Thread(DataPumpThread);
             _keepRunning = true;
             _listener = listener;
@@ -46,7 +48,29 @@ namespace NetProxy.Service.Routing
 
         public void RunInboundAsync()
         {
-            var endpoint = _listener.Router.Route.Endpoints.Collection.First();
+            var endpoints = _listener.Router.Route.Endpoints.Collection;
+            if (endpoints.Count == 0)
+            {
+                throw new Exception("The route has no defined endpoints.");
+            }
+
+            if (_listener.Router.Route.UseStickySessions)
+            {
+                
+                TcpClient.
+                string stickeySessionKey = _listener.Router.Route.Name + ":" + _listener.Router.Route.Endpoints.ConnectionPattern
+                    + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address?.ToString();
+
+                if (_stickySessionCache.TryGetValue(stickeySessionKey, out StickySession? cacheItem) && cacheItem != null)
+                {
+                    foreignConnectionEndpoint = (from o in _route.Endpoints.List
+                                                 where o.Address == cacheItem.DestinationAddress && o.Port == cacheItem.DestinationPort
+                                                 select o).FirstOrDefault();
+                }
+            }
+
+            var endpoint = endpoints.First();
+
 
             //Make the outbound connection to the endpoint specified for this route.
             var tcpClient = new TcpClient(endpoint.Address, endpoint.Port);
@@ -80,7 +104,7 @@ namespace NetProxy.Service.Routing
         {
             _keepRunning = false;
             try { _stream.Close(); } catch { }
-            try { _client.Close(); } catch { }
+            try { _tcpclient.Close(); } catch { }
 
             if (waitOnThread)
             {

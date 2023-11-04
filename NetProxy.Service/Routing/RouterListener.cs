@@ -1,4 +1,5 @@
-﻿using NetProxy.Library.Utilities;
+﻿using Microsoft.Extensions.Caching.Memory;
+using NetProxy.Library.Utilities;
 using NTDLS.Semaphore;
 using System.Net.Sockets;
 
@@ -8,12 +9,12 @@ namespace NetProxy.Service.Routing
     {
         internal readonly CriticalResource<Dictionary<Guid, RouterConnection>> _activeConnections = new();
 
-        private readonly MemoryCache StickySessionCache = new(new MemoryCacheOptions());
-
         private readonly TcpListener _listener;
         private readonly Thread _thread;
         private bool _keepRunning;
+
         public Router Router { get; private set; }
+        public MemoryCache StickySessionCache { get; private set; } = new(new MemoryCacheOptions());
 
         public RouterListener(Router router, TcpListener listener)
         {

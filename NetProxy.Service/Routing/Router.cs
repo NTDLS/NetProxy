@@ -9,7 +9,6 @@ namespace NetProxy.Service.Routing
         #region Backend Variables.
 
         public RouterStatistics Stats { get; set; }
-        //private readonly MemoryCache _stickySessionCache = new(new MemoryCacheOptions());
         private readonly Route _route;
         private readonly List<RouterListener> _listeners = new();
         private bool _keepRunning = false;
@@ -45,7 +44,7 @@ namespace NetProxy.Service.Routing
                 }
                 else
                 {
-                    foreach (var binding in _route.Bindings.Where(o=>o.Enabled == true))
+                    foreach (var binding in _route.Bindings.Where(o => o.Enabled == true))
                     {
                         var tcpListener = new TcpListener(IPAddress.Parse(binding.Address), _route.ListenPort);
                         var listener = new RouterListener(this, tcpListener);

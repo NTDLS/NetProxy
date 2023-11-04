@@ -1,5 +1,4 @@
-﻿using NetProxy.Library;
-using Topshelf;
+﻿using Topshelf;
 
 namespace NetProxy.Service
 {

@@ -7,7 +7,6 @@ using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
 using System.Net;
-using static NetProxy.Client.Forms.FormMain;
 
 namespace NetProxy.Client.Forms
 {

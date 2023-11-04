@@ -4,29 +4,25 @@ namespace NetProxy.Service.Routing
 {
     internal class RouterConnection
     {
-        private TcpClient _client;
-        private Thread _thread;
+        private readonly TcpClient _client; //The TCP/IP connection associated with this connection.
+        private readonly Thread _dataPumpThread; //The thread that receives data for this connection.
+        private readonly NetworkStream _stream; //The stream for the TCP/IP connection (used for reading and writing).
+        private readonly RouterListener _listener; //The listener which owns this connection.
+        private RouterConnection? _peer; //The associated endpoint connection for this connection.
         private bool _keepRunning;
-        private readonly NetworkStream _stream;
-        private readonly Router _router;
-        private readonly RouterListener _listener;
-        private RouterConnection? _peer;
 
         public Guid Id { get; private set; }
         public DateTime StartDateTime { get; private set; } = DateTime.UtcNow;
         public DateTime LastActivityDateTime { get; private set; } = DateTime.UtcNow;
-        public double ActivityAgeInMiliseconds => (DateTime.UtcNow - LastActivityDateTime).TotalMilliseconds;
-        public double StartAgeInMiliseconds => (DateTime.UtcNow - StartDateTime).TotalMilliseconds;
 
-        public RouterConnection(Router router, RouterListener listener, TcpClient tcpClient)
+        public RouterConnection(RouterListener listener, TcpClient tcpClient)
         {
-            _router = router;
-            _listener = listener;
-            _thread = new Thread(DataPumpThread);
-            _client = tcpClient;
             Id = Guid.NewGuid();
-            _stream = tcpClient.GetStream();
+            _client = tcpClient;
+            _dataPumpThread = new Thread(DataPumpThread);
             _keepRunning = true;
+            _listener = listener;
+            _stream = tcpClient.GetStream();
         }
 
         public void Write(byte[] buffer)
@@ -50,27 +46,27 @@ namespace NetProxy.Service.Routing
 
         public void RunInboundAsync()
         {
-            var endpoint = _router.Route.Endpoints.Collection.First();
+            var endpoint = _listener.Router.Route.Endpoints.Collection.First();
 
             //Make the outbound connection to the endpoint specified for this route.
             var tcpClient = new TcpClient(endpoint.Address, endpoint.Port);
-            _peer = new RouterConnection(_router, _listener, tcpClient);
+            _peer = new RouterConnection(_listener, tcpClient);
 
             _peer.RunOutboundAsync(this);
 
             //If we were successful making the outbound connection, then start the inbound connection thread.
-            _thread.Start();
+            _dataPumpThread.Start();
         }
 
         public void RunOutboundAsync(RouterConnection peer)
         {
             _peer = peer; //Each active connection needs a reference to the opposite endpoint connection.
-            _thread.Start();
+            _dataPumpThread.Start();
         }
 
         internal void DataPumpThread()
         {
-            byte[] buffer = new byte[_router.Route.InitialBufferSize];
+            byte[] buffer = new byte[_listener.Router.Route.InitialBufferSize];
 
             while (_keepRunning && Read(ref buffer, out int length))
             {
@@ -88,7 +84,7 @@ namespace NetProxy.Service.Routing
 
             if (waitOnThread)
             {
-                _thread.Join();
+                _dataPumpThread.Join();
             }
         }
     }

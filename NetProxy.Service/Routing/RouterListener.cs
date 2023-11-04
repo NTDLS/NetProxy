@@ -8,14 +8,16 @@ namespace NetProxy.Service.Routing
     {
         internal readonly CriticalResource<Dictionary<Guid, RouterConnection>> _activeConnections = new();
 
+        private readonly MemoryCache StickySessionCache = new(new MemoryCacheOptions());
+
         private readonly TcpListener _listener;
         private readonly Thread _thread;
         private bool _keepRunning;
-        private readonly Router _router;
+        public Router Router { get; private set; }
 
         public RouterListener(Router router, TcpListener listener)
         {
-            _router = router;
+            Router = router;
             _listener = listener;
             _thread = new Thread(InboundConnectionThreadProc);
         }
@@ -59,7 +61,7 @@ namespace NetProxy.Service.Routing
             {
                 _listener.Start();
 
-                Singletons.EventLog.WriteLog(Logging.Severity.Verbose, $"Listening inbound '{_router.Route.Name}' on port {_router.Route.ListenPort}");
+                Singletons.EventLog.WriteLog(Logging.Severity.Verbose, $"Listening inbound '{Router.Route.Name}' on port {Router.Route.ListenPort}");
 
                 while (_keepRunning)
                 {
@@ -69,7 +71,7 @@ namespace NetProxy.Service.Routing
                     {
                         if (_keepRunning) //Check again, we may have received a connection while shutting down.
                         {
-                            var activeConnection = new RouterConnection(_router, this, tcpClient);
+                            var activeConnection = new RouterConnection(this, tcpClient);
 
                             _activeConnections.Use((o) => o.Add(activeConnection.Id, activeConnection));
 

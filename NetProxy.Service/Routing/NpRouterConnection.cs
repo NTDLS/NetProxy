@@ -89,21 +89,22 @@ namespace NetProxy.Service.Routing
                 throw new Exception("The route has no defined endpoints.");
             }
 
+            var remoteEndPoint = _tcpclient.Client.RemoteEndPoint as IPEndPoint;
+            if (remoteEndPoint == null)
+            {
+                throw new Exception("Could not determine remote endpoint from the client.");
+            }
+
+            var sessionKey = $"{_listener.Router.Route.Name}:{_listener.Router.Route.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
+
             TcpClient? establishedConnection = null;
 
             #region First try sticky sessions....
             if (_listener.Router.Route.UseStickySessions)
             {
-                var remoteEndPoint = _tcpclient.Client.RemoteEndPoint as IPEndPoint;
-                if (remoteEndPoint == null)
+                if (_listener.StickySessionCache.TryGetValue(sessionKey, out NpStickySession? cacheItem) && cacheItem != null)
                 {
-                    throw new Exception("Could not determine remote endpoint from the client.");
-                }
-
-                var stickeySessionKey = $"{_listener.Router.Route.Name}:{_listener.Router.Route.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
-                if (_listener.StickySessionCache.TryGetValue(stickeySessionKey, out NpStickySession? cacheItem) && cacheItem != null)
-                {
-                    endpoint = endpoints.Where(o => o.Address == cacheItem.DestinationAddress && o.Port == cacheItem.DestinationPort).FirstOrDefault();
+                    endpoint = endpoints.Where(o => o.Address == cacheItem.Address && o.Port == cacheItem.Port).FirstOrDefault();
                 }
 
                 if (endpoint != null)
@@ -195,6 +196,12 @@ namespace NetProxy.Service.Routing
             }
 
             _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
+
+            if (_listener.Router.Route.UseStickySessions)
+            {
+                //Keep track of the successful stucky session.
+                _listener.StickySessionCache.Set(sessionKey, new NpStickySession(endpoint.Address, endpoint.Port));
+            }
 
             _peer = new NpRouterConnection(_listener, establishedConnection);
             _peer.RunOutboundAsync(this, endpoint);

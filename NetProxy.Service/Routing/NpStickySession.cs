@@ -1,8 +1,16 @@
-﻿namespace NetProxy.Service.Routing
+﻿using System.Net;
+
+namespace NetProxy.Service.Routing
 {
     public class NpStickySession
     {
-        public string DestinationAddress { get; set; } = string.Empty;
-        public int DestinationPort { get; set; }
+        public string Address { get; set; }
+        public int Port { get; set; }
+
+        public NpStickySession(string address, int port)
+        {
+            Address = address;
+            Port = port;
+        }
     }
 }

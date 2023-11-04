@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using NetProxy.Library;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using System.Net;
@@ -8,12 +9,15 @@ namespace NetProxy.Service.Routing
 {
     internal class NpRouterConnection
     {
+        public ConnectionDirection Direction { get; private set; }
+
         private readonly TcpClient _tcpclient; //The TCP/IP connection associated with this connection.
         private readonly Thread _dataPumpThread; //The thread that receives data for this connection.
         private readonly NetworkStream _stream; //The stream for the TCP/IP connection (used for reading and writing).
         private readonly NpRouterListener _listener; //The listener which owns this connection.
         private NpRouterConnection? _peer; //The associated endpoint connection for this connection.
         private bool _keepRunning;
+        private NpEndpoint? _outboundEndpoint; //For outbound connections, this is the endpoint that was used to make this connection.
 
         public Guid Id { get; private set; }
         public DateTime StartDateTime { get; private set; } = DateTime.UtcNow;
@@ -23,7 +27,7 @@ namespace NetProxy.Service.Routing
         {
             Id = Guid.NewGuid();
             _tcpclient = tcpClient;
-            _dataPumpThread = new Thread(DataPumpThread);
+            _dataPumpThread = new Thread(DataPumpThreadProc);
             _keepRunning = true;
             _listener = listener;
             _stream = tcpClient.GetStream();
@@ -31,20 +35,38 @@ namespace NetProxy.Service.Routing
 
         public void Write(byte[] buffer)
         {
+            if (_outboundEndpoint != null)
+            {
+                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesWritten += (ulong)buffer.Length);
+            }
+
             LastActivityDateTime = DateTime.UtcNow;
             _stream.Write(buffer);
         }
 
         public void Write(byte[] buffer, int length)
         {
+            if (_outboundEndpoint != null)
+            {
+                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesWritten += (ulong)length);
+            }
+
             LastActivityDateTime = DateTime.UtcNow;
             _stream.Write(buffer, 0, length);
         }
 
-        public bool Read(ref byte[] buffer, out int length)
+        public bool Read(ref byte[] buffer, out int outLength)
         {
             LastActivityDateTime = DateTime.UtcNow;
-            length = _stream.Read(buffer, 0, buffer.Length);
+            int length = _stream.Read(buffer, 0, buffer.Length);
+
+            if (_outboundEndpoint != null)
+            {
+                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesRead += (ulong)length);
+            }
+
+            outLength = length;
+
             return length > 0;
         }
 
@@ -54,6 +76,8 @@ namespace NetProxy.Service.Routing
         /// <exception cref="Exception"></exception>
         public void RunInboundAsync()
         {
+            Direction = ConnectionDirection.Inbound;
+
             HashSet<Guid> triedEndpoints = new();
 
             int lastTriedEndpointIndex = _listener.LastTriedEndpointIndex;
@@ -159,28 +183,72 @@ namespace NetProxy.Service.Routing
                 }
             }
 
+            if (endpoint == null)
+            {
+                throw new Exception($"A connection was estanblished but the endpoint remains undefined.");
+            }
+
             _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
 
             _peer = new NpRouterConnection(_listener, establishedConnection);
-            _peer.RunOutboundAsync(this);
+            _peer.RunOutboundAsync(this, endpoint);
 
             //If we were successful making the outbound connection, then start the inbound connection thread.
             _dataPumpThread.Start();
         }
 
-        public void RunOutboundAsync(NpRouterConnection peer)
+        public void RunOutboundAsync(NpRouterConnection peer, NpEndpoint endpoint)
         {
+            Direction = ConnectionDirection.Outbound;
+
+            _outboundEndpoint = endpoint;
             _peer = peer; //Each active connection needs a reference to the opposite endpoint connection.
             _dataPumpThread.Start();
         }
 
-        internal void DataPumpThread()
+        internal void DataPumpThreadProc()
         {
-            byte[] buffer = new byte[_listener.Router.Route.InitialBufferSize];
+            Thread.CurrentThread.Name = $"DataPumpThreadProc:{Thread.CurrentThread.ManagedThreadId}";
 
-            while (_keepRunning && Read(ref buffer, out int length))
+            #region Track endpoint statistics.
+            if (_outboundEndpoint != null)
             {
-                _peer?.Write(buffer, length);
+                _listener.EndpointStatistics.Use((o) =>
+                {
+                    var stat = o[_outboundEndpoint.Id];
+                    stat.CurrentConnections++;
+                    stat.TotalConnections++;
+                });
+            }
+            #endregion
+
+            try
+            {
+
+                byte[] buffer = new byte[_listener.Router.Route.InitialBufferSize];
+                while (_keepRunning && Read(ref buffer, out int length))
+                {
+                    _peer?.Write(buffer, length);
+                }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                NpUtility.TryAndIgnore(() => _peer?.Stop(false)); //Tell the peer connection to disconnect.
+
+                #region Track endpoint statistics.
+                if (_outboundEndpoint != null)
+                {
+                    _listener.EndpointStatistics.Use((o) =>
+                    {
+                        var stat = o[_outboundEndpoint.Id];
+                        stat.CurrentConnections--;
+
+                    });
+                }
+                #endregion
             }
 
             _listener.RemoveActiveConnection(this);

@@ -11,7 +11,7 @@
         {
             _management = new NpManagement();
             _semaphoreToRequestStop = new SemaphoreSlim(0);
-            _thread = new Thread(DoWork);
+            _thread = new Thread(ServiceThreadProc);
         }
 
         public void Start()
@@ -26,8 +26,10 @@
             _thread.Join();
         }
 
-        private void DoWork()
+        private void ServiceThreadProc()
         {
+            Thread.CurrentThread.Name = $"ServiceThreadProc:{Thread.CurrentThread.ManagedThreadId}";
+
             _management.Start();
 
             while (true)

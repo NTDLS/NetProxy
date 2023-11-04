@@ -38,6 +38,13 @@
         Put
     }
 
+    public enum ConnectionDirection
+    {
+        Undefiend,
+        Inbound,
+        Outbound
+    }
+
     public enum BindingProtocal
     {
         Pv4,

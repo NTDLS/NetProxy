@@ -8,6 +8,26 @@ namespace NetProxy.Library.Utilities
 {
     public static class Utility
     {
+        public delegate void TryAndIgnoreProc();
+        public delegate T TryAndIgnoreProc<T>();
+
+        /// <summary>
+        /// We didnt need that exception! Did we?... DID WE?!
+        /// </summary>
+        public static void TryAndIgnore(TryAndIgnoreProc func)
+        {
+            try { func(); } catch { }
+        }
+
+        /// <summary>
+        /// We didnt need that exception! Did we?... DID WE?!
+        /// </summary>
+        public static T? TryAndIgnore<T>(TryAndIgnoreProc<T> func)
+        {
+            try { return func(); } catch { }
+            return default;
+        }
+
         public static string GetExceptionText(Exception ex)
         {
             StringBuilder builder = new StringBuilder();

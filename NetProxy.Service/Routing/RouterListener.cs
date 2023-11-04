@@ -1,18 +1,19 @@
 ﻿using NetProxy.Library.Utilities;
+using NTDLS.Semaphore;
 using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing
 {
-    internal class ActiveListener
+    internal class RouterListener
     {
-        internal readonly Dictionary<Guid, ActiveConnection> _activeConnections = new();
+        internal readonly CriticalResource<Dictionary<Guid, RouterConnection>> _activeConnections = new();
 
         private readonly TcpListener _listener;
         private readonly Thread _thread;
         private bool _keepRunning;
         private readonly Router _router;
 
-        public ActiveListener(Router router, TcpListener listener)
+        public RouterListener(Router router, TcpListener listener)
         {
             _router = router;
             _listener = listener;
@@ -27,8 +28,28 @@ namespace NetProxy.Service.Routing
 
         public void Stop()
         {
+            Utility.TryAndIgnore(_listener.Stop);
+
+            _activeConnections.Use((o) =>
+            {
+                foreach (var connection in o)
+                {
+                    connection.Value.Stop(true);
+                }
+                o.Clear();
+            });
+
             _keepRunning = false;
             _thread.Join();
+        }
+
+        public void RemoveActiveConnection(RouterConnection connection)
+        {
+            _activeConnections.Use((o) =>
+            {
+                o.Remove(connection.Id);
+                connection.Stop(false);
+            });
         }
 
         void InboundConnectionThreadProc()
@@ -48,8 +69,9 @@ namespace NetProxy.Service.Routing
                     {
                         if (_keepRunning) //Check again, we may have received a connection while shutting down.
                         {
-                            var activeConnection = new ActiveConnection(_router, tcpClient);
-                            _activeConnections.Add(activeConnection.Id, activeConnection);
+                            var activeConnection = new RouterConnection(_router, this, tcpClient);
+
+                            _activeConnections.Use((o) => o.Add(activeConnection.Id, activeConnection));
 
                             Singletons.EventLog.WriteLog(Logging.Severity.Verbose, $"Accepted inbound endpoint connection: {activeConnection.Id}");
                             activeConnection.RunInboundAsync();

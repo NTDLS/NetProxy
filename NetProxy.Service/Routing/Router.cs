@@ -10,11 +10,8 @@ namespace NetProxy.Service.Routing
 
         public RouterStatistics Stats { get; set; }
         //private readonly MemoryCache _stickySessionCache = new(new MemoryCacheOptions());
-        //private int _lastRoundRobinIndex = 0;
         private readonly Route _route;
-        //private Socket? _listenSocket = null;
-        //private readonly List<SocketState> _connections = new();
-        private readonly List<ActiveListener> _listeners = new();
+        private readonly List<RouterListener> _listeners = new();
         private bool _keepRunning = false;
         public bool IsRunning => _keepRunning;
 
@@ -43,7 +40,7 @@ namespace NetProxy.Service.Routing
                 if (_route.ListenOnAllAddresses)
                 {
                     var tcpListener = new TcpListener(IPAddress.Any, _route.ListenPort);
-                    var listener = new ActiveListener(this, tcpListener);
+                    var listener = new RouterListener(this, tcpListener);
                     _listeners.Add(listener);
                 }
                 else
@@ -51,7 +48,7 @@ namespace NetProxy.Service.Routing
                     foreach (var binding in _route.Bindings.Where(o=>o.Enabled == true))
                     {
                         var tcpListener = new TcpListener(IPAddress.Parse(binding.Address), _route.ListenPort);
-                        var listener = new ActiveListener(this, tcpListener);
+                        var listener = new RouterListener(this, tcpListener);
                         _listeners.Add(listener);
                     }
                 }
@@ -72,12 +69,13 @@ namespace NetProxy.Service.Routing
 
         public void Stop()
         {
+            foreach (var listener in _listeners)
+            {
+                listener.Stop();
+            }
         }
 
-
-
         /*
-
         #region Start/Stop.
 
         public bool Start()

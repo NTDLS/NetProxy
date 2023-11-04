@@ -2,14 +2,15 @@
 
 namespace NetProxy.Service.Routing
 {
-    internal class ActiveConnection : IDisposable
+    internal class RouterConnection
     {
         private TcpClient _client;
         private Thread _thread;
         private bool _keepRunning;
         private readonly NetworkStream _stream;
         private readonly Router _router;
-        private ActiveConnection? _peer;
+        private readonly RouterListener _listener;
+        private RouterConnection? _peer;
 
         public Guid Id { get; private set; }
         public DateTime StartDateTime { get; private set; } = DateTime.UtcNow;
@@ -17,21 +18,15 @@ namespace NetProxy.Service.Routing
         public double ActivityAgeInMiliseconds => (DateTime.UtcNow - LastActivityDateTime).TotalMilliseconds;
         public double StartAgeInMiliseconds => (DateTime.UtcNow - StartDateTime).TotalMilliseconds;
 
-        public ActiveConnection(Router router, TcpClient tcpClient)
+        public RouterConnection(Router router, RouterListener listener, TcpClient tcpClient)
         {
             _router = router;
+            _listener = listener;
             _thread = new Thread(DataPumpThread);
             _client = tcpClient;
             Id = Guid.NewGuid();
             _stream = tcpClient.GetStream();
             _keepRunning = true;
-        }
-
-        public void Disconnect()
-        {
-            try { _stream.Close(); } catch { }
-            try { _client.Close(); } catch { }
-            _keepRunning = false;
         }
 
         public void Write(byte[] buffer)
@@ -59,7 +54,7 @@ namespace NetProxy.Service.Routing
 
             //Make the outbound connection to the endpoint specified for this route.
             var tcpClient = new TcpClient(endpoint.Address, endpoint.Port);
-            _peer = new ActiveConnection(_router, tcpClient);
+            _peer = new RouterConnection(_router, _listener, tcpClient);
 
             _peer.RunOutboundAsync(this);
 
@@ -67,7 +62,7 @@ namespace NetProxy.Service.Routing
             _thread.Start();
         }
 
-        public void RunOutboundAsync(ActiveConnection peer)
+        public void RunOutboundAsync(RouterConnection peer)
         {
             _peer = peer; //Each active connection needs a reference to the opposite endpoint connection.
             _thread.Start();
@@ -77,21 +72,24 @@ namespace NetProxy.Service.Routing
         {
             byte[] buffer = new byte[_router.Route.InitialBufferSize];
 
-            while (_keepRunning)
+            while (_keepRunning && Read(ref buffer, out int length))
             {
-                if (Read(ref buffer, out int length))
-                {
-                    _peer?.Write(buffer, length);
-                }
+                _peer?.Write(buffer, length);
             }
+
+            _listener.RemoveActiveConnection(this);
         }
 
-        public void Dispose()
+        public void Stop(bool waitOnThread)
         {
-            Disconnect();
+            _keepRunning = false;
+            try { _stream.Close(); } catch { }
+            try { _client.Close(); } catch { }
 
-            try { _stream.Dispose(); } catch { }
-            try { _client.Dispose(); } catch { }
+            if (waitOnThread)
+            {
+                _thread.Join();
+            }
         }
     }
 }

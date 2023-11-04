@@ -34,7 +34,7 @@ namespace NetProxy.Service.Routing
                     {
                         Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                         {
-                            Severity = Logging.Severity.Error,
+                            Severity = Logging.Severity.Exception,
                             CustomText = "Failed to start route.",
                             Exception = ex
                         });
@@ -55,7 +55,7 @@ namespace NetProxy.Service.Routing
                 {
                     Singletons.EventLog.WriteLog(new Logging.LoggingPayload
                     {
-                        Severity = Logging.Severity.Error,
+                        Severity = Logging.Severity.Exception,
                         CustomText = "Failed to stop route.",
                         Exception = ex
                     });

@@ -1,10 +1,6 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using NetProxy.Library;
-using NetProxy.Library.Routing;
-using NetProxy.Library.Utilities;
+﻿using NetProxy.Library.Routing;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace NetProxy.Service.Routing
 {
@@ -13,31 +9,17 @@ namespace NetProxy.Service.Routing
         #region Backend Variables.
 
         public RouterStatistics Stats { get; set; }
-        private readonly MemoryCache _stickySessionCache = new(new MemoryCacheOptions());
-        private int _lastRoundRobinIndex = 0;
+        //private readonly MemoryCache _stickySessionCache = new(new MemoryCacheOptions());
+        //private int _lastRoundRobinIndex = 0;
         private readonly Route _route;
-        private Socket? _listenSocket = null;
-        private readonly List<SocketState> _connections = new();
-        private AsyncCallback? _onDataReceivedCallback;
+        //private Socket? _listenSocket = null;
+        //private readonly List<SocketState> _connections = new();
+        private readonly List<ActiveListener> _listeners = new();
+        private bool _keepRunning = false;
+        public bool IsRunning => _keepRunning;
 
-        public int CurrentConnectionCount
-        {
-            get
-            {
-                lock (_connections)
-                {
-                    return _connections.Count;
-                }
-            }
-        }
-
-        public Route Route
-        {
-            get
-            {
-                return _route;
-            }
-        }
+        public int CurrentConnectionCount => 1000;
+        public Route Route => _route;
 
         #endregion
 
@@ -47,13 +29,54 @@ namespace NetProxy.Service.Routing
             _route = route;
         }
 
-        public bool IsRunning
+        public bool Start()
         {
-            get
+            try
             {
-                return _listenSocket != null;
+                if (_keepRunning)
+                {
+                    return true;
+                }
+
+                _keepRunning = true;
+
+                if (_route.ListenOnAllAddresses)
+                {
+                    var tcpListener = new TcpListener(IPAddress.Any, _route.ListenPort);
+                    var listener = new ActiveListener(this, tcpListener);
+                    _listeners.Add(listener);
+                }
+                else
+                {
+                    foreach (var binding in _route.Bindings.Where(o=>o.Enabled == true))
+                    {
+                        var tcpListener = new TcpListener(IPAddress.Parse(binding.Address), _route.ListenPort);
+                        var listener = new ActiveListener(this, tcpListener);
+                        _listeners.Add(listener);
+                    }
+                }
+
+                foreach (var listener in _listeners)
+                {
+                    listener.StartAsync();
+                }
+
+                return true;
             }
+            catch
+            {
+                //TODO: Log this.
+            }
+            return false;
         }
+
+        public void Stop()
+        {
+        }
+
+
+
+        /*
 
         #region Start/Stop.
 
@@ -664,5 +687,6 @@ namespace NetProxy.Service.Routing
         }
 
         #endregion
+        */
     }
 }

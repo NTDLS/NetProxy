@@ -8,11 +8,11 @@ namespace NetProxy.Library.Routing
         [JsonConverter(typeof(StringEnumConverter))]
         public ConnectionPattern ConnectionPattern { get; set; }
 
-        public List<Endpoint> List = new();
+        public List<Endpoint> Collection = new();
 
         public void Add(Endpoint peer)
         {
-            List.Add(peer);
+            Collection.Add(peer);
         }
     }
 }

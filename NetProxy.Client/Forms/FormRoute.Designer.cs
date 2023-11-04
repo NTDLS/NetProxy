@@ -78,8 +78,6 @@
             groupBox4 = new GroupBox();
             textBoxStickySessionCacheExpiration = new TextBox();
             label15 = new Label();
-            label14 = new Label();
-            textBoxSpinLockCount = new TextBox();
             groupBox1 = new GroupBox();
             textBoxMaxBufferSize = new TextBox();
             textBoxAcceptBacklogSize = new TextBox();
@@ -152,7 +150,7 @@
             // labelAcceptBacklogSize
             // 
             labelAcceptBacklogSize.AutoSize = true;
-            labelAcceptBacklogSize.Location = new Point(49, 87);
+            labelAcceptBacklogSize.Location = new Point(49, 30);
             labelAcceptBacklogSize.Margin = new Padding(4, 0, 4, 0);
             labelAcceptBacklogSize.Name = "labelAcceptBacklogSize";
             labelAcceptBacklogSize.Size = new Size(112, 15);
@@ -524,10 +522,10 @@
             // groupBox4
             // 
             groupBox4.Controls.Add(textBoxStickySessionCacheExpiration);
+            groupBox4.Controls.Add(textBoxAcceptBacklogSize);
             groupBox4.Controls.Add(label15);
-            groupBox4.Controls.Add(label14);
-            groupBox4.Controls.Add(textBoxSpinLockCount);
-            groupBox4.Location = new Point(14, 160);
+            groupBox4.Controls.Add(labelAcceptBacklogSize);
+            groupBox4.Location = new Point(14, 131);
             groupBox4.Margin = new Padding(4, 3, 4, 3);
             groupBox4.Name = "groupBox4";
             groupBox4.Padding = new Padding(4, 3, 4, 3);
@@ -554,37 +552,17 @@
             label15.TabIndex = 16;
             label15.Text = "Sticky Session Expiration (s)";
             // 
-            // label14
-            // 
-            label14.AutoSize = true;
-            label14.Location = new Point(65, 28);
-            label14.Margin = new Padding(4, 0, 4, 0);
-            label14.Name = "label14";
-            label14.Size = new Size(96, 15);
-            label14.TabIndex = 14;
-            label14.Text = "Spin-Lock Count";
-            // 
-            // textBoxSpinLockCount
-            // 
-            textBoxSpinLockCount.Location = new Point(169, 25);
-            textBoxSpinLockCount.Margin = new Padding(4, 3, 4, 3);
-            textBoxSpinLockCount.Name = "textBoxSpinLockCount";
-            textBoxSpinLockCount.Size = new Size(116, 23);
-            textBoxSpinLockCount.TabIndex = 15;
-            // 
             // groupBox1
             // 
             groupBox1.Controls.Add(textBoxMaxBufferSize);
-            groupBox1.Controls.Add(textBoxAcceptBacklogSize);
             groupBox1.Controls.Add(label5);
             groupBox1.Controls.Add(label3);
-            groupBox1.Controls.Add(labelAcceptBacklogSize);
             groupBox1.Controls.Add(textBoxInitialBufferSize);
             groupBox1.Location = new Point(14, 17);
             groupBox1.Margin = new Padding(4, 3, 4, 3);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(4, 3, 4, 3);
-            groupBox1.Size = new Size(309, 137);
+            groupBox1.Size = new Size(309, 99);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Buffers";
@@ -599,7 +577,7 @@
             // 
             // textBoxAcceptBacklogSize
             // 
-            textBoxAcceptBacklogSize.Location = new Point(169, 84);
+            textBoxAcceptBacklogSize.Location = new Point(169, 27);
             textBoxAcceptBacklogSize.Margin = new Padding(4, 3, 4, 3);
             textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
             textBoxAcceptBacklogSize.Size = new Size(116, 23);
@@ -710,8 +688,6 @@
         private ComboBox comboBoxBindingProtocol;
         private Label label10;
         private CheckBox checkBoxUseStickySessions;
-        private TextBox textBoxSpinLockCount;
-        private Label label14;
         private TextBox textBoxStickySessionCacheExpiration;
         private Label label15;
         private GroupBox groupBox4;

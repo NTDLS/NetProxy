@@ -11,7 +11,7 @@ namespace NetProxy.Library.Utilities
             Verbose = 0,
             Information = 1,
             Warning = 2,
-            Error = 3
+            Exception = 3
         }
 
         public class LoggingPayload
@@ -77,7 +77,7 @@ namespace NetProxy.Library.Utilities
                     }
                 }
 
-                if (payload.Exception != null && payload.Severity == Severity.Error)
+                if (payload.Exception != null && payload.Severity == Severity.Exception)
                 {
                     StackTrace stackTrace = new StackTrace();
                     MethodBase? methodBase = stackTrace?.GetFrame(1)?.GetMethod();

@@ -82,7 +82,6 @@ namespace NetProxy.Client.Forms
             textBoxAcceptBacklogSize.Text = Constants.DefaultAcceptBacklogSize.ToString();
             comboBoxConnectionPattern.SelectedValue = ConnectionPattern.RoundRobbin;
             textBoxStickySessionCacheExpiration.Text = Constants.DefaultStickySessionExpiration.ToString();
-            textBoxSpinLockCount.Text = Constants.DefaultSpinLockCount.ToString();
             checkBoxListenAutoStart.Checked = true;
             //----------------------------------------------------------------------------
         }
@@ -111,9 +110,8 @@ namespace NetProxy.Client.Forms
             checkBoxListenAutoStart.Checked = route.AutoStart;
             checkBoxUseStickySessions.Checked = route.UseStickySessions;
             textBoxStickySessionCacheExpiration.Text = route.StickySessionCacheExpiration.ToString();
-            textBoxSpinLockCount.Text = route.SpinLockCount.ToString();
 
-            foreach (var endpoint in route.Endpoints.List)
+            foreach (var endpoint in route.Endpoints.Collection)
             {
                 dataGridViewEndpoints.Rows.Add(
                     new string[] { endpoint.Enabled.ToString(), endpoint.Address, endpoint.Port.ToString(), endpoint.Description }
@@ -180,12 +178,6 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            if (Utility.ValidateInt32(textBoxSpinLockCount.Text, 1000, 100000000) == false)
-            {
-                MessageBox.Show("The spin-lock count is required (between 1000 and 100,000,000.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                return;
-            }
-
             Utility.EnsureNotNull(_routeId);
 
             route.Id = Guid.Parse(_routeId);
@@ -202,7 +194,6 @@ namespace NetProxy.Client.Forms
             route.AutoStart = checkBoxListenAutoStart.Checked;
             route.UseStickySessions = checkBoxUseStickySessions.Checked;
             route.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
-            route.SpinLockCount = int.Parse(textBoxSpinLockCount.Text);
 
             if (route.InitialBufferSize > route.MaxBufferSize)
             {
@@ -263,7 +254,7 @@ namespace NetProxy.Client.Forms
                 );
             }
 
-            if (route.Endpoints.List.Count == 0)
+            if (route.Endpoints.Collection.Count == 0)
             {
                 MessageBox.Show("At least one end-point is required required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;

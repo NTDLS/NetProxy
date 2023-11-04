@@ -13,7 +13,6 @@ namespace NetProxy.Library.Routing
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int ListenPort { get; set; }
-        public int SpinLockCount { get; set; }
         public bool UseStickySessions { get; set; }
         public int AcceptBacklogSize { get; set; }
         public int InitialBufferSize { get; set; }
@@ -34,7 +33,6 @@ namespace NetProxy.Library.Routing
             InitialBufferSize = Constants.DefaultInitialBufferSize;
             MaxBufferSize = Constants.DefaultMaxBufferSize;
             StickySessionCacheExpiration = Constants.DefaultStickySessionExpiration;
-            SpinLockCount = Constants.DefaultSpinLockCount;
             Bindings = new List<Binding>();
         }
     }

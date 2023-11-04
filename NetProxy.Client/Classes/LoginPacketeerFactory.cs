@@ -8,16 +8,16 @@ namespace NetProxy.Client.Classes
 {
     public static class LoginPacketeerFactory
     {
-        public static Packeteer? GetNewPacketeer(ConnectionInfo connectionInfo)
+        public static NpHubPacketeer? GetNewPacketeer(ConnectionInfo connectionInfo)
         {
-            Packeteer packeteer = new Packeteer();
+            NpHubPacketeer packeteer = new NpHubPacketeer();
 
             if (packeteer.Connect(connectionInfo.ServerName, connectionInfo.Port))
             {
-                var userLogin = new UserLogin()
+                var userLogin = new NpUserLogin()
                 {
                     UserName = connectionInfo.UserName,
-                    PasswordHash = Utility.Sha256(connectionInfo.Password)
+                    PasswordHash = NpUtility.Sha256(connectionInfo.Password)
                 };
 
                 packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));

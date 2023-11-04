@@ -10,11 +10,11 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private Packeteer? _packeteer = null;
+        private NpHubPacketeer? _packeteer = null;
 
-        private delegate void PopulateGrid(Users users);
+        private delegate void PopulateGrid(NpUsers users);
         private PopulateGrid? _populateGrid = null;
-        private void OnPopulateGrid(Users users)
+        private void OnPopulateGrid(NpUsers users)
         {
             foreach (var user in users.Collection)
             {
@@ -50,30 +50,30 @@ namespace NetProxy.Client.Forms
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
-            Utility.EnsureNotNull(_packeteer);
+            NpUtility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, NetProxy.Hub.Common.Peer peer, Frame packet)
+        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer, NpHubFrame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestUserList)
             {
-                Utility.EnsureNotNull(_populateGrid);
-                var collection = JsonConvert.DeserializeObject<Users>(packet.Payload);
-                Utility.EnsureNotNull(collection);
+                NpUtility.EnsureNotNull(_populateGrid);
+                var collection = JsonConvert.DeserializeObject<NpUsers>(packet.Payload);
+                NpUtility.EnsureNotNull(collection);
                 Invoke(_populateGrid, new object[] { collection });
             }
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            Utility.EnsureNotNull(_packeteer);
+            NpUtility.EnsureNotNull(_packeteer);
             _packeteer.Disconnect();
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
         {
-            Users users = new Users();
+            NpUsers users = new NpUsers();
 
             foreach (DataGridViewRow row in dataGridViewUsers.Rows)
             {
@@ -82,10 +82,10 @@ namespace NetProxy.Client.Forms
                     string hash = (string)row.Cells[ColumnPassword.Index].Value;
                     if (hash == null || hash == string.Empty)
                     {
-                        hash = Utility.Sha256(string.Empty);
+                        hash = NpUtility.Sha256(string.Empty);
                     }
 
-                    users.Add(new User
+                    users.Add(new NpUser
                     {
                         Id = (string)row.Cells[ColumnId.Index].Value,
                         UserName = (string)row.Cells[ColumnUsername.Index].Value,
@@ -95,7 +95,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            Utility.EnsureNotNull(_packeteer);
+            NpUtility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
 
             DialogResult = DialogResult.OK;

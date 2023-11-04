@@ -10,9 +10,9 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormRoute : Form
     {
-        private Packeteer? _packeteer = null;
+        private NpHubPacketeer? _packeteer = null;
         private string? _routeId = null;
-        private delegate void PopulateRouteInformation(Route route);
+        private delegate void PopulateRouteInformation(NpRoute route);
         private PopulateRouteInformation? _populateRouteInformation;
 
         public FormRoute()
@@ -90,12 +90,12 @@ namespace NetProxy.Client.Forms
         {
             if (_routeId != null)
             {
-                Utility.EnsureNotNull(_packeteer);
+                NpUtility.EnsureNotNull(_packeteer);
                 _packeteer.SendAll(Constants.CommandLables.GuiRequestRoute, _routeId);
             }
         }
 
-        private void OnPopulateRouteInformation(Route route)
+        private void OnPopulateRouteInformation(NpRoute route)
         {
             textBoxDescription.Text = route.Description;
             textBoxRouteName.Text = route.Name;
@@ -133,52 +133,52 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Frame packet)
+        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpHubFrame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestRoute)
             {
-                Utility.EnsureNotNull(_populateRouteInformation);
-                Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<Route>(packet.Payload));
+                NpUtility.EnsureNotNull(_populateRouteInformation);
+                Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<NpRoute>(packet.Payload));
             }
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
         {
-            Route route = new Route();
+            var route = new NpRoute();
 
             if (textBoxRouteName.Text.Trim().Length == 0)
             {
                 MessageBox.Show("The route name is required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Utility.ValidateInt32(textBoxListenPort.Text, 1, 65535) == false)
+            if (NpUtility.ValidateInt32(textBoxListenPort.Text, 1, 65535) == false)
             {
                 MessageBox.Show("The listen port is required (between 1 and 65,535).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Utility.ValidateInt32(textBoxInitialBufferSize.Text, 1024, 1073741824) == false)
+            if (NpUtility.ValidateInt32(textBoxInitialBufferSize.Text, 1024, 1073741824) == false)
             {
                 MessageBox.Show("The initial buffer size is required (between 1024 and 1,073,741,824).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Utility.ValidateInt32(textBoxMaxBufferSize.Text) == false)
+            if (NpUtility.ValidateInt32(textBoxMaxBufferSize.Text) == false)
             {
                 MessageBox.Show("The max buffer size is required (between 1024 and 1,073,741,824).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (Utility.ValidateInt32(textBoxAcceptBacklogSize.Text, 0, 10000) == false)
+            if (NpUtility.ValidateInt32(textBoxAcceptBacklogSize.Text, 0, 10000) == false)
             {
                 MessageBox.Show("The accept backlog size is required (between 0 and 10,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
-            if (Utility.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
+            if (NpUtility.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
             {
                 MessageBox.Show("The sticky session cach expiration (s) is required (between 1 and 2,592,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
-            Utility.EnsureNotNull(_routeId);
+            NpUtility.EnsureNotNull(_routeId);
 
             route.Id = Guid.Parse(_routeId);
             route.Name = textBoxRouteName.Text;
@@ -205,7 +205,7 @@ namespace NetProxy.Client.Forms
             {
                 if (((string)(row.Cells[ColumnEndpointsAddress.Index].Value ?? "")) != string.Empty)
                 {
-                    route.Endpoints.Add(new Endpoint()
+                    route.Endpoints.Add(new NpEndpoint()
                     {
                         Enabled = bool.Parse(row.Cells[ColumnEndpointsEnabled.Index].Value?.ToString() ?? "True"),
                         Address = row.Cells[ColumnEndpointsAddress.Index].Value?.ToString() ?? "",
@@ -221,7 +221,7 @@ namespace NetProxy.Client.Forms
                 {
 
 
-                    route.Bindings.Add(new Library.Routing.Binding()
+                    route.Bindings.Add(new Library.Routing.NpBinding()
                     {
                         Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value?.ToString()) ?? "True"),
                         Address = row.Cells[ColumnBindingsIPAddress.Index].Value?.ToString() ?? "",
@@ -234,7 +234,7 @@ namespace NetProxy.Client.Forms
             {
                 if (((string)(row.Cells[ColumnHTTPHeadersHeader.Index].Value ?? "")) != string.Empty)
                 {
-                    route.HttpHeaderRules.Add(new HttpHeaderRule
+                    route.HttpHeaderRules.Add(new NpHttpHeaderRule
                     {
                         Enabled = bool.Parse(row.Cells[ColumnHTTPHeadersEnabled.Index].Value?.ToString() ?? "True"),
                         Action = (HttpHeaderAction)Enum.Parse(typeof(HttpHeaderAction), row.Cells[ColumnHTTPHeadersAction.Index].Value?.ToString() ?? ""),
@@ -265,7 +265,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            Utility.EnsureNotNull(_packeteer);
+            NpUtility.EnsureNotNull(_packeteer);
             _packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertRoute, JsonConvert.SerializeObject(route));
 
             Thread.Sleep(500);
@@ -282,7 +282,7 @@ namespace NetProxy.Client.Forms
 
         private void FormRoute_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            Utility.EnsureNotNull(_packeteer);
+            NpUtility.EnsureNotNull(_packeteer);
             _packeteer.Disconnect();
         }
 

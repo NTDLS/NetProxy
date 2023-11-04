@@ -56,6 +56,8 @@ namespace NetProxy.Service.Routing
         {
             HashSet<Guid> triedEndpoints = new();
 
+            int lastTriedEndpointIndex = _listener.LastTriedEndpointIndex;
+
             NpEndpoint? endpoint = null;
             var endpoints = _listener.Router.Route.Endpoints.Collection;
             if (endpoints.Count == 0)
@@ -65,7 +67,7 @@ namespace NetProxy.Service.Routing
 
             TcpClient? establishedConnection = null;
 
-            //First try sticky sessions.
+            #region First try sticky sessions....
             if (_listener.Router.Route.UseStickySessions)
             {
                 var remoteEndPoint = _tcpclient.Client.RemoteEndPoint as IPEndPoint;
@@ -95,13 +97,28 @@ namespace NetProxy.Service.Routing
                     }
                 }
             }
+            #endregion
 
             //If and while we do not have a connection, lets determine what endpoint we should use.
             while (establishedConnection == null)
             {
+                if (endpoints.Where(o => triedEndpoints.Contains(o.Id) == false).Any() == false)
+                {
+                    throw new Exception("All endpoints were exhausted while trying to connect to the remote peer.");
+                }
+
                 if (_listener.Router.Route.Endpoints.ConnectionPattern == Library.ConnectionPattern.RoundRobbin)
                 {
-                    endpoint = endpoints.First();
+                    lastTriedEndpointIndex++;
+
+                    if (lastTriedEndpointIndex >= endpoints.Count)
+                    {
+                        //We mayhave started trying RoundRobbin connections at a non-zero index, if we reached the end, start back at zero.
+                        //We use "triedEndpoints" to determine when we have tired them all.
+                        lastTriedEndpointIndex = 0;
+                    }
+
+                    endpoint = endpoints[lastTriedEndpointIndex];
                 }
                 else if (_listener.Router.Route.Endpoints.ConnectionPattern == Library.ConnectionPattern.Balanced)
                 {
@@ -109,7 +126,20 @@ namespace NetProxy.Service.Routing
                 }
                 else if (_listener.Router.Route.Endpoints.ConnectionPattern == Library.ConnectionPattern.FailOver)
                 {
-                    endpoint = endpoints.First();
+                    //Starting at the last tried endpoint index, look for endpoints that we have not tired.
+                    while (triedEndpoints.Contains(endpoints[lastTriedEndpointIndex].Id))
+                    {
+                        if (lastTriedEndpointIndex >= endpoints.Count)
+                        {
+                            lastTriedEndpointIndex = 0;
+                        }
+                        else
+                        {
+                            lastTriedEndpointIndex++;
+                        }
+                    }
+
+                    endpoint = endpoints[lastTriedEndpointIndex];
                 }
                 else
                 {
@@ -119,6 +149,7 @@ namespace NetProxy.Service.Routing
                 try
                 {
                     //Make the outbound connection to the endpoint specified for this route.
+                    triedEndpoints.Add(endpoint.Id);
                     establishedConnection = new TcpClient(endpoint.Address, endpoint.Port);
                 }
                 catch
@@ -127,6 +158,8 @@ namespace NetProxy.Service.Routing
                     establishedConnection = null;
                 }
             }
+
+            _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
 
             _peer = new NpRouterConnection(_listener, establishedConnection);
             _peer.RunOutboundAsync(this);

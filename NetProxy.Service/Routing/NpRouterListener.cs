@@ -15,6 +15,7 @@ namespace NetProxy.Service.Routing
 
         public NpRouter Router { get; private set; }
         public MemoryCache StickySessionCache { get; private set; } = new(new MemoryCacheOptions());
+        public int LastTriedEndpointIndex { get; set; } = 0;
 
         public NpRouterListener(NpRouter router, TcpListener listener)
         {

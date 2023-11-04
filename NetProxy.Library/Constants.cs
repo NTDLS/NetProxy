@@ -62,7 +62,7 @@
     {
         FailOver,
         RoundRobbin,
-        Balanced
+        Balanced //AKA: Least connections.
     }
 
     public enum HttpHeaderAction

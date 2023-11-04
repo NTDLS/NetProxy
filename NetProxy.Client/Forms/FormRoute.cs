@@ -59,7 +59,7 @@ namespace NetProxy.Client.Forms
 
             var connectionPatterns = new List<ComboItem>
             {
-                //connectionPatterns.Add(new ComboItem("Balanced", ConnectionPattern.Balanced)); //Not yet implemented.
+                new ComboItem("Balanced", ConnectionPattern.Balanced),
                 new ComboItem("Fail-Over", ConnectionPattern.FailOver),
                 new ComboItem("Round-Robbin", ConnectionPattern.RoundRobbin)
             };

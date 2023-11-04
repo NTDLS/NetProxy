@@ -131,7 +131,7 @@ namespace NetProxy.Service.Routing
                     throw new Exception("All endpoints were exhausted while trying to connect to the remote peer.");
                 }
 
-                if (_listener.Router.Route.Endpoints.ConnectionPattern == Library.ConnectionPattern.RoundRobbin)
+                if (_listener.Router.Route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
                 {
                     lastTriedEndpointIndex++;
 
@@ -144,11 +144,17 @@ namespace NetProxy.Service.Routing
 
                     endpoint = endpoints[lastTriedEndpointIndex];
                 }
-                else if (_listener.Router.Route.Endpoints.ConnectionPattern == Library.ConnectionPattern.Balanced)
+                else if (_listener.Router.Route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
                 {
-                    endpoint = endpoints.First();
+                    //Get the id of the endpoint with the least connections.
+                    var endpointId = _listener.EndpointStatistics.Use((o) =>
+                    {
+                        return o.OrderBy(e => e.Value.CurrentConnections).First().Key;
+                    });
+
+                    endpoint = endpoints.Where(o => o.Id == endpointId).First();
                 }
-                else if (_listener.Router.Route.Endpoints.ConnectionPattern == Library.ConnectionPattern.FailOver)
+                else if (_listener.Router.Route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
                 {
                     //Starting at the last tried endpoint index, look for endpoints that we have not tired.
                     while (triedEndpoints.Contains(endpoints[lastTriedEndpointIndex].Id))

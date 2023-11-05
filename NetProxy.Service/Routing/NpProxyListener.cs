@@ -5,28 +5,28 @@ using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing
 {
-    internal class NpRouterListener
+    internal class NpProxyListener
     {
         private readonly TcpListener _listener;
         private readonly Thread _thread;
         private bool _keepRunning;
-        private readonly CriticalResource<Dictionary<Guid, NpRouterConnection>> _activeConnections = new();
+        private readonly CriticalResource<Dictionary<Guid, NpProxyConnection>> _activeConnections = new();
 
-        internal NpRouter Router { get; private set; }
+        internal NpProxy Proxy { get; private set; }
         internal MemoryCache StickySessionCache { get; private set; } = new(new MemoryCacheOptions());
         internal int LastTriedEndpointIndex { get; set; } = 0;
-        internal CriticalResource<Dictionary<Guid, NpEndpointStatistics>> EndpointStatistics { get; private set; } = new();
+        internal CriticalResource<Dictionary<Guid, NpProxyEndpointStatistics>> EndpointStatistics { get; private set; } = new();
 
-        public NpRouterListener(NpRouter router, TcpListener listener)
+        public NpProxyListener(NpProxy proxy, TcpListener listener)
         {
-            Router = router;
+            Proxy = proxy;
             _listener = listener;
             _thread = new Thread(InboundListenerThreadProc);
 
             EndpointStatistics.Use((o) =>
             {
                 //Add empty endpoint statistics for each endpoint.
-                Router.Route.Endpoints.Collection.ForEach(e => o.Add(e.Id, new NpEndpointStatistics()));
+                Proxy.Route.Endpoints.Collection.ForEach(e => o.Add(e.Id, new NpProxyEndpointStatistics()));
             });
         }
 
@@ -55,7 +55,7 @@ namespace NetProxy.Service.Routing
             _thread.Join();
         }
 
-        public void RemoveActiveConnection(NpRouterConnection connection)
+        public void RemoveActiveConnection(NpProxyConnection connection)
         {
             _activeConnections.Use((o) =>
             {
@@ -66,13 +66,13 @@ namespace NetProxy.Service.Routing
 
         void InboundListenerThreadProc()
         {
-            Thread.CurrentThread.Name = $"InboundListenerThreadProc:{Thread.CurrentThread.ManagedThreadId}:{Router.Route.Name}";
+            Thread.CurrentThread.Name = $"InboundListenerThreadProc:{Thread.CurrentThread.ManagedThreadId}:{Proxy.Route.Name}";
 
             try
             {
                 _listener.Start();
 
-                Singletons.EventLog.WriteLog(NpLogging.Severity.Verbose, $"Listening inbound '{Router.Route.Name}' on port {Router.Route.ListenPort}");
+                Singletons.EventLog.WriteLog(NpLogging.Severity.Verbose, $"Listening inbound '{Proxy.Route.Name}' on port {Proxy.Route.ListenPort}");
 
                 while (_keepRunning)
                 {
@@ -82,7 +82,7 @@ namespace NetProxy.Service.Routing
                     {
                         if (_keepRunning) //Check again, we may have received a connection while shutting down.
                         {
-                            var activeConnection = new NpRouterConnection(this, tcpClient);
+                            var activeConnection = new NpProxyConnection(this, tcpClient);
 
                             _activeConnections.Use((o) => o.Add(activeConnection.Id, activeConnection));
 

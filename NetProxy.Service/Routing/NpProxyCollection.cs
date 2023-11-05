@@ -3,32 +3,36 @@ using NetProxy.Library.Utilities;
 
 namespace NetProxy.Service.Routing
 {
-    public class NpRouters
+    public class NpProxyCollection : List<NpProxy>
     {
-        public List<NpRouter> Collection = new();
-
         public List<NpRoute> Routes()
         {
             var routes = new List<NpRoute>();
-            Collection.ForEach(o => routes.Add(o.Route));
+            this.ForEach(o => routes.Add(o.Route));
             return routes;
         }
 
-        public NpRouter? this[Guid routeId]
-            => Collection.Where(o => o.Route.Id == routeId).FirstOrDefault();
+        public NpProxy? this[Guid routeId]
+            => this.Where(o => o.Route.Id == routeId).FirstOrDefault();
 
-        public void Add(NpRouter router)
-            => Collection.Add(router);
+        //public void Add(NpProxy proxy)
+        //    => this.Add(proxy);
+
+        public new void Remove(NpProxy item)
+        {
+            NpUtility.TryAndIgnore(item.Stop);
+            base.Remove(item);
+        }
 
         public void Start()
         {
-            foreach (var router in Collection)
+            foreach (var proxy in this)
             {
-                if (router.Route.AutoStart)
+                if (proxy.Route.AutoStart)
                 {
                     try
                     {
-                        router.Start();
+                        proxy.Start();
                     }
                     catch (Exception ex)
                     {
@@ -45,11 +49,11 @@ namespace NetProxy.Service.Routing
 
         public void Stop()
         {
-            foreach (var router in Collection)
+            foreach (var proxy in this)
             {
                 try
                 {
-                    router.Stop();
+                    proxy.Stop();
                 }
                 catch (Exception ex)
                 {

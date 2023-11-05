@@ -38,7 +38,7 @@
             this.ColumnStatus = new System.Windows.Forms.DataGridViewImageColumn();
             this.ColumnId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnRouterType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnProxyType = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColummListenPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnBytesTransferred = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnTotalConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -71,7 +71,7 @@
             this.ColumnStatus,
             this.ColumnId,
             this.ColumnName,
-            this.ColumnRouterType,
+            this.ColumnProxyType,
             this.ColummListenPort,
             this.ColumnBytesTransferred,
             this.ColumnTotalConnections,
@@ -111,13 +111,13 @@
             this.ColumnName.ReadOnly = true;
             this.ColumnName.Width = 200;
             // 
-            // ColumnRouterType
+            // ColumnProxyType
             // 
-            this.ColumnRouterType.DataPropertyName = "RouterType";
-            this.ColumnRouterType.HeaderText = "Type";
-            this.ColumnRouterType.Name = "ColumnRouterType";
-            this.ColumnRouterType.ReadOnly = true;
-            this.ColumnRouterType.Width = 80;
+            this.ColumnProxyType.DataPropertyName = "ProxyType";
+            this.ColumnProxyType.HeaderText = "Type";
+            this.ColumnProxyType.Name = "ColumnProxyType";
+            this.ColumnProxyType.ReadOnly = true;
+            this.ColumnProxyType.Width = 80;
             // 
             // ColummListenPort
             // 
@@ -309,7 +309,7 @@
         private System.Windows.Forms.DataGridViewImageColumn ColumnStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnId;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnRouterType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnProxyType;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColummListenPort;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnBytesTransferred;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnTotalConnections;

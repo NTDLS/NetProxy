@@ -4,13 +4,13 @@ using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing
 {
-    public class NpRouter
+    public class NpProxy
     {
         #region Backend Variables.
 
-        public NpRouterStatistics Stats { get; set; }
+        public NpProxyStatistics Stats { get; set; }
         private readonly NpRoute _route;
-        private readonly List<NpRouterListener> _listeners = new();
+        private readonly List<NpProxyListener> _listeners = new();
         private bool _keepRunning = false;
         public bool IsRunning => _keepRunning;
 
@@ -19,9 +19,9 @@ namespace NetProxy.Service.Routing
 
         #endregion
 
-        public NpRouter(NpRoute route)
+        public NpProxy(NpRoute route)
         {
-            Stats = new NpRouterStatistics();
+            Stats = new NpProxyStatistics();
             _route = route;
         }
 
@@ -39,7 +39,7 @@ namespace NetProxy.Service.Routing
                 if (_route.ListenOnAllAddresses)
                 {
                     var tcpListener = new TcpListener(IPAddress.Any, _route.ListenPort);
-                    var listener = new NpRouterListener(this, tcpListener);
+                    var listener = new NpProxyListener(this, tcpListener);
                     _listeners.Add(listener);
                 }
                 else
@@ -47,7 +47,7 @@ namespace NetProxy.Service.Routing
                     foreach (var binding in _route.Bindings.Where(o => o.Enabled == true))
                     {
                         var tcpListener = new TcpListener(IPAddress.Parse(binding.Address), _route.ListenPort);
-                        var listener = new NpRouterListener(this, tcpListener);
+                        var listener = new NpProxyListener(this, tcpListener);
                         _listeners.Add(listener);
                     }
                 }

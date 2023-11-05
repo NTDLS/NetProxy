@@ -1,6 +1,6 @@
 ﻿namespace NetProxy.Service.Routing
 {
-    public class NpEndpointStatistics
+    public class NpProxyEndpointStatistics
     {
         public ulong TotalConnections = 0;
         public ulong CurrentConnections = 0;

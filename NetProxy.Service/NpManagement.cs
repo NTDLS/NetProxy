@@ -14,7 +14,7 @@ namespace NetProxy.Service
     {
         private NpConfiguration? _config;
         private readonly NpHubPacketeer _packeteer = new();
-        private readonly NpRouters _routers = new();
+        private readonly NpProxyCollection _proxies = new();
         private readonly HashSet<Guid> _loggedInPeers = new();
 
         public NpManagement()
@@ -90,20 +90,20 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        foreach (var router in _routers.Collection)
+                        foreach (var proxy in _proxies)
                         {
                             NpRouteGridItem augmentedRoute = new()
                             {
-                                Id = router.Route.Id,
-                                Name = router.Route.Name,
-                                TrafficType = router.Route.TrafficType,
-                                RouterType = router.Route.TrafficType.ToString() + " / " + router.Route.BindingProtocal.ToString(),
-                                BindingProtocal = router.Route.BindingProtocal,
-                                Description = router.Route.Description,
-                                IsRunning = router.IsRunning,
-                                ListenPort = router.Route.ListenPort,
-                                ListenOnAllAddresses = router.Route.ListenOnAllAddresses,
-                                Bindings = router.Route.Bindings
+                                Id = proxy.Route.Id,
+                                Name = proxy.Route.Name,
+                                TrafficType = proxy.Route.TrafficType,
+                                ProxyType = proxy.Route.TrafficType.ToString() + " / " + proxy.Route.BindingProtocal.ToString(),
+                                BindingProtocal = proxy.Route.BindingProtocal,
+                                Description = proxy.Route.Description,
+                                IsRunning = proxy.IsRunning,
+                                ListenPort = proxy.Route.ListenPort,
+                                ListenOnAllAddresses = proxy.Route.ListenOnAllAddresses,
+                                Bindings = proxy.Route.Bindings
                             };
 
                             routes.Add(augmentedRoute);
@@ -132,16 +132,16 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        foreach (var router in _routers.Collection)
+                        foreach (var proxy in _proxies)
                         {
                             NpRouteGridStats augmentedRoute = new NpRouteGridStats()
                             {
-                                Id = router.Route.Id,
-                                IsRunning = router.IsRunning,
-                                BytesReceived = router.Stats.BytesReceived,
-                                BytesSent = router.Stats.BytesSent,
-                                TotalConnections = router.Stats.TotalConnections,
-                                CurrentConnections = router.CurrentConnectionCount
+                                Id = proxy.Route.Id,
+                                IsRunning = proxy.IsRunning,
+                                BytesReceived = proxy.Stats.BytesReceived,
+                                BytesSent = proxy.Stats.BytesSent,
+                                TotalConnections = proxy.Stats.TotalConnections,
+                                CurrentConnections = proxy.CurrentConnectionCount
 
                             };
                             stats.Add(augmentedRoute);
@@ -167,11 +167,11 @@ namespace NetProxy.Service
                 {
                     lock (_config)
                     {
-                        Guid routerId = Guid.Parse(packet.Payload);
-                        var router = _routers[routerId];
-                        if (router != null)
+                        Guid proxyId = Guid.Parse(packet.Payload);
+                        var proxy = _proxies[proxyId];
+                        if (proxy != null)
                         {
-                            string value = JsonConvert.SerializeObject(router.Route);
+                            string value = JsonConvert.SerializeObject(proxy.Route);
                             _packeteer.SendTo(peer.Id, packet.Label, value);
                         }
                     }
@@ -250,25 +250,25 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.Collection
+                        var existingRoute = (from o in _proxies
                                              where o.Route.Id == value.Id
                                              select o).FirstOrDefault();
 
                         if (existingRoute != null)
                         {
                             existingRoute.Stop();
-                            _routers.Collection.Remove(existingRoute);
+                            _proxies.Remove(existingRoute);
                         }
 
-                        var newRouter = new NpRouter(value);
+                        var newProxy = new NpProxy(value);
 
-                        _routers.Add(newRouter);
+                        _proxies.Add(newProxy);
 
                         SaveConfiguration();
 
-                        if (newRouter.Route.AutoStart)
+                        if (newProxy.Route.AutoStart)
                         {
-                            newRouter.Start();
+                            newProxy.Start();
                         }
                     }
                 }
@@ -292,14 +292,14 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.Collection
+                        var existingRoute = (from o in _proxies
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
                         if (existingRoute != null)
                         {
                             existingRoute.Stop();
-                            _routers.Collection.Remove(existingRoute);
+                            _proxies.Remove(existingRoute);
                         }
                         SaveConfiguration();
                     }
@@ -324,7 +324,7 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.Collection
+                        var existingRoute = (from o in _proxies
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
@@ -354,7 +354,7 @@ namespace NetProxy.Service
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _routers.Collection
+                        var existingRoute = (from o in _proxies
                                              where o.Route.Id == routeId
                                              select o).FirstOrDefault();
 
@@ -385,7 +385,7 @@ namespace NetProxy.Service
             try
             {
                 CommonApplicationData.SaveToDisk(Constants.TitleCaption, _config);
-                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _routers.Routes());
+                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _proxies.Routes());
             }
             catch (Exception ex)
             {
@@ -420,7 +420,7 @@ namespace NetProxy.Service
                 foreach (var route in routes)
                 {
                     Console.WriteLine("Adding route {0}.", route.Name);
-                    _routers.Add(new NpRouter(route));
+                    _proxies.Add(new NpProxy(route));
                 }
             }
             catch (Exception ex)
@@ -436,7 +436,7 @@ namespace NetProxy.Service
 
         private void AddTestRoutes()
         {
-            NpRouters routers = new();
+            NpProxyCollection proxies = new();
 
             //------------------------------------------------------------------------------------------------------------------
             {
@@ -459,7 +459,7 @@ namespace NetProxy.Service
 
                 route.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.NetworkDLS.com"));
 
-                routers.Add(new NpRouter(route));
+                proxies.Add(new NpProxy(route));
             }
             //------------------------------------------------------------------------------------------------------------------
             {
@@ -480,7 +480,7 @@ namespace NetProxy.Service
 
                 route.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.IngenuitySC.com"));
 
-                routers.Add(new NpRouter(route));
+                proxies.Add(new NpProxy(route));
             }
             //------------------------------------------------------------------------------------------------------------------
             {
@@ -501,11 +501,11 @@ namespace NetProxy.Service
 
                 route.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "login.live.com"));
 
-                routers.Add(new NpRouter(route));
+                proxies.Add(new NpProxy(route));
             }
             //------------------------------------------------------------------------------------------------------------------
 
-            CommonApplicationData.SaveToDisk(Constants.TitleCaption, routers.Routes());
+            CommonApplicationData.SaveToDisk(Constants.TitleCaption, proxies.Routes());
         }
 
         public void Start()
@@ -519,14 +519,14 @@ namespace NetProxy.Service
                 _packeteer.Start(_config.ManagementPort);
 
                 Console.WriteLine("starting routes...");
-                _routers.Start();
+                _proxies.Start();
             }
             catch (Exception ex)
             {
                 Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                 {
                     Severity = NpLogging.Severity.Exception,
-                    CustomText = "Failed to start router.",
+                    CustomText = "Failed to start proxy.",
                     Exception = ex
                 });
             }
@@ -539,14 +539,14 @@ namespace NetProxy.Service
                 SaveConfiguration();
 
                 _packeteer.Stop();
-                _routers.Stop();
+                _proxies.Stop();
             }
             catch (Exception ex)
             {
                 Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                 {
                     Severity = NpLogging.Severity.Exception,
-                    CustomText = "Failed to stop router.",
+                    CustomText = "Failed to stop proxy.",
                     Exception = ex
                 });
             }

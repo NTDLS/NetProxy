@@ -7,15 +7,15 @@ using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing
 {
-    internal class NpRouterConnection
+    internal class NpProxyConnection
     {
         public ConnectionDirection Direction { get; private set; }
 
         private readonly TcpClient _tcpclient; //The TCP/IP connection associated with this connection.
         private readonly Thread _dataPumpThread; //The thread that receives data for this connection.
         private readonly NetworkStream _stream; //The stream for the TCP/IP connection (used for reading and writing).
-        private readonly NpRouterListener _listener; //The listener which owns this connection.
-        private NpRouterConnection? _peer; //The associated endpoint connection for this connection.
+        private readonly NpProxyListener _listener; //The listener which owns this connection.
+        private NpProxyConnection? _peer; //The associated endpoint connection for this connection.
         private bool _keepRunning;
         private NpEndpoint? _outboundEndpoint; //For outbound connections, this is the endpoint that was used to make this connection.
 
@@ -23,7 +23,7 @@ namespace NetProxy.Service.Routing
         public DateTime StartDateTime { get; private set; } = DateTime.UtcNow;
         public DateTime LastActivityDateTime { get; private set; } = DateTime.UtcNow;
 
-        public NpRouterConnection(NpRouterListener listener, TcpClient tcpClient)
+        public NpProxyConnection(NpProxyListener listener, TcpClient tcpClient)
         {
             Id = Guid.NewGuid();
             _tcpclient = tcpClient;
@@ -83,7 +83,7 @@ namespace NetProxy.Service.Routing
             int lastTriedEndpointIndex = _listener.LastTriedEndpointIndex;
 
             NpEndpoint? endpoint = null;
-            var endpoints = _listener.Router.Route.Endpoints.Collection;
+            var endpoints = _listener.Proxy.Route.Endpoints.Collection;
             if (endpoints.Count == 0)
             {
                 throw new Exception("The route has no defined endpoints.");
@@ -95,12 +95,12 @@ namespace NetProxy.Service.Routing
                 throw new Exception("Could not determine remote endpoint from the client.");
             }
 
-            var sessionKey = $"{_listener.Router.Route.Name}:{_listener.Router.Route.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
+            var sessionKey = $"{_listener.Proxy.Route.Name}:{_listener.Proxy.Route.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
 
             TcpClient? establishedConnection = null;
 
             #region First try sticky sessions....
-            if (_listener.Router.Route.UseStickySessions)
+            if (_listener.Proxy.Route.UseStickySessions)
             {
                 if (_listener.StickySessionCache.TryGetValue(sessionKey, out NpStickySession? cacheItem) && cacheItem != null)
                 {
@@ -132,7 +132,7 @@ namespace NetProxy.Service.Routing
                     throw new Exception("All endpoints were exhausted while trying to connect to the remote peer.");
                 }
 
-                if (_listener.Router.Route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
+                if (_listener.Proxy.Route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
                 {
                     lastTriedEndpointIndex++;
 
@@ -145,7 +145,7 @@ namespace NetProxy.Service.Routing
 
                     endpoint = endpoints[lastTriedEndpointIndex];
                 }
-                else if (_listener.Router.Route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
+                else if (_listener.Proxy.Route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
                 {
                     //Get the id of the endpoint with the least connections.
                     var endpointId = _listener.EndpointStatistics.Use((o) =>
@@ -155,7 +155,7 @@ namespace NetProxy.Service.Routing
 
                     endpoint = endpoints.Where(o => o.Id == endpointId).First();
                 }
-                else if (_listener.Router.Route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
+                else if (_listener.Proxy.Route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
                 {
                     //Starting at the last tried endpoint index, look for endpoints that we have not tired.
                     while (triedEndpoints.Contains(endpoints[lastTriedEndpointIndex].Id))
@@ -174,7 +174,7 @@ namespace NetProxy.Service.Routing
                 }
                 else
                 {
-                    throw new Exception($"The connection pattern {_listener.Router.Route.Endpoints.ConnectionPattern} is not implemented.");
+                    throw new Exception($"The connection pattern {_listener.Proxy.Route.Endpoints.ConnectionPattern} is not implemented.");
                 }
 
                 try
@@ -197,20 +197,20 @@ namespace NetProxy.Service.Routing
 
             _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
 
-            if (_listener.Router.Route.UseStickySessions)
+            if (_listener.Proxy.Route.UseStickySessions)
             {
                 //Keep track of the successful stucky session.
                 _listener.StickySessionCache.Set(sessionKey, new NpStickySession(endpoint.Address, endpoint.Port));
             }
 
-            _peer = new NpRouterConnection(_listener, establishedConnection);
+            _peer = new NpProxyConnection(_listener, establishedConnection);
             _peer.RunOutboundAsync(this, endpoint);
 
             //If we were successful making the outbound connection, then start the inbound connection thread.
             _dataPumpThread.Start();
         }
 
-        public void RunOutboundAsync(NpRouterConnection peer, NpEndpoint endpoint)
+        public void RunOutboundAsync(NpProxyConnection peer, NpEndpoint endpoint)
         {
             Direction = ConnectionDirection.Outbound;
 
@@ -238,7 +238,7 @@ namespace NetProxy.Service.Routing
             try
             {
 
-                byte[] buffer = new byte[_listener.Router.Route.InitialBufferSize];
+                byte[] buffer = new byte[_listener.Proxy.Route.InitialBufferSize];
                 while (_keepRunning && Read(ref buffer, out int length))
                 {
                     _peer?.Write(buffer, length);

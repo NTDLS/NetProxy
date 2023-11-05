@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using System;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -6,6 +7,29 @@ namespace NetProxy.Service
 {
     public static class HttpUtility
     {
+        public static readonly List<string> HttpVerbs = new()
+        {
+            "connect","delete","get","head","options","patch","post","put","trace"
+        };
+
+        public static bool StartsWithHTTPVerb(byte []bytes)
+        {
+            var possibleHttpHeader = Encoding.UTF8.GetString(bytes.Take(10).ToArray()).ToLower();
+
+            foreach (var verb in HttpVerbs)
+            {
+                if (possibleHttpHeader.StartsWith(verb))
+                {
+                    if (possibleHttpHeader.Length > verb.Length)
+                    {
+                        return char.IsWhiteSpace(possibleHttpHeader[verb.Length]);
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public static string? GetNextHeaderToken(string str, ref int position)
         {
             int spacePos = str.IndexOfAny(new char[] { ' ', '\n' }, position);

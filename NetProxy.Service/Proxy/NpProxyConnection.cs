@@ -3,7 +3,9 @@ using NetProxy.Library;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
+using System.Text;
 
 namespace NetProxy.Service.Proxy
 {
@@ -238,9 +240,48 @@ namespace NetProxy.Service.Proxy
             try
             {
 
-                byte[] buffer = new byte[_listener.Proxy.Route.InitialBufferSize];
+                //byte[] buffer = new byte[_listener.Proxy.Route.InitialBufferSize];
+
+                var buffer = new byte[64];
+
+                StringBuilder? headerBuilder = null;
+
                 while (_keepRunning && Read(ref buffer, out int length))
                 {
+                    if (Direction == ConnectionDirection.Inbound)
+                    {
+                        if (headerBuilder != null) //We are reconstructing a fragmented HTTP request header.
+                        {
+                            var stringContent = Encoding.UTF8.GetString(buffer);
+                            headerBuilder.Append(stringContent);
+                        }
+                        else if (HttpUtility.StartsWithHTTPVerb(buffer))
+                        {
+                            var stringContent = Encoding.UTF8.GetString(buffer);
+                            headerBuilder = new StringBuilder(stringContent);
+                        }
+
+                        if (headerBuilder != null)
+                        {
+                            var headerType = HttpUtility.IsHttpHeader(headerBuilder.ToString(), out string? verb);
+
+                            if (headerType != HttpHeaderType.None)
+                            {
+                                var end = HttpUtility.GetHttpHeaderEnd(headerBuilder.ToString(), out string delimiter);
+                                if (end < 0)
+                                {
+                                    //We have a HTTP header but its a fragment. Wait on the remaining header.
+                                    continue;
+                                }
+                                else
+                                {
+                                }
+                            }
+                        }
+
+                    }
+
+
                     _peer?.Write(buffer, length);
                 }
             }

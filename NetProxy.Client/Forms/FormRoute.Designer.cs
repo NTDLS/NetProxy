@@ -1,4 +1,13 @@
-﻿namespace NetProxy.Client.Forms
+﻿using Microsoft.VisualBasic.ApplicationServices;
+using NetProxy.Client.Properties;
+using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using static System.Windows.Forms.Design.AxImporter;
+using System.Diagnostics;
+using System.Windows.Forms.DataVisualization.Charting;
+using System;
+
+namespace NetProxy.Client.Forms
 {
     partial class FormRoute
     {
@@ -383,7 +392,7 @@
             // ColumnHTTPHeadersVerb
             // 
             ColumnHTTPHeadersVerb.HeaderText = "Verb";
-            ColumnHTTPHeadersVerb.Items.AddRange(new object[] { "Any", "Connect", "Delete", "Get", "Head", "Options", "Post", "Put" });
+            ColumnHTTPHeadersVerb.Items.AddRange(new object[] { "Any", "Connect", "Delete", "Get", "Head", "Options", "Patch", "Post", "Put", "Trace" });
             ColumnHTTPHeadersVerb.Name = "ColumnHTTPHeadersVerb";
             ColumnHTTPHeadersVerb.Resizable = DataGridViewTriState.True;
             ColumnHTTPHeadersVerb.SortMode = DataGridViewColumnSortMode.Automatic;

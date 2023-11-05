@@ -4,7 +4,7 @@ namespace NetProxy.Hub.MessageFraming
 {
     [Serializable]
     [ProtoContract]
-    public class NpHubFrame
+    public class NpFrame
     {
         [ProtoMember(1)]
         public DateTime CreatedTime = DateTime.Now;

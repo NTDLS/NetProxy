@@ -4,25 +4,23 @@ using System.IO.Compression;
 
 namespace NetProxy.Hub.MessageFraming
 {
-    internal static class NpHubFraming
+    internal static class NpFraming
     {
-        public delegate void ProcessFramePayloadCallback(NpHubSocketState state, NpHubFrame frame);
+        public delegate void ProcessFramePayloadCallback(NpHubSocketState state, NpFrame frame);
 
-        public static byte[] AssembleFrame(NpHubFrame frame)
+        public static byte[] AssembleFrame(NpFrame frame)
         {
-            byte[] payloadBody = SerializeToByteArray(frame);
+            var payloadBody = SerializeToByteArray(frame);
+            var payloadBytes = Zip(payloadBody);
+            int grossFrameSize = payloadBytes.Length + NpConstants.FrameHeaderSize;
+            var frameBytes = new byte[grossFrameSize];
 
-            byte[] payloadBytes = Zip(payloadBody);
-            int grossFrameSize = payloadBytes.Length + Constants.PayloadHeaderSize;
+            var payloadCrc = NpFrameChecksum.ComputeCRC16(payloadBytes);
 
-            byte[] frameBytes = new byte[grossFrameSize];
-
-            ushort payloadCrc = NpHubCRC16.ComputeChecksum(payloadBytes);
-
-            Buffer.BlockCopy(BitConverter.GetBytes(Constants.PayloadDelimiter), 0, frameBytes, 0, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(NpConstants.FrameDelimiter), 0, frameBytes, 0, 4);
             Buffer.BlockCopy(BitConverter.GetBytes(grossFrameSize), 0, frameBytes, 4, 4);
             Buffer.BlockCopy(BitConverter.GetBytes(payloadCrc), 0, frameBytes, 8, 2);
-            Buffer.BlockCopy(payloadBytes, 0, frameBytes, Constants.PayloadHeaderSize, payloadBytes.Length);
+            Buffer.BlockCopy(payloadBytes, 0, frameBytes, NpConstants.FrameHeaderSize, payloadBytes.Length);
 
             return frameBytes;
         }
@@ -39,7 +37,7 @@ namespace NetProxy.Hub.MessageFraming
 
                     int value = BitConverter.ToInt32(payloadDelimiterBytes, 0);
 
-                    if (value == Constants.PayloadDelimiter)
+                    if (value == NpConstants.FrameDelimiter)
                     {
                         Buffer.BlockCopy(state.PayloadBuilder, offset, state.PayloadBuilder, 0, state.PayloadBuilderLength - offset);
                         state.PayloadBuilderLength = state.PayloadBuilderLength - offset;
@@ -69,11 +67,11 @@ namespace NetProxy.Hub.MessageFraming
 
                 state.PayloadBuilderLength = state.PayloadBuilderLength + state.BytesReceived;
 
-                while (state.PayloadBuilderLength > Constants.PayloadHeaderSize) //[PayloadSize] and [CRC16]
+                while (state.PayloadBuilderLength > NpConstants.FrameHeaderSize) //[PayloadSize] and [CRC16]
                 {
-                    byte[] payloadDelimiterBytes = new byte[4];
-                    byte[] payloadSizeBytes = new byte[4];
-                    byte[] expectedCrc16Bytes = new byte[2];
+                    var payloadDelimiterBytes = new byte[4];
+                    var payloadSizeBytes = new byte[4];
+                    var expectedCrc16Bytes = new byte[2];
 
                     Buffer.BlockCopy(state.PayloadBuilder, 0, payloadDelimiterBytes, 0, payloadDelimiterBytes.Length);
                     Buffer.BlockCopy(state.PayloadBuilder, 4, payloadSizeBytes, 0, payloadSizeBytes.Length);
@@ -83,17 +81,10 @@ namespace NetProxy.Hub.MessageFraming
                     int grossPayloadSize = BitConverter.ToInt32(payloadSizeBytes, 0);
                     ushort expectedCrc16 = BitConverter.ToUInt16(expectedCrc16Bytes, 0);
 
-                    if (payloadDelimiter != Constants.PayloadDelimiter)
+                    if (payloadDelimiter != NpConstants.FrameDelimiter)
                     {
                         SkipFrame(ref state);
                         //throw new Exception("Malformed payload frame, invalid delimiter.");
-                        continue;
-                    }
-
-                    if (grossPayloadSize < Constants.DefaultMinMsgSize || grossPayloadSize > Constants.DefaultMaxMsgSize)
-                    {
-                        SkipFrame(ref state);
-                        //throw new Exception("Malformed payload frame, invalid length."); 
                         continue;
                     }
 
@@ -104,7 +95,7 @@ namespace NetProxy.Hub.MessageFraming
                         break;
                     }
 
-                    ushort actualCrc16 = NpHubCRC16.ComputeChecksum(state.PayloadBuilder, Constants.PayloadHeaderSize, grossPayloadSize - Constants.PayloadHeaderSize);
+                    ushort actualCrc16 = NpFrameChecksum.ComputeCRC16(state.PayloadBuilder, NpConstants.FrameHeaderSize, grossPayloadSize - NpConstants.FrameHeaderSize);
 
                     if (actualCrc16 != expectedCrc16)
                     {
@@ -113,14 +104,14 @@ namespace NetProxy.Hub.MessageFraming
                         continue;
                     }
 
-                    int netPayloadSize = grossPayloadSize - Constants.PayloadHeaderSize;
-                    byte[] payloadBytes = new byte[netPayloadSize];
+                    int netPayloadSize = grossPayloadSize - NpConstants.FrameHeaderSize;
+                    var payloadBytes = new byte[netPayloadSize];
 
-                    Buffer.BlockCopy(state.PayloadBuilder, Constants.PayloadHeaderSize, payloadBytes, 0, netPayloadSize);
+                    Buffer.BlockCopy(state.PayloadBuilder, NpConstants.FrameHeaderSize, payloadBytes, 0, netPayloadSize);
 
-                    byte[] payloadBody = Unzip(payloadBytes);
+                    var payloadBody = Unzip(payloadBytes);
 
-                    processPayload(state, DeserializeToObject<NpHubFrame>(payloadBody));
+                    processPayload(state, DeserializeToObject<NpFrame>(payloadBody));
 
                     //Zero out the consumed portion of the payload buffer - more for fun than anything else.
                     Array.Clear(state.PayloadBuilder, 0, grossPayloadSize);
@@ -139,7 +130,7 @@ namespace NetProxy.Hub.MessageFraming
         {
             using var msi = new MemoryStream(bytes);
             using var mso = new MemoryStream();
-            using (var gs = new GZipStream(mso, CompressionMode.Compress))
+            using (var gs = new DeflateStream(mso, CompressionLevel.SmallestSize))
             {
                 msi.CopyTo(gs);
             }
@@ -150,7 +141,7 @@ namespace NetProxy.Hub.MessageFraming
         {
             using var msi = new MemoryStream(bytes);
             using var mso = new MemoryStream();
-            using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+            using (var gs = new DeflateStream(msi, CompressionMode.Decompress))
             {
                 gs.CopyTo(mso);
             }

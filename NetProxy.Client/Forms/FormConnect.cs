@@ -178,7 +178,7 @@ namespace NetProxy.Client.Forms
             _packeteer.Disconnect();
         }
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpHubFrame packet)
+        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpFrame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestLogin)
             {

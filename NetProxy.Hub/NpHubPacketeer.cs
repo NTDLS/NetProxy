@@ -12,14 +12,14 @@ namespace NetProxy.Hub
 
         public event PacketReceivedEvent? OnMessageReceived;
         public event PeerDisconnectedEvent? OnPeerDisconnected;
-        public delegate void PacketReceivedEvent(NpHubPacketeer sender, NpHubPeer peer, NpHubFrame packet);
+        public delegate void PacketReceivedEvent(NpHubPacketeer sender, NpHubPeer peer, NpFrame packet);
         public delegate void PeerDisconnectedEvent(NpHubPacketeer sender, NpHubPeer peer);
 
         #endregion
 
         #region Backend Variables.
 
-        private readonly int _listenBacklog = 4;
+        private readonly int _listenBacklog = 1;
         private Socket? _listenSocket;
         private readonly List<NpHubPeer> _peers = new();
         private AsyncCallback? _onDataReceivedCallback;
@@ -44,7 +44,7 @@ namespace NetProxy.Hub
         {
             _listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            IPEndPoint ipLocal = new IPEndPoint(IPAddress.Any, listenPort);
+            var ipLocal = new IPEndPoint(IPAddress.Any, listenPort);
 
             _listenSocket.Bind(ipLocal);
             _listenSocket.Listen(_listenBacklog);
@@ -62,16 +62,8 @@ namespace NetProxy.Hub
 
         public void Disconnect()
         {
-            try
-            {
-                if (_listenSocket != null)
-                {
-                    _listenSocket.Disconnect(false);
-                }
-            }
-            catch
-            {
-            }
+            NpUtility.TryAndIgnore(() => _listenSocket?.Disconnect(false));
+
 
             _listenSocket = null;
 
@@ -81,20 +73,12 @@ namespace NetProxy.Hub
 
                 foreach (var peer in openSockets)
                 {
-                    try
-                    {
-                        peer.Socket.Disconnect(false);
-                    }
-                    catch
-                    {
-                    }
+                    NpUtility.TryAndIgnore(() => peer.Socket.Disconnect(false));
                 }
 
                 _peers.Clear();
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         /// <summary>
@@ -104,12 +88,15 @@ namespace NetProxy.Hub
         /// <returns></returns>
         public bool Connect(string hostName, int port, bool retryInBackground)
         {
-            IPAddress? ipAddress = NpHubSocketUtility.GetIPv4Address(hostName);
-            if (ipAddress == null)
+            foreach (var ipAddress in Dns.GetHostAddresses(hostName))
             {
-                return false;
+                if (ipAddress?.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return Connect(ipAddress, port, retryInBackground);
+                }
             }
-            return Connect(ipAddress, port, retryInBackground);
+
+            return false;
         }
 
         public bool Connect(string hostName, int port)
@@ -131,11 +118,9 @@ namespace NetProxy.Hub
         {
             try
             {
-                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-                NpHubPeer peer = new NpHubPeer(socket);
-
-                IPEndPoint ipEnd = new IPEndPoint(ipAddress, port);
+                var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                var peer = new NpHubPeer(socket);
+                var ipEnd = new IPEndPoint(ipAddress, port);
 
                 socket.Connect(ipEnd);
                 if (socket != null && socket.Connected)
@@ -149,9 +134,7 @@ namespace NetProxy.Hub
                     return true;
                 }
             }
-            catch
-            {
-            }
+            catch { }
 
             return false;
         }
@@ -214,7 +197,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                NpHubFraming.ProcessFrameBuffer(socketState, ProcessPayloadHandler);
+                NpFraming.ProcessFrameBuffer(socketState, ProcessPayloadHandler);
 
                 WaitForData(socketState);
             }
@@ -233,7 +216,7 @@ namespace NetProxy.Hub
             }
         }
 
-        private void ProcessPayloadHandler(NpHubSocketState state, NpHubFrame packet)
+        private void ProcessPayloadHandler(NpHubSocketState state, NpFrame packet)
         {
             OnMessageReceived?.Invoke(this, state.Peer, packet);
         }
@@ -300,7 +283,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                byte[] packet = NpHubFraming.AssembleFrame(new NpHubFrame()
+                byte[] packet = NpFraming.AssembleFrame(new NpFrame()
                 {
                     Label = label,
                     Payload = payload
@@ -308,13 +291,7 @@ namespace NetProxy.Hub
 
                 foreach (var peer in _peers)
                 {
-                    try
-                    {
-                        peer.Socket.Send(packet);
-                    }
-                    catch
-                    {
-                    }
+                    NpUtility.TryAndIgnore(() => peer.Socket.Send(packet));
                 }
             }
         }
@@ -334,7 +311,7 @@ namespace NetProxy.Hub
                     return;
                 }
 
-                byte[] packet = NpHubFraming.AssembleFrame(new NpHubFrame()
+                byte[] packet = NpFraming.AssembleFrame(new NpFrame()
                 {
                     Label = label,
                     Payload = payload
@@ -344,13 +321,7 @@ namespace NetProxy.Hub
                 {
                     if (peer.Id == peerId)
                     {
-                        try
-                        {
-                            peer.Socket.Send(packet);
-                        }
-                        catch
-                        {
-                        }
+                        NpUtility.TryAndIgnore(() => peer.Socket.Send(packet));
                     }
                 }
             }
@@ -362,9 +333,7 @@ namespace NetProxy.Hub
         /// <param name="label"></param>
 
         public void SendAll(string label)
-        {
-            SendAll(label, string.Empty);
-        }
+            => SendAll(label, string.Empty);
 
         /// <summary>
         /// Send to is used to send data to a single peer. To boradcast use SendAll().
@@ -372,8 +341,6 @@ namespace NetProxy.Hub
         /// <param name="peerId"></param>
         /// <param name="label"></param>
         public void SendTo(Guid peerId, string label)
-        {
-            SendTo(peerId, label, string.Empty);
-        }
+            => SendTo(peerId, label, string.Empty);
     }
 }

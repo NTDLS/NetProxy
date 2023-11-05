@@ -1,11 +1,11 @@
 ﻿namespace NetProxy.Hub.MessageFraming
 {
-    public static class NpHubCRC16
+    public static class NpFrameChecksum
     {
         private const ushort Polynomial = 0xAB01;
         internal static readonly ushort[] Table = new ushort[256];
 
-        public static ushort ComputeChecksum(byte[] bytes)
+        public static ushort ComputeCRC16(byte[] bytes)
         {
             ushort crc = 0;
             for (int i = 0; i < bytes.Length; ++i)
@@ -16,7 +16,7 @@
             return crc;
         }
 
-        public static ushort ComputeChecksum(byte[] bytes, int offset, int length)
+        public static ushort ComputeCRC16(byte[] bytes, int offset, int length)
         {
             ushort crc = 0;
             for (int i = offset; i < length + offset; ++i)
@@ -27,7 +27,7 @@
             return crc;
         }
 
-        static NpHubCRC16()
+        static NpFrameChecksum()
         {
             ushort value;
             ushort temp;

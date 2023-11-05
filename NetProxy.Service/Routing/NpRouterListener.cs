@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using NetProxy.Library.Utilities;
 using NTDLS.Semaphore;
-using System.Net;
 using System.Net.Sockets;
 
 namespace NetProxy.Service.Routing

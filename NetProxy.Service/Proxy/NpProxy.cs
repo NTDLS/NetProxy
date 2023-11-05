@@ -2,26 +2,22 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace NetProxy.Service.Routing
+namespace NetProxy.Service.Proxy
 {
     public class NpProxy
     {
-        #region Backend Variables.
-
-        public NpProxyStatistics Stats { get; set; }
+        public NpProxyStatistics Statistics { get; private set; }
         private readonly NpRoute _route;
         private readonly List<NpProxyListener> _listeners = new();
         private bool _keepRunning = false;
-        public bool IsRunning => _keepRunning;
 
+        public bool IsRunning => _keepRunning;
         public int CurrentConnectionCount => 1000;
         public NpRoute Route => _route;
 
-        #endregion
-
         public NpProxy(NpRoute route)
         {
-            Stats = new NpProxyStatistics();
+            Statistics = new NpProxyStatistics();
             _route = route;
         }
 

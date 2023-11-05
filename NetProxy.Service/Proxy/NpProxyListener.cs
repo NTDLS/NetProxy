@@ -3,7 +3,7 @@ using NetProxy.Library.Utilities;
 using NTDLS.Semaphore;
 using System.Net.Sockets;
 
-namespace NetProxy.Service.Routing
+namespace NetProxy.Service.Proxy
 {
     internal class NpProxyListener
     {

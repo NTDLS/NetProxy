@@ -1,4 +1,4 @@
-﻿namespace NetProxy.Service.Routing
+﻿namespace NetProxy.Service.Proxy
 {
     public class NpProxyStatistics
     {

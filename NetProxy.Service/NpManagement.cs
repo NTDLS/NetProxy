@@ -4,7 +4,7 @@ using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
-using NetProxy.Service.Routing;
+using NetProxy.Service.Proxy;
 using Newtonsoft.Json;
 using NTDLS.Persistence;
 
@@ -138,9 +138,9 @@ namespace NetProxy.Service
                             {
                                 Id = proxy.Route.Id,
                                 IsRunning = proxy.IsRunning,
-                                BytesReceived = proxy.Stats.BytesReceived,
-                                BytesSent = proxy.Stats.BytesSent,
-                                TotalConnections = proxy.Stats.TotalConnections,
+                                BytesReceived = proxy.Statistics.BytesReceived,
+                                BytesSent = proxy.Statistics.BytesSent,
+                                TotalConnections = proxy.Statistics.TotalConnections,
                                 CurrentConnections = proxy.CurrentConnectionCount
 
                             };

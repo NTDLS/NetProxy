@@ -1,14 +1,14 @@
 ﻿using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 
-namespace NetProxy.Service.Routing
+namespace NetProxy.Service.Proxy
 {
     public class NpProxyCollection : List<NpProxy>
     {
         public List<NpRoute> Routes()
         {
             var routes = new List<NpRoute>();
-            this.ForEach(o => routes.Add(o.Route));
+            ForEach(o => routes.Add(o.Route));
             return routes;
         }
 

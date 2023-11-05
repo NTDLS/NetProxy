@@ -5,7 +5,7 @@ using NetProxy.Library.Utilities;
 using System.Net;
 using System.Net.Sockets;
 
-namespace NetProxy.Service.Routing
+namespace NetProxy.Service.Proxy
 {
     internal class NpProxyConnection
     {

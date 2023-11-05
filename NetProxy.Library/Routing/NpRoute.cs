@@ -9,7 +9,6 @@ namespace NetProxy.Library.Routing
 
         [JsonConverter(typeof(StringEnumConverter))]
         public BindingProtocal BindingProtocal { get; set; }
-
         public TrafficType TrafficType { get; set; }
         public bool AutoStart { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -22,10 +21,8 @@ namespace NetProxy.Library.Routing
         public string Description { get; set; } = string.Empty;
         public List<NpBinding> Bindings { get; set; }
         public bool ListenOnAllAddresses { get; set; }
-
-        public NpEndpoints Endpoints = new();
-
-        public NpHTTPHeaderRules HttpHeaderRules = new();
+        public NpEndpoints Endpoints { get; set; } = new();
+        public NpHTTPHeaderRules HttpHeaderRules { get; set; } = new();
 
         public NpRoute()
         {

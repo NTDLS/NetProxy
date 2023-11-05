@@ -8,25 +8,25 @@ using Newtonsoft.Json;
 
 namespace NetProxy.Client.Forms
 {
-    public partial class FormRoute : Form
+    public partial class FormProxy : Form
     {
         private NpHubPacketeer? _packeteer = null;
-        private string? _routeId = null;
-        private delegate void PopulateRouteInformation(NpRoute route);
-        private PopulateRouteInformation? _populateRouteInformation;
+        private string? _proxyId = null;
+        private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
+        private PopulateProxyInformation? _populateProxyInformation;
 
-        public FormRoute()
+        public FormProxy()
         {
             InitializeComponent();
         }
 
-        public FormRoute(ConnectionInfo connectionInfo, string? routeId)
+        public FormProxy(ConnectionInfo connectionInfo, string? proxyId)
         {
             InitializeComponent();
 
-            _populateRouteInformation = OnPopulateRouteInformation;
+            _populateProxyInformation = OnPopulateProxyInformation;
 
-            _routeId = routeId ?? Guid.NewGuid().ToString();
+            _proxyId = proxyId ?? Guid.NewGuid().ToString();
             _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
             if (_packeteer == null)
             {
@@ -86,46 +86,46 @@ namespace NetProxy.Client.Forms
             //----------------------------------------------------------------------------
         }
 
-        private void FormRoute_Shown(object? sender, EventArgs e)
+        private void FormProxy_Shown(object? sender, EventArgs e)
         {
-            if (_routeId != null)
+            if (_proxyId != null)
             {
                 NpUtility.EnsureNotNull(_packeteer);
-                _packeteer.SendAll(Constants.CommandLables.GuiRequestRoute, _routeId);
+                _packeteer.SendAll(Constants.CommandLables.GuiRequestProxy, _proxyId);
             }
         }
 
-        private void OnPopulateRouteInformation(NpRoute route)
+        private void OnPopulateProxyInformation(NpProxyConfiguration proxy)
         {
-            textBoxDescription.Text = route.Description;
-            textBoxRouteName.Text = route.Name;
-            comboBoxTrafficType.SelectedValue = route.TrafficType;
-            comboBoxBindingProtocol.SelectedValue = route.BindingProtocal;
-            textBoxListenPort.Text = route.ListenPort.ToString();
-            checkBoxListenOnAllAddresses.Checked = route.ListenOnAllAddresses;
-            textBoxInitialBufferSize.Text = route.InitialBufferSize.ToString();
-            textBoxMaxBufferSize.Text = route.MaxBufferSize.ToString();
-            textBoxAcceptBacklogSize.Text = route.AcceptBacklogSize.ToString();
-            comboBoxConnectionPattern.SelectedValue = route.Endpoints.ConnectionPattern;
-            checkBoxListenAutoStart.Checked = route.AutoStart;
-            checkBoxUseStickySessions.Checked = route.UseStickySessions;
-            textBoxStickySessionCacheExpiration.Text = route.StickySessionCacheExpiration.ToString();
+            textBoxDescription.Text = proxy.Description;
+            textBoxProxyName.Text = proxy.Name;
+            comboBoxTrafficType.SelectedValue = proxy.TrafficType;
+            comboBoxBindingProtocol.SelectedValue = proxy.BindingProtocal;
+            textBoxListenPort.Text = proxy.ListenPort.ToString();
+            checkBoxListenOnAllAddresses.Checked = proxy.ListenOnAllAddresses;
+            textBoxInitialBufferSize.Text = proxy.InitialBufferSize.ToString();
+            textBoxMaxBufferSize.Text = proxy.MaxBufferSize.ToString();
+            textBoxAcceptBacklogSize.Text = proxy.AcceptBacklogSize.ToString();
+            comboBoxConnectionPattern.SelectedValue = proxy.Endpoints.ConnectionPattern;
+            checkBoxListenAutoStart.Checked = proxy.AutoStart;
+            checkBoxUseStickySessions.Checked = proxy.UseStickySessions;
+            textBoxStickySessionCacheExpiration.Text = proxy.StickySessionCacheExpiration.ToString();
 
-            foreach (var endpoint in route.Endpoints.Collection)
+            foreach (var endpoint in proxy.Endpoints.Collection)
             {
                 dataGridViewEndpoints.Rows.Add(
                     new string[] { endpoint.Enabled.ToString(), endpoint.Address, endpoint.Port.ToString(), endpoint.Description }
                 );
             }
 
-            foreach (var binding in route.Bindings)
+            foreach (var binding in proxy.Bindings)
             {
                 dataGridViewBindings.Rows.Add(
                     new string[] { binding.Enabled.ToString(), binding.Address, binding.Description }
                 );
             }
 
-            foreach (var httpHeaderRule in route.HttpHeaderRules.List)
+            foreach (var httpHeaderRule in proxy.HttpHeaderRules.List)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
                     new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }
@@ -135,20 +135,20 @@ namespace NetProxy.Client.Forms
 
         private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpFrame packet)
         {
-            if (packet.Label == Constants.CommandLables.GuiRequestRoute)
+            if (packet.Label == Constants.CommandLables.GuiRequestProxy)
             {
-                NpUtility.EnsureNotNull(_populateRouteInformation);
-                Invoke(_populateRouteInformation, JsonConvert.DeserializeObject<NpRoute>(packet.Payload));
+                NpUtility.EnsureNotNull(_populateProxyInformation);
+                Invoke(_populateProxyInformation, JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload));
             }
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
         {
-            var route = new NpRoute();
+            var proxy = new NpProxyConfiguration();
 
-            if (textBoxRouteName.Text.Trim().Length == 0)
+            if (textBoxProxyName.Text.Trim().Length == 0)
             {
-                MessageBox.Show("The route name is required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The proxy name is required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
             if (NpUtility.ValidateInt32(textBoxListenPort.Text, 1, 65535) == false)
@@ -178,24 +178,24 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            NpUtility.EnsureNotNull(_routeId);
+            NpUtility.EnsureNotNull(_proxyId);
 
-            route.Id = Guid.Parse(_routeId);
-            route.Name = textBoxRouteName.Text;
-            route.Description = textBoxDescription.Text;
-            route.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue?.ToString() ?? "");
-            route.BindingProtocal = (BindingProtocal)Enum.Parse(typeof(BindingProtocal), comboBoxBindingProtocol.SelectedValue?.ToString() ?? "");
-            route.ListenPort = int.Parse(textBoxListenPort.Text);
-            route.ListenOnAllAddresses = checkBoxListenOnAllAddresses.Checked;
-            route.InitialBufferSize = int.Parse(textBoxInitialBufferSize.Text);
-            route.MaxBufferSize = int.Parse(textBoxMaxBufferSize.Text);
-            route.AcceptBacklogSize = int.Parse(textBoxAcceptBacklogSize.Text);
-            route.Endpoints.ConnectionPattern = (ConnectionPattern)Enum.Parse(typeof(ConnectionPattern), comboBoxConnectionPattern.SelectedValue?.ToString() ?? "");
-            route.AutoStart = checkBoxListenAutoStart.Checked;
-            route.UseStickySessions = checkBoxUseStickySessions.Checked;
-            route.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
+            proxy.Id = Guid.Parse(_proxyId);
+            proxy.Name = textBoxProxyName.Text;
+            proxy.Description = textBoxDescription.Text;
+            proxy.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue?.ToString() ?? "");
+            proxy.BindingProtocal = (BindingProtocal)Enum.Parse(typeof(BindingProtocal), comboBoxBindingProtocol.SelectedValue?.ToString() ?? "");
+            proxy.ListenPort = int.Parse(textBoxListenPort.Text);
+            proxy.ListenOnAllAddresses = checkBoxListenOnAllAddresses.Checked;
+            proxy.InitialBufferSize = int.Parse(textBoxInitialBufferSize.Text);
+            proxy.MaxBufferSize = int.Parse(textBoxMaxBufferSize.Text);
+            proxy.AcceptBacklogSize = int.Parse(textBoxAcceptBacklogSize.Text);
+            proxy.Endpoints.ConnectionPattern = (ConnectionPattern)Enum.Parse(typeof(ConnectionPattern), comboBoxConnectionPattern.SelectedValue?.ToString() ?? "");
+            proxy.AutoStart = checkBoxListenAutoStart.Checked;
+            proxy.UseStickySessions = checkBoxUseStickySessions.Checked;
+            proxy.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
 
-            if (route.InitialBufferSize > route.MaxBufferSize)
+            if (proxy.InitialBufferSize > proxy.MaxBufferSize)
             {
                 MessageBox.Show("The max buffer size must be larger than the initial buffer size.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
@@ -205,7 +205,7 @@ namespace NetProxy.Client.Forms
             {
                 if (((string)(row.Cells[ColumnEndpointsAddress.Index].Value ?? "")) != string.Empty)
                 {
-                    route.Endpoints.Add(new NpEndpoint()
+                    proxy.Endpoints.Add(new NpEndpoint()
                     {
                         Enabled = bool.Parse(row.Cells[ColumnEndpointsEnabled.Index].Value?.ToString() ?? "True"),
                         Address = row.Cells[ColumnEndpointsAddress.Index].Value?.ToString() ?? "",
@@ -221,7 +221,7 @@ namespace NetProxy.Client.Forms
                 {
 
 
-                    route.Bindings.Add(new Library.Routing.NpBinding()
+                    proxy.Bindings.Add(new Library.Routing.NpBinding()
                     {
                         Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value?.ToString()) ?? "True"),
                         Address = row.Cells[ColumnBindingsIPAddress.Index].Value?.ToString() ?? "",
@@ -234,7 +234,7 @@ namespace NetProxy.Client.Forms
             {
                 if (((string)(row.Cells[ColumnHTTPHeadersHeader.Index].Value ?? "")) != string.Empty)
                 {
-                    route.HttpHeaderRules.Add(new NpHttpHeaderRule
+                    proxy.HttpHeaderRules.Add(new NpHttpHeaderRule
                     {
                         Enabled = bool.Parse(row.Cells[ColumnHTTPHeadersEnabled.Index].Value?.ToString() ?? "True"),
                         Action = (HttpHeaderAction)Enum.Parse(typeof(HttpHeaderAction), row.Cells[ColumnHTTPHeadersAction.Index].Value?.ToString() ?? ""),
@@ -247,26 +247,26 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            foreach (var httpHeaderRule in route.HttpHeaderRules.List)
+            foreach (var httpHeaderRule in proxy.HttpHeaderRules.List)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
                     new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }
                 );
             }
 
-            if (route.Endpoints.Collection.Count == 0)
+            if (proxy.Endpoints.Collection.Count == 0)
             {
                 MessageBox.Show("At least one end-point is required required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
-            if (route.Bindings.Count == 0 && route.ListenOnAllAddresses == false)
+            if (proxy.Bindings.Count == 0 && proxy.ListenOnAllAddresses == false)
             {
                 MessageBox.Show("At least one binding is required unless [listen on all addresses] is selected.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
             NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertRoute, JsonConvert.SerializeObject(route));
+            _packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertProxy, JsonConvert.SerializeObject(proxy));
 
             Thread.Sleep(500);
 
@@ -280,7 +280,7 @@ namespace NetProxy.Client.Forms
             Close();
         }
 
-        private void FormRoute_FormClosed(object? sender, FormClosedEventArgs e)
+        private void FormProxy_FormClosed(object? sender, FormClosedEventArgs e)
         {
             NpUtility.EnsureNotNull(_packeteer);
             _packeteer.Disconnect();

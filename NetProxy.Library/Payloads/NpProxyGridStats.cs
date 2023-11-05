@@ -1,6 +1,6 @@
 ﻿namespace NetProxy.Library.Payloads
 {
-    public class NpRouteGridStats
+    public class NpProxyGridStats
     {
         public Guid Id { get; set; }
         public bool IsRunning { get; set; }

@@ -26,7 +26,7 @@ namespace NetProxy.Service.Proxy
             EndpointStatistics.Use((o) =>
             {
                 //Add empty endpoint statistics for each endpoint.
-                Proxy.Route.Endpoints.Collection.ForEach(e => o.Add(e.Id, new NpProxyEndpointStatistics()));
+                Proxy.Configuration.Endpoints.Collection.ForEach(e => o.Add(e.Id, new NpProxyEndpointStatistics()));
             });
         }
 
@@ -66,13 +66,13 @@ namespace NetProxy.Service.Proxy
 
         void InboundListenerThreadProc()
         {
-            Thread.CurrentThread.Name = $"InboundListenerThreadProc:{Thread.CurrentThread.ManagedThreadId}:{Proxy.Route.Name}";
+            Thread.CurrentThread.Name = $"InboundListenerThreadProc:{Thread.CurrentThread.ManagedThreadId}:{Proxy.Configuration.Name}";
 
             try
             {
                 _listener.Start();
 
-                Singletons.EventLog.WriteLog(NpLogging.Severity.Verbose, $"Listening inbound '{Proxy.Route.Name}' on port {Proxy.Route.ListenPort}");
+                Singletons.EventLog.WriteLog(NpLogging.Severity.Verbose, $"Listening inbound '{Proxy.Configuration.Name}' on port {Proxy.Configuration.ListenPort}");
 
                 while (_keepRunning)
                 {

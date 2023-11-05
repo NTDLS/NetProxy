@@ -5,15 +5,15 @@ namespace NetProxy.Service.Proxy
 {
     public class NpProxyCollection : List<NpProxy>
     {
-        public List<NpRoute> Routes()
+        public List<NpProxyConfiguration> CloneConfigurations()
         {
-            var routes = new List<NpRoute>();
-            ForEach(o => routes.Add(o.Route));
-            return routes;
+            var proxyConfigurations = new List<NpProxyConfiguration>();
+            ForEach(o => proxyConfigurations.Add(o.Configuration));
+            return proxyConfigurations;
         }
 
-        public NpProxy? this[Guid routeId]
-            => this.Where(o => o.Route.Id == routeId).FirstOrDefault();
+        public NpProxy? this[Guid proxyId]
+            => this.Where(o => o.Configuration.Id == proxyId).FirstOrDefault();
 
         //public void Add(NpProxy proxy)
         //    => this.Add(proxy);
@@ -28,7 +28,7 @@ namespace NetProxy.Service.Proxy
         {
             foreach (var proxy in this)
             {
-                if (proxy.Route.AutoStart)
+                if (proxy.Configuration.AutoStart)
                 {
                     try
                     {
@@ -39,7 +39,7 @@ namespace NetProxy.Service.Proxy
                         Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                         {
                             Severity = NpLogging.Severity.Exception,
-                            CustomText = "Failed to start route.",
+                            CustomText = "Failed to start proxy.",
                             Exception = ex
                         });
                     }
@@ -60,7 +60,7 @@ namespace NetProxy.Service.Proxy
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to stop route.",
+                        CustomText = "Failed to stop proxy.",
                         Exception = ex
                     });
                 }

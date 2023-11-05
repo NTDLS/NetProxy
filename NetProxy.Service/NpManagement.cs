@@ -82,61 +82,61 @@ namespace NetProxy.Service
                 return; //If the peer is not logged in, don't go any further.
             }
 
-            if (packet.Label == Constants.CommandLables.GuiRequestRouteList)
+            if (packet.Label == Constants.CommandLables.GuiRequestProxyList)
             {
                 try
                 {
-                    List<NpRouteGridItem> routes = new();
+                    List<NpProxyGridItem> gridItems = new();
 
                     lock (_config)
                     {
                         foreach (var proxy in _proxies)
                         {
-                            NpRouteGridItem augmentedRoute = new()
+                            NpProxyGridItem augmentedProxy = new()
                             {
-                                Id = proxy.Route.Id,
-                                Name = proxy.Route.Name,
-                                TrafficType = proxy.Route.TrafficType,
-                                ProxyType = proxy.Route.TrafficType.ToString() + " / " + proxy.Route.BindingProtocal.ToString(),
-                                BindingProtocal = proxy.Route.BindingProtocal,
-                                Description = proxy.Route.Description,
+                                Id = proxy.Configuration.Id,
+                                Name = proxy.Configuration.Name,
+                                TrafficType = proxy.Configuration.TrafficType,
+                                ProxyType = proxy.Configuration.TrafficType.ToString() + " / " + proxy.Configuration.BindingProtocal.ToString(),
+                                BindingProtocal = proxy.Configuration.BindingProtocal,
+                                Description = proxy.Configuration.Description,
                                 IsRunning = proxy.IsRunning,
-                                ListenPort = proxy.Route.ListenPort,
-                                ListenOnAllAddresses = proxy.Route.ListenOnAllAddresses,
-                                Bindings = proxy.Route.Bindings
+                                ListenPort = proxy.Configuration.ListenPort,
+                                ListenOnAllAddresses = proxy.Configuration.ListenOnAllAddresses,
+                                Bindings = proxy.Configuration.Bindings
                             };
 
-                            routes.Add(augmentedRoute);
+                            gridItems.Add(augmentedProxy);
                         }
                     }
 
-                    _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(routes));
+                    _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(gridItems));
                 }
                 catch (Exception ex)
                 {
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get route list.",
+                        CustomText = "Failed to get proxy list.",
                         Exception = ex
                     });
 
                     _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiRequestRouteStatsList)
+            else if (packet.Label == Constants.CommandLables.GuiRequestProxyStatsList)
             {
                 try
                 {
-                    List<NpRouteGridStats> stats = new List<NpRouteGridStats>();
+                    List<NpProxyGridStats> stats = new List<NpProxyGridStats>();
 
                     lock (_config)
                     {
                         foreach (var proxy in _proxies)
                         {
-                            NpRouteGridStats augmentedRoute = new NpRouteGridStats()
+                            NpProxyGridStats augmentedProxy = new NpProxyGridStats()
                             {
-                                Id = proxy.Route.Id,
+                                Id = proxy.Configuration.Id,
                                 IsRunning = proxy.IsRunning,
                                 BytesReceived = proxy.Statistics.BytesReceived,
                                 BytesSent = proxy.Statistics.BytesSent,
@@ -144,7 +144,7 @@ namespace NetProxy.Service
                                 CurrentConnections = proxy.CurrentConnectionCount
 
                             };
-                            stats.Add(augmentedRoute);
+                            stats.Add(augmentedProxy);
                         }
                     }
 
@@ -155,13 +155,13 @@ namespace NetProxy.Service
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get route stats list.",
+                        CustomText = "Failed to get proxy stats list.",
                         Exception = ex
                     });
                     _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiRequestRoute)
+            else if (packet.Label == Constants.CommandLables.GuiRequestProxy)
             {
                 try
                 {
@@ -171,7 +171,7 @@ namespace NetProxy.Service
                         var proxy = _proxies[proxyId];
                         if (proxy != null)
                         {
-                            string value = JsonConvert.SerializeObject(proxy.Route);
+                            string value = JsonConvert.SerializeObject(proxy.Configuration);
                             _packeteer.SendTo(peer.Id, packet.Label, value);
                         }
                     }
@@ -181,7 +181,7 @@ namespace NetProxy.Service
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get route.",
+                        CustomText = "Failed to get proxy.",
                         Exception = ex
                     });
 
@@ -241,23 +241,23 @@ namespace NetProxy.Service
                     _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistUpsertRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistUpsertProxy)
             {
                 try
                 {
-                    var value = JsonConvert.DeserializeObject<NpRoute>(packet.Payload);
+                    var value = JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload);
                     NpUtility.EnsureNotNull(value);
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _proxies
-                                             where o.Route.Id == value.Id
+                        var existingProxy = (from o in _proxies
+                                             where o.Configuration.Id == value.Id
                                              select o).FirstOrDefault();
 
-                        if (existingRoute != null)
+                        if (existingProxy != null)
                         {
-                            existingRoute.Stop();
-                            _proxies.Remove(existingRoute);
+                            existingProxy.Stop();
+                            _proxies.Remove(existingProxy);
                         }
 
                         var newProxy = new NpProxy(value);
@@ -266,7 +266,7 @@ namespace NetProxy.Service
 
                         SaveConfiguration();
 
-                        if (newProxy.Route.AutoStart)
+                        if (newProxy.Configuration.AutoStart)
                         {
                             newProxy.Start();
                         }
@@ -277,29 +277,29 @@ namespace NetProxy.Service
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to upsert route.",
+                        CustomText = "Failed to upsert proxy.",
                         Exception = ex
                     });
 
                     _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistDeleteRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistDeleteProxy)
             {
                 try
                 {
-                    Guid routeId = Guid.Parse(packet.Payload);
+                    Guid proxyId = Guid.Parse(packet.Payload);
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _proxies
-                                             where o.Route.Id == routeId
+                        var existingProxy = (from o in _proxies
+                                             where o.Configuration.Id == proxyId
                                              select o).FirstOrDefault();
 
-                        if (existingRoute != null)
+                        if (existingProxy != null)
                         {
-                            existingRoute.Stop();
-                            _proxies.Remove(existingRoute);
+                            existingProxy.Stop();
+                            _proxies.Remove(existingProxy);
                         }
                         SaveConfiguration();
                     }
@@ -309,28 +309,28 @@ namespace NetProxy.Service
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get delete route.",
+                        CustomText = "Failed to get delete proxy.",
                         Exception = ex
                     });
 
                     _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistStopRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistStopProxy)
             {
                 try
                 {
-                    Guid routeId = Guid.Parse(packet.Payload);
+                    Guid proxyId = Guid.Parse(packet.Payload);
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _proxies
-                                             where o.Route.Id == routeId
+                        var existingProxy = (from o in _proxies
+                                             where o.Configuration.Id == proxyId
                                              select o).FirstOrDefault();
 
-                        if (existingRoute != null)
+                        if (existingProxy != null)
                         {
-                            existingRoute.Stop();
+                            existingProxy.Stop();
                         }
                     }
                 }
@@ -339,30 +339,30 @@ namespace NetProxy.Service
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get stop route.",
+                        CustomText = "Failed to get stop proxy.",
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to stop route: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to stop proxy: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistStartRoute)
+            else if (packet.Label == Constants.CommandLables.GuiPersistStartProxy)
             {
                 try
                 {
-                    Guid routeId = Guid.Parse(packet.Payload);
+                    Guid proxyId = Guid.Parse(packet.Payload);
 
                     lock (_config)
                     {
-                        var existingRoute = (from o in _proxies
-                                             where o.Route.Id == routeId
+                        var existingProxy = (from o in _proxies
+                                             where o.Configuration.Id == proxyId
                                              select o).FirstOrDefault();
 
-                        if (existingRoute != null)
+                        if (existingProxy != null)
                         {
-                            if (existingRoute.Start() == false)
+                            if (existingProxy.Start() == false)
                             {
-                                _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start route.");
+                                _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start proxy.");
                             }
                         }
                     }
@@ -372,10 +372,10 @@ namespace NetProxy.Service
                     Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to start route.",
+                        CustomText = "Failed to start proxy.",
                         Exception = ex
                     });
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start route: " + ex.Message);
+                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start proxy: " + ex.Message);
                 }
             }
         }
@@ -385,7 +385,7 @@ namespace NetProxy.Service
             try
             {
                 CommonApplicationData.SaveToDisk(Constants.TitleCaption, _config);
-                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _proxies.Routes());
+                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _proxies.CloneConfigurations());
             }
             catch (Exception ex)
             {
@@ -404,7 +404,7 @@ namespace NetProxy.Service
             {
                 Console.WriteLine("Loading configuration...");
 
-                //AddTestRoutes();
+                //AddTestProxys();
 
                 var defaultConfiguration = new NpConfiguration()
                 {
@@ -415,12 +415,12 @@ namespace NetProxy.Service
                 Console.WriteLine("Server configuration...");
                 _config = CommonApplicationData.LoadFromDisk<NpConfiguration>(Constants.TitleCaption, defaultConfiguration);
 
-                Console.WriteLine("Route configuration...");
-                var routes = CommonApplicationData.LoadFromDisk<List<NpRoute>>(Constants.TitleCaption, new List<NpRoute>());
-                foreach (var route in routes)
+                Console.WriteLine("Proxy configuration...");
+                var proxys = CommonApplicationData.LoadFromDisk<List<NpProxyConfiguration>>(Constants.TitleCaption, new List<NpProxyConfiguration>());
+                foreach (var proxy in proxys)
                 {
-                    Console.WriteLine("Adding route {0}.", route.Name);
-                    _proxies.Add(new NpProxy(route));
+                    Console.WriteLine("Adding proxy {0}.", proxy.Name);
+                    _proxies.Add(new NpProxy(proxy));
                 }
             }
             catch (Exception ex)
@@ -434,13 +434,13 @@ namespace NetProxy.Service
             }
         }
 
-        private void AddTestRoutes()
+        private void AddTestProxys()
         {
             NpProxyCollection proxies = new();
 
             //------------------------------------------------------------------------------------------------------------------
             {
-                NpRoute route = new NpRoute()
+                NpProxyConfiguration proxy = new NpProxyConfiguration()
                 {
                     Name = "NetworkDLS",
                     ListenPort = 80,
@@ -448,22 +448,22 @@ namespace NetProxy.Service
                     MaxBufferSize = 1021 * 1024,
                     ListenOnAllAddresses = false,
                     AutoStart = true,
-                    Description = "Default example route."
+                    Description = "Default example proxy."
 
                 };
 
-                route.Bindings.Add(new NpBinding { Enabled = true, Address = "127.0.0.1" });
+                proxy.Bindings.Add(new NpBinding { Enabled = true, Address = "127.0.0.1" });
 
-                route.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
-                route.Endpoints.Add(new NpEndpoint("www.NetworkDLS.com", 80));
+                proxy.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                proxy.Endpoints.Add(new NpEndpoint("www.NetworkDLS.com", 80));
 
-                route.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.NetworkDLS.com"));
+                proxy.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.NetworkDLS.com"));
 
-                proxies.Add(new NpProxy(route));
+                proxies.Add(new NpProxy(proxy));
             }
             //------------------------------------------------------------------------------------------------------------------
             {
-                NpRoute route = new NpRoute()
+                NpProxyConfiguration proxy = new NpProxyConfiguration()
                 {
                     Name = "Ingenuity",
                     ListenPort = 81,
@@ -473,18 +473,18 @@ namespace NetProxy.Service
                     AutoStart = true
                 };
 
-                //route.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
+                //proxy.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
 
-                route.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
-                route.Endpoints.Add(new NpEndpoint("www.IngenuitySC.com", 80));
+                proxy.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                proxy.Endpoints.Add(new NpEndpoint("www.IngenuitySC.com", 80));
 
-                route.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.IngenuitySC.com"));
+                proxy.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.IngenuitySC.com"));
 
-                proxies.Add(new NpProxy(route));
+                proxies.Add(new NpProxy(proxy));
             }
             //------------------------------------------------------------------------------------------------------------------
             {
-                NpRoute route = new NpRoute()
+                NpProxyConfiguration proxy = new NpProxyConfiguration()
                 {
                     Name = "Microsoft LIVE!",
                     ListenPort = 82,
@@ -494,18 +494,18 @@ namespace NetProxy.Service
                     AutoStart = true
                 };
 
-                //route.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
+                //proxy.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
 
-                route.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
-                route.Endpoints.Add(new NpEndpoint("login.live.com", 443));
+                proxy.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                proxy.Endpoints.Add(new NpEndpoint("login.live.com", 443));
 
-                route.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "login.live.com"));
+                proxy.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "login.live.com"));
 
-                proxies.Add(new NpProxy(route));
+                proxies.Add(new NpProxy(proxy));
             }
             //------------------------------------------------------------------------------------------------------------------
 
-            CommonApplicationData.SaveToDisk(Constants.TitleCaption, proxies.Routes());
+            CommonApplicationData.SaveToDisk(Constants.TitleCaption, proxies.CloneConfigurations());
         }
 
         public void Start()
@@ -518,7 +518,7 @@ namespace NetProxy.Service
                 Console.WriteLine("Starting management interface on port {0}.", _config.ManagementPort);
                 _packeteer.Start(_config.ManagementPort);
 
-                Console.WriteLine("starting routes...");
+                Console.WriteLine("starting proxys...");
                 _proxies.Start();
             }
             catch (Exception ex)

@@ -9,7 +9,7 @@ using System;
 
 namespace NetProxy.Client.Forms
 {
-    partial class FormRoute
+    partial class FormProxy
     {
         /// <summary>
         /// Required designer variable.
@@ -40,7 +40,7 @@ namespace NetProxy.Client.Forms
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormRoute));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProxy));
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
@@ -55,7 +55,7 @@ namespace NetProxy.Client.Forms
             label6 = new Label();
             checkBoxListenAutoStart = new CheckBox();
             comboBoxTrafficType = new ComboBox();
-            textBoxRouteName = new TextBox();
+            textBoxProxyName = new TextBox();
             tabPageBindings = new TabPage();
             comboBoxBindingProtocol = new ComboBox();
             label10 = new Label();
@@ -209,7 +209,7 @@ namespace NetProxy.Client.Forms
             tabPageGeneral.Controls.Add(label6);
             tabPageGeneral.Controls.Add(checkBoxListenAutoStart);
             tabPageGeneral.Controls.Add(comboBoxTrafficType);
-            tabPageGeneral.Controls.Add(textBoxRouteName);
+            tabPageGeneral.Controls.Add(textBoxProxyName);
             tabPageGeneral.Controls.Add(label1);
             tabPageGeneral.Controls.Add(label2);
             tabPageGeneral.Location = new Point(4, 24);
@@ -262,13 +262,13 @@ namespace NetProxy.Client.Forms
             comboBoxTrafficType.TabIndex = 2;
             comboBoxTrafficType.SelectedIndexChanged += comboBoxTrafficType_SelectedIndexChanged;
             // 
-            // textBoxRouteName
+            // textBoxProxyName
             // 
-            textBoxRouteName.Location = new Point(85, 13);
-            textBoxRouteName.Margin = new Padding(4, 3, 4, 3);
-            textBoxRouteName.Name = "textBoxRouteName";
-            textBoxRouteName.Size = new Size(484, 23);
-            textBoxRouteName.TabIndex = 1;
+            textBoxProxyName.Location = new Point(85, 13);
+            textBoxProxyName.Margin = new Padding(4, 3, 4, 3);
+            textBoxProxyName.Name = "textBoxProxyName";
+            textBoxProxyName.Size = new Size(484, 23);
+            textBoxProxyName.TabIndex = 1;
             // 
             // tabPageBindings
             // 
@@ -622,7 +622,7 @@ namespace NetProxy.Client.Forms
             buttonSave.UseVisualStyleBackColor = true;
             buttonSave.Click += buttonSave_Click;
             // 
-            // FormRoute
+            // FormProxy
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -635,12 +635,12 @@ namespace NetProxy.Client.Forms
             Margin = new Padding(4, 3, 4, 3);
             MaximizeBox = false;
             MinimizeBox = false;
-            Name = "FormRoute";
+            Name = "FormProxy";
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
-            Text = "Route";
-            FormClosed += FormRoute_FormClosed;
-            Shown += FormRoute_Shown;
+            Text = "Proxy";
+            FormClosed += FormProxy_FormClosed;
+            Shown += FormProxy_Shown;
             tabControl.ResumeLayout(false);
             tabPageGeneral.ResumeLayout(false);
             tabPageGeneral.PerformLayout();
@@ -673,7 +673,7 @@ namespace NetProxy.Client.Forms
         private TabControl tabControl;
         private TabPage tabPageGeneral;
         private ComboBox comboBoxTrafficType;
-        private TextBox textBoxRouteName;
+        private TextBox textBoxProxyName;
         private TabPage tabPageBindings;
         private TextBox textBoxListenPort;
         private TabPage tabPageHTTPHeaders;

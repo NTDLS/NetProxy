@@ -7,18 +7,17 @@ namespace NetProxy.Service.Proxy
     public class NpProxy
     {
         public NpProxyStatistics Statistics { get; private set; }
-        private readonly NpRoute _route;
+        public  NpProxyConfiguration Configuration { get; private set; }
         private readonly List<NpProxyListener> _listeners = new();
         private bool _keepRunning = false;
 
         public bool IsRunning => _keepRunning;
         public int CurrentConnectionCount => 1000;
-        public NpRoute Route => _route;
 
-        public NpProxy(NpRoute route)
+        public NpProxy(NpProxyConfiguration configuration)
         {
             Statistics = new NpProxyStatistics();
-            _route = route;
+            Configuration = configuration;
         }
 
         public bool Start()
@@ -32,17 +31,17 @@ namespace NetProxy.Service.Proxy
 
                 _keepRunning = true;
 
-                if (_route.ListenOnAllAddresses)
+                if (Configuration.ListenOnAllAddresses)
                 {
-                    var tcpListener = new TcpListener(IPAddress.Any, _route.ListenPort);
+                    var tcpListener = new TcpListener(IPAddress.Any, Configuration.ListenPort);
                     var listener = new NpProxyListener(this, tcpListener);
                     _listeners.Add(listener);
                 }
                 else
                 {
-                    foreach (var binding in _route.Bindings.Where(o => o.Enabled == true))
+                    foreach (var binding in Configuration.Bindings.Where(o => o.Enabled == true))
                     {
-                        var tcpListener = new TcpListener(IPAddress.Parse(binding.Address), _route.ListenPort);
+                        var tcpListener = new TcpListener(IPAddress.Parse(binding.Address), Configuration.ListenPort);
                         var listener = new NpProxyListener(this, tcpListener);
                         _listeners.Add(listener);
                     }
@@ -84,16 +83,16 @@ namespace NetProxy.Service.Proxy
             SocketState? foreignConnection = null;
 
             Endpoint? foreignConnectionEndpoint = null;
-            string stickeySessionKey = _route.Name + ":" + _route.Endpoints.ConnectionPattern
+            string stickeySessionKey = _proxy.Name + ":" + _proxy.Endpoints.ConnectionPattern
                 + ":" + ((IPEndPoint)accpetedConnection.Socket.RemoteEndPoint).Address?.ToString();
 
-            if (_route.UseStickySessions)
+            if (_proxy.UseStickySessions)
             {
                 lock (_stickySessionCache)
                 {
                     if (_stickySessionCache.TryGetValue(stickeySessionKey, out StickySession? cacheItem) && cacheItem != null)
                     {
-                        foreignConnectionEndpoint = (from o in _route.Endpoints.List
+                        foreignConnectionEndpoint = (from o in _proxy.Endpoints.List
                                                      where o.Address == cacheItem.DestinationAddress && o.Port == cacheItem.DestinationPort
                                                      select o).FirstOrDefault();
                     }
@@ -112,9 +111,9 @@ namespace NetProxy.Service.Proxy
             //If not using sticky sessions, of if we failed to connect to the previously successful host - then take the connection pattern into account.
             if (foreignConnection == null)
             {
-                if (_route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
+                if (_proxy.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
                 {
-                    foreach (var remotePeer in _route.Endpoints.List)
+                    foreach (var remotePeer in _proxy.Endpoints.List)
                     {
                         if (remotePeer.Enabled)
                         {
@@ -126,27 +125,27 @@ namespace NetProxy.Service.Proxy
                         }
                     }
                 }
-                else if (_route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
+                else if (_proxy.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
                 {
                     throw new NotImplementedException();
                 }
-                else if (_route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
+                else if (_proxy.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
                 {
-                    if (_lastRoundRobinIndex >= _route.Endpoints.List.Count)
+                    if (_lastRoundRobinIndex >= _proxy.Endpoints.List.Count)
                     {
                         _lastRoundRobinIndex = 0;
                     }
 
                     int startIndex = _lastRoundRobinIndex++;
 
-                    if (startIndex >= _route.Endpoints.List.Count)
+                    if (startIndex >= _proxy.Endpoints.List.Count)
                     {
                         startIndex = 0;
                     }
 
-                    for (int i = startIndex; i < _route.Endpoints.List.Count; i++)
+                    for (int i = startIndex; i < _proxy.Endpoints.List.Count; i++)
                     {
-                        var remotePeer = _route.Endpoints.List[i];
+                        var remotePeer = _proxy.Endpoints.List[i];
                         if (remotePeer.Enabled)
                         {
                             if ((foreignConnection = Connect(remotePeer.Address, remotePeer.Port)) != null)
@@ -169,7 +168,7 @@ namespace NetProxy.Service.Proxy
                 return;
             }
 
-            if (_route.UseStickySessions)
+            if (_proxy.UseStickySessions)
             {
                 Utility.EnsureNotNull(foreignConnectionEndpoint);
 
@@ -181,7 +180,7 @@ namespace NetProxy.Service.Proxy
                         DestinationPort = foreignConnectionEndpoint.Port
                     };
 
-                    _stickySessionCache.Set(stickeySessionKey, stickySession, DateTime.Now.AddSeconds(_route.StickySessionCacheExpiration));
+                    _stickySessionCache.Set(stickeySessionKey, stickySession, DateTime.Now.AddSeconds(_proxy.StickySessionCacheExpiration));
                 }
             }
 
@@ -209,7 +208,7 @@ namespace NetProxy.Service.Proxy
                     _onDataReceivedCallback = new AsyncCallback(OnDataReceived);
                 }
 
-                if (connection.BytesReceived == connection.Buffer.Length && connection.BytesReceived < _route.MaxBufferSize)
+                if (connection.BytesReceived == connection.Buffer.Length && connection.BytesReceived < _proxy.MaxBufferSize)
                 {
                     int largerBufferSize = connection.Buffer.Length + (connection.Buffer.Length / 4);
                     connection.Buffer = new byte[largerBufferSize];
@@ -235,7 +234,7 @@ namespace NetProxy.Service.Proxy
         {
             try
             {
-                var availableRules = (from o in _route.HttpHeaderRules.List
+                var availableRules = (from o in _proxy.HttpHeaderRules.List
                                       where
                                       (o.HeaderType == headerType || o.HeaderType == HttpHeaderType.Any)
                                       && (o.Verb.ToString().ToUpper() == httpRequestVerb.ToUpper() || o.Verb == HttpVerb.Any)
@@ -336,7 +335,7 @@ namespace NetProxy.Service.Proxy
 
             Utility.EnsureNotNull(connection.Peer);
 
-            if (_route.TrafficType == TrafficType.Http)
+            if (_proxy.TrafficType == TrafficType.Http)
             {
                 HttpHeaderType httpHeaderType = HttpHeaderType.None;
 
@@ -393,7 +392,7 @@ namespace NetProxy.Service.Proxy
                         Buffer.BlockCopy(buffer, endOfHeaderPos, fullReponse, httpHeader.Length, contentLength);
                     }
 
-                    //Console.WriteLine("--Send:{0}, Raw: {1}", route.Name, Encoding.UTF8.GetString(fullReponse.Take(fullReponse.Length).ToArray()));
+                    //Console.WriteLine("--Send:{0}, Raw: {1}", proxy.Name, Encoding.UTF8.GetString(fullReponse.Take(fullReponse.Length).ToArray()));
 
                     Stats.BytesSent += (ulong)fullReponse.Length;
 
@@ -404,7 +403,7 @@ namespace NetProxy.Service.Proxy
                 }
             }
 
-            //Console.WriteLine("--Send:{0}, Raw: {1}", route.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
+            //Console.WriteLine("--Send:{0}, Raw: {1}", proxy.Name, Encoding.UTF8.GetString(buffer.Take(bufferSize).ToArray()));
 
             Stats.BytesSent += (ulong)bufferSize;
 

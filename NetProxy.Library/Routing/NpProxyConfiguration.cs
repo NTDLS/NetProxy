@@ -3,7 +3,7 @@ using Newtonsoft.Json.Converters;
 
 namespace NetProxy.Library.Routing
 {
-    public class NpRoute
+    public class NpProxyConfiguration
     {
         public Guid Id { get; set; }
 
@@ -24,7 +24,7 @@ namespace NetProxy.Library.Routing
         public NpEndpoints Endpoints { get; set; } = new();
         public NpHTTPHeaderRules HttpHeaderRules { get; set; } = new();
 
-        public NpRoute()
+        public NpProxyConfiguration()
         {
             Id = Guid.NewGuid();
             AcceptBacklogSize = Constants.DefaultAcceptBacklogSize;

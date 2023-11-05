@@ -18,3 +18,5 @@ NetProxy.Hub/obj/
 NetProxy.Hub/bin/
 NetProxy.Client/bin/
 .vs/
+
+*.user

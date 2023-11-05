@@ -85,10 +85,10 @@ namespace NetProxy.Service.Proxy
             int lastTriedEndpointIndex = _listener.LastTriedEndpointIndex;
 
             NpEndpoint? endpoint = null;
-            var endpoints = _listener.Proxy.Route.Endpoints.Collection;
+            var endpoints = _listener.Proxy.Configuration.Endpoints.Collection;
             if (endpoints.Count == 0)
             {
-                throw new Exception("The route has no defined endpoints.");
+                throw new Exception("The proxy has no defined endpoints.");
             }
 
             var remoteEndPoint = _tcpclient.Client.RemoteEndPoint as IPEndPoint;
@@ -97,12 +97,12 @@ namespace NetProxy.Service.Proxy
                 throw new Exception("Could not determine remote endpoint from the client.");
             }
 
-            var sessionKey = $"{_listener.Proxy.Route.Name}:{_listener.Proxy.Route.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
+            var sessionKey = $"{_listener.Proxy.Configuration.Name}:{_listener.Proxy.Configuration.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
 
             TcpClient? establishedConnection = null;
 
             #region First try sticky sessions....
-            if (_listener.Proxy.Route.UseStickySessions)
+            if (_listener.Proxy.Configuration.UseStickySessions)
             {
                 if (_listener.StickySessionCache.TryGetValue(sessionKey, out NpStickySession? cacheItem) && cacheItem != null)
                 {
@@ -114,7 +114,7 @@ namespace NetProxy.Service.Proxy
                     triedEndpoints.Add(endpoint.Id);
                     try
                     {
-                        //Make the outbound connection to the endpoint specified for this route (and sticky session).
+                        //Make the outbound connection to the endpoint specified for this proxy (and sticky session).
                         establishedConnection = new TcpClient(endpoint.Address, endpoint.Port);
                     }
                     catch
@@ -134,7 +134,7 @@ namespace NetProxy.Service.Proxy
                     throw new Exception("All endpoints were exhausted while trying to connect to the remote peer.");
                 }
 
-                if (_listener.Proxy.Route.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
+                if (_listener.Proxy.Configuration.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
                 {
                     lastTriedEndpointIndex++;
 
@@ -147,7 +147,7 @@ namespace NetProxy.Service.Proxy
 
                     endpoint = endpoints[lastTriedEndpointIndex];
                 }
-                else if (_listener.Proxy.Route.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
+                else if (_listener.Proxy.Configuration.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
                 {
                     //Get the id of the endpoint with the least connections.
                     var endpointId = _listener.EndpointStatistics.Use((o) =>
@@ -157,7 +157,7 @@ namespace NetProxy.Service.Proxy
 
                     endpoint = endpoints.Where(o => o.Id == endpointId).First();
                 }
-                else if (_listener.Proxy.Route.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
+                else if (_listener.Proxy.Configuration.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
                 {
                     //Starting at the last tried endpoint index, look for endpoints that we have not tired.
                     while (triedEndpoints.Contains(endpoints[lastTriedEndpointIndex].Id))
@@ -176,12 +176,12 @@ namespace NetProxy.Service.Proxy
                 }
                 else
                 {
-                    throw new Exception($"The connection pattern {_listener.Proxy.Route.Endpoints.ConnectionPattern} is not implemented.");
+                    throw new Exception($"The connection pattern {_listener.Proxy.Configuration.Endpoints.ConnectionPattern} is not implemented.");
                 }
 
                 try
                 {
-                    //Make the outbound connection to the endpoint specified for this route.
+                    //Make the outbound connection to the endpoint specified for this proxy.
                     triedEndpoints.Add(endpoint.Id);
                     establishedConnection = new TcpClient(endpoint.Address, endpoint.Port);
                 }
@@ -199,7 +199,7 @@ namespace NetProxy.Service.Proxy
 
             _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
 
-            if (_listener.Proxy.Route.UseStickySessions)
+            if (_listener.Proxy.Configuration.UseStickySessions)
             {
                 //Keep track of the successful stucky session.
                 _listener.StickySessionCache.Set(sessionKey, new NpStickySession(endpoint.Address, endpoint.Port));
@@ -240,7 +240,7 @@ namespace NetProxy.Service.Proxy
             try
             {
 
-                //byte[] buffer = new byte[_listener.Proxy.Route.InitialBufferSize];
+                //byte[] buffer = new byte[_listener.Proxy.Proxy.InitialBufferSize];
 
                 var buffer = new byte[64];
 
@@ -248,7 +248,7 @@ namespace NetProxy.Service.Proxy
 
                 while (_keepRunning && Read(ref buffer, out int length))
                 {
-                    if (Direction == ConnectionDirection.Inbound)
+                    if (Direction == ConnectionDirection.Inbound && _listener.Proxy.Configuration.TrafficType == TrafficType.Http)
                     {
                         if (headerBuilder != null) //We are reconstructing a fragmented HTTP request header.
                         {
@@ -267,11 +267,10 @@ namespace NetProxy.Service.Proxy
 
                             if (headerType != HttpHeaderType.None)
                             {
-                                var end = HttpUtility.GetHttpHeaderEnd(headerBuilder.ToString(), out string delimiter);
+                                var endOfHeaderIndex = HttpUtility.GetHttpHeaderEnd(headerBuilder.ToString(), out string delimiter);
                                 if (end < 0)
                                 {
-                                    //We have a HTTP header but its a fragment. Wait on the remaining header.
-                                    continue;
+                                    continue; //We have a HTTP header but its a fragment. Wait on the remaining header.
                                 }
                                 else
                                 {

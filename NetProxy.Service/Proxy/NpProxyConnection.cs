@@ -238,10 +238,7 @@ namespace NetProxy.Service.Proxy
 
             try
             {
-
-                //byte[] buffer = new byte[_listener.Proxy.Proxy.InitialBufferSize];
-
-                var buffer = new byte[64];
+                byte[] buffer = new byte[_listener.Proxy.Configuration.InitialBufferSize];
 
                 StringBuilder? httpRequestHeaderBuilder = null;
 

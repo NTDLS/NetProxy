@@ -1,1 +1,4 @@
 Add overall stats to the status bar.
+Test and fix chart.
+Move NetProxy.Hub "packeteer" and "framing" to nuget package.
+Fix all statistics, they are currently not being tracked.

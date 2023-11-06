@@ -28,9 +28,6 @@ namespace NetProxy.Library.Routing
             Value = value;
         }
 
-        public NpHttpHeaderRule()
-        {
-
-        }
+        public NpHttpHeaderRule() { }
     }
 }

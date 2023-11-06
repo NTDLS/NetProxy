@@ -1,5 +1,6 @@
 ﻿namespace NetProxy.Library.Payloads
 {
+    [Serializable]
     public class NpUserLogin
     {
         public string UserName { get; set; } = string.Empty;

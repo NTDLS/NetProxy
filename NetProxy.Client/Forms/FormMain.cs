@@ -13,7 +13,7 @@ namespace NetProxy.Client.Forms
     public partial class FormMain : Form
     {
         private ConnectionInfo? _connectionInfo = null;
-        private NpHubPacketeer? _packeteer = null;
+        private HubClient? _messageClient = null;
         private readonly System.Windows.Forms.Timer? _statsTimer = null;
 
         public FormMain()
@@ -39,7 +39,7 @@ namespace NetProxy.Client.Forms
 
         private void StatsTimer_Tick(object? sender, EventArgs e)
         {
-            _packeteer?.SendAll(Constants.CommandLables.GuiRequestProxyStatsList);
+            //_messageClient?.SendAll(Constants.CommandLables.GuiRequestProxyStatsList);
         }
 
         private bool ChangeConnection()
@@ -50,20 +50,20 @@ namespace NetProxy.Client.Forms
             {
                 if (formConnect.ShowDialog() == DialogResult.OK)
                 {
-                    if (_packeteer != null)
+                    if (_messageClient != null)
                     {
                         _connectionLost = null;
-                        _packeteer.Disconnect();
+                        _messageClient.Disconnect();
                     }
 
                     _connectionInfo = formConnect.GetConnectionInfo();
 
-                    _packeteer = LoginPacketeerFactory.GetNewPacketeer(_connectionInfo);
-                    if (_packeteer != null)
+                    _messageClient = LoginPacketeerFactory.GetNewPacketeer(_connectionInfo);
+                    if (_messageClient != null)
                     {
                         _connectionLost = OnConnectionLost;
-                        _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
-                        _packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
+                        _messageClient.OnNotificationReceived += _messageClient_OnNotificationReceived;
+                        _messageClient.OnDisconnected += _messageClient_OnDisconnected;
 
                         RefreshProxyList();
 
@@ -77,7 +77,8 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-        private void Packeteer_OnPeerDisconnected(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer)
+        
+        private void _messageClient_OnDisconnected(Guid connectionId)
         {
             if (_connectionLost != null)
             {
@@ -85,8 +86,9 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer, NpFrame packet)
+        private void _messageClient_OnNotificationReceived(Guid connectionId, MessageHub.MessageFraming.Payloads.IFramePayloadNotification payload)
         {
+            /*
             if (packet.Label == Constants.CommandLables.GuiRequestProxyList)
             {
                 Invoke(_populateProxyList, JsonConvert.DeserializeObject<List<NpProxyGridItem>>(packet.Payload));
@@ -99,12 +101,13 @@ namespace NetProxy.Client.Forms
             {
                 Invoke(_populateProxyListStats, JsonConvert.DeserializeObject<List<NpProxyGridStats>>(packet.Payload));
             }
+            */
         }
 
         private void RefreshProxyList()
         {
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiRequestProxyList);
+            NpUtility.EnsureNotNull(_messageClient);
+            //_messageClient.SendAll(Constants.CommandLables.GuiRequestProxyList);
         }
 
         #region Delegates.
@@ -248,7 +251,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            string proxyId = dataGridViewProxys.Rows[e.RowIndex].Cells["ColumnId"]?.Value?.ToString() ?? "";
+            var proxyId = Guid.Parse(dataGridViewProxys.Rows[e.RowIndex].Cells["ColumnId"]?.Value?.ToString() ?? "");
 
             NpUtility.EnsureNotNull(_connectionInfo);
             using (var formProxy = new FormProxy(_connectionInfo, proxyId))
@@ -370,6 +373,7 @@ namespace NetProxy.Client.Forms
 
         private void Menu_ItemClicked(object? sender, ToolStripItemClickedEventArgs e)
         {
+            /*
             string proxyId = string.Empty;
 
             if (dataGridViewProxys.CurrentRow != null)
@@ -398,18 +402,18 @@ namespace NetProxy.Client.Forms
                     RefreshProxyList();
                     break;
                 case "Start":
-                    NpUtility.EnsureNotNull(_packeteer);
+                    NpUtility.EnsureNotNull(_messageClient);
                     NpUtility.EnsureNotNull(proxyId);
-                    _packeteer.SendAll(Constants.CommandLables.GuiPersistStartProxy, proxyId);
+                    _messageClient.SendAll(Constants.CommandLables.GuiPersistStartProxy, proxyId);
                     RefreshProxyList();
                     break;
                 case "Stop":
-                    NpUtility.EnsureNotNull(_packeteer);
+                    NpUtility.EnsureNotNull(_messageClient);
                     NpUtility.EnsureNotNull(proxyId);
                     if (MessageBox.Show(@"Stop the selected proxy?", Constants.TitleCaption, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _packeteer.SendAll(Constants.CommandLables.GuiPersistStopProxy, proxyId);
+                        _messageClient.SendAll(Constants.CommandLables.GuiPersistStopProxy, proxyId);
                         RefreshProxyList();
                     }
 
@@ -427,15 +431,16 @@ namespace NetProxy.Client.Forms
                     break;
                 case "Delete":
                     NpUtility.EnsureNotNull(proxyId);
-                    NpUtility.EnsureNotNull(_packeteer);
+                    NpUtility.EnsureNotNull(_messageClient);
                     if (MessageBox.Show(@"Delete the selected proxy?", Constants.TitleCaption,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _packeteer.SendAll(Constants.CommandLables.GuiPersistDeleteProxy, proxyId);
+                        _messageClient.SendAll(Constants.CommandLables.GuiPersistDeleteProxy, proxyId);
                         RefreshProxyList();
                     }
                     break;
             }
+            */
         }
 
         #endregion

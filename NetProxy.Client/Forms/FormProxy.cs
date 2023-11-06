@@ -1,17 +1,18 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Hub;
-using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
+using NetProxy.Library.MessageHubPayloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.MessageHub.MessageFraming.Payloads;
 using Newtonsoft.Json;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormProxy : Form
     {
-        private NpHubPacketeer? _packeteer = null;
-        private string? _proxyId = null;
+        private HubClient? _packeteer = null;
+        private Guid? _proxyId = null;
         private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
         private PopulateProxyInformation? _populateProxyInformation;
 
@@ -20,13 +21,13 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
         }
 
-        public FormProxy(ConnectionInfo connectionInfo, string? proxyId)
+        public FormProxy(ConnectionInfo connectionInfo, Guid? proxyId)
         {
             InitializeComponent();
 
             _populateProxyInformation = OnPopulateProxyInformation;
 
-            _proxyId = proxyId ?? Guid.NewGuid().ToString();
+            _proxyId = proxyId ?? Guid.NewGuid();
             _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
             if (_packeteer == null)
             {
@@ -34,7 +35,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            _packeteer.OnNotificationReceived += _packeteer_OnNotificationReceived;
 
             var trafficTypes = new List<ComboItem>
             {
@@ -91,7 +92,8 @@ namespace NetProxy.Client.Forms
             if (_proxyId != null)
             {
                 NpUtility.EnsureNotNull(_packeteer);
-                _packeteer.SendAll(Constants.CommandLables.GuiRequestProxy, _proxyId);
+                NpUtility.EnsureNotNull(_proxyId);
+                _packeteer.SendNotification(new GUIRequestProxy((Guid)_proxyId));
             }
         }
 
@@ -133,12 +135,12 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpFrame packet)
+        private void _packeteer_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
-            if (packet.Label == Constants.CommandLables.GuiRequestProxy)
+            if (payload is GUIRequestProxy)
             {
-                NpUtility.EnsureNotNull(_populateProxyInformation);
-                Invoke(_populateProxyInformation, JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload));
+                //NpUtility.EnsureNotNull(_populateProxyInformation);
+                //Invoke(_populateProxyInformation, JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload));
             }
         }
 
@@ -180,7 +182,7 @@ namespace NetProxy.Client.Forms
 
             NpUtility.EnsureNotNull(_proxyId);
 
-            proxy.Id = Guid.Parse(_proxyId);
+            proxy.Id = (Guid)_proxyId;
             proxy.Name = textBoxProxyName.Text;
             proxy.Description = textBoxDescription.Text;
             proxy.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue?.ToString() ?? "");
@@ -266,7 +268,7 @@ namespace NetProxy.Client.Forms
             }
 
             NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertProxy, JsonConvert.SerializeObject(proxy));
+            //_packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertProxy, JsonConvert.SerializeObject(proxy));
 
             Thread.Sleep(500);
 

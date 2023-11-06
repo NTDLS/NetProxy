@@ -2,15 +2,17 @@
 using NetProxy.Hub;
 using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
+using NetProxy.Library.MessageHubPayloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.MessageHub.MessageFraming.Payloads;
 using Newtonsoft.Json;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private NpHubPacketeer? _packeteer = null;
+        private HubClient? _messageClient = null;
 
         private delegate void PopulateGrid(NpUsers users);
         private PopulateGrid? _populateGrid = null;
@@ -39,23 +41,24 @@ namespace NetProxy.Client.Forms
 
             _populateGrid = OnPopulateGrid;
 
-            _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
-            if (_packeteer == null)
+            _messageClient = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            if (_messageClient == null)
             {
                 Close();
                 return;
             }
-            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            _messageClient.OnNotificationReceived += _messageClient_OnNotificationReceived;
         }
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
+            NpUtility.EnsureNotNull(_messageClient);
+            _messageClient.SendNotification(new GUIRequestUserList());
         }
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer, NpFrame packet)
+        private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
+            /*
             if (packet.Label == Constants.CommandLables.GuiRequestUserList)
             {
                 NpUtility.EnsureNotNull(_populateGrid);
@@ -63,12 +66,13 @@ namespace NetProxy.Client.Forms
                 NpUtility.EnsureNotNull(collection);
                 Invoke(_populateGrid, new object[] { collection });
             }
+            */
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.Disconnect();
+            NpUtility.EnsureNotNull(_messageClient);
+            _messageClient.Disconnect();
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
@@ -95,8 +99,8 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
+            NpUtility.EnsureNotNull(_messageClient);
+            //_messageClient.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
 
             DialogResult = DialogResult.OK;
             Close();

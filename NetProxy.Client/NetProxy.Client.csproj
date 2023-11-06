@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetProxy.Hub\NetProxy.Hub.csproj" />
+    <ProjectReference Include="..\NetProxy.Hub\NetProxy.MessageHub.csproj" />
     <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
   </ItemGroup>
 

@@ -2,8 +2,10 @@
 using NetProxy.Hub;
 using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
+using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
+using NetProxy.MessageHub.MessageFraming.Payloads;
 using Newtonsoft.Json;
 using NTDLS.Persistence;
 using System.ComponentModel;
@@ -18,7 +20,7 @@ namespace NetProxy.Client.Forms
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
         private bool _loginResult = false;
-        private NpHubPacketeer? _packeteer = null;
+        private HubClient? _messageClient = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -131,8 +133,8 @@ namespace NetProxy.Client.Forms
             _loginResult = false;
             _connectMessage = "Failed to connect.";
 
-            _packeteer = new NpHubPacketeer();
-            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
+            _messageClient = new HubClient();
+            _messageClient.OnNotificationReceived += _messageClient_OnNotificationReceived;
 
             NpUtility.EnsureNotNull(_worker);
 
@@ -140,18 +142,24 @@ namespace NetProxy.Client.Forms
             {
                 _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Connecting..." });
 
-                if (_packeteer.Connect(_connectionInfo.ServerName, _connectionInfo.Port))
+                try
                 {
+                    _messageClient.Connect(_connectionInfo.ServerName, _connectionInfo.Port);
                     _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
                     _loginConnectionEvent = new AutoResetEvent(false);
 
-                    NpUserLogin userLogin = new NpUserLogin()
-                    {
-                        UserName = _connectionInfo.UserName,
-                        PasswordHash = NpUtility.Sha256(_connectionInfo.Password)
-                    };
+                    //_messageClient.SendNotification(new GUIRequestLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password)));
 
-                    _packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
+                    _messageClient.SendQuery<GUIRequestLoginReply>(new GUIRequestLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
+                        {
+                            if (o.IsCompletedSuccessfully && o.Result?.Result == true)
+                            {
+                                NpUtility.EnsureNotNull(_loginConnectionEvent);
+
+                                _loginResult = o.Result.Result;
+                                _loginConnectionEvent.Set();
+                            }
+                        });
 
                     if (_loginConnectionEvent.WaitOne(5000))
                     {
@@ -165,7 +173,7 @@ namespace NetProxy.Client.Forms
                         }
                     }
                 }
-                else
+                catch
                 {
                     _connectMessage = "Could not connect to remote server.";
                 }
@@ -175,20 +183,21 @@ namespace NetProxy.Client.Forms
                 _connectMessage = "An error occured while logging in: " + ex.Message;
             }
 
-            _packeteer.Disconnect();
+            _messageClient.Disconnect();
         }
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpFrame packet)
+
+        private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
-            if (packet.Label == Constants.CommandLables.GuiRequestLogin)
+            if (payload is GUIRequestLogin)
             {
-                var result = JsonConvert.DeserializeObject<NpGenericBooleanResult>(packet.Payload);
-                NpUtility.EnsureNotNull(result);
+                //var result = JsonConvert.DeserializeObject<NpGenericBooleanResult>(packet.Payload);
+                //NpUtility.EnsureNotNull(result);
 
-                NpUtility.EnsureNotNull(_loginConnectionEvent);
+                //NpUtility.EnsureNotNull(_loginConnectionEvent);
 
-                _loginResult = result.Value;
-                _loginConnectionEvent.Set();
+                //_loginResult = result.Value;
+                //_loginConnectionEvent.Set();
             }
         }
 

@@ -1,11 +1,11 @@
 ﻿using NetProxy.Hub;
-using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
-using NetProxy.Library.Payloads;
+using NetProxy.Library.MessageHubPayloads.Notifications;
+using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.MessageHub.MessageFraming.Payloads;
 using NetProxy.Service.Proxy;
-using Newtonsoft.Json;
 using NTDLS.Persistence;
 
 namespace NetProxy.Service
@@ -13,57 +13,92 @@ namespace NetProxy.Service
     public class NpManagement
     {
         private NpConfiguration? _config;
-        private readonly NpHubPacketeer _packeteer = new();
+        private readonly HubServer _messageServer = new();
         private readonly NpProxyCollection _proxies = new();
         private readonly HashSet<Guid> _loggedInPeers = new();
 
         public NpManagement()
         {
-            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
-            _packeteer.OnPeerDisconnected += Packeteer_OnPeerDisconnected;
+            _messageServer.OnNotificationReceived += _MessageHubServer_OnNotificationReceived;
+            _messageServer.OnQueryReceived += _messageServer_OnQueryReceived;
+            _messageServer.OnDisconnected += _MessageHubServer_OnDisconnected;
         }
 
-        private void Packeteer_OnPeerDisconnected(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer)
+        private IFramePayloadReply _messageServer_OnQueryReceived(Guid connectionId, IFramePayloadQuery payload)
+        {
+            NpUtility.EnsureNotNull(_config);
+
+            if (payload is GUIRequestLogin userLogin)
+            {
+                try
+                {
+                    lock (_config)
+                    {
+                        if (_config.Users.Collection.Where(o =>
+                            o.UserName.ToLower() == userLogin.UserName.ToLower() && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()).Any())
+                        {
+                            _loggedInPeers.Add(connectionId);
+                            Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", connectionId, userLogin.UserName.ToLower(), _loggedInPeers.Count);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", connectionId, userLogin.UserName.ToLower(), _loggedInPeers.Count);
+                        }
+
+                        return new GUIRequestLoginReply(true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
+                    {
+                        Severity = NpLogging.Severity.Exception,
+                        CustomText = "An error occured while logging in.",
+                        Exception = ex
+                    });
+                }
+
+                return new GUIRequestLoginReply(false);
+            }
+            else
+            {
+                throw new Exception("Unknown query.");
+            }
+        }
+
+        private void _MessageHubServer_OnDisconnected(Guid connectionId)
         {
             NpUtility.EnsureNotNull(_config);
 
             lock (_config)
             {
-                _loggedInPeers.Remove(peer.Id);
+                _loggedInPeers.Remove(connectionId);
             }
-            Console.WriteLine("Disconnected Session: {0} (Logged in users {1}).", peer.Id, _loggedInPeers.Count());
+            Console.WriteLine("Disconnected Session: {0} (Logged in users {1}).", connectionId, _loggedInPeers.Count());
         }
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer, NpFrame packet)
+        private void _MessageHubServer_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
             NpUtility.EnsureNotNull(_config);
 
-            if (_loggedInPeers.Contains(peer.Id) == false)
+            if (_loggedInPeers.Contains(connectionId) == false)
             {
-                if (packet.Label == Constants.CommandLables.GuiRequestLogin)
+                if (payload is GUIRegisterLogin registerLogin)
                 {
                     try
                     {
                         lock (_config)
                         {
-                            var userLogin = JsonConvert.DeserializeObject<NpUserLogin>(packet.Payload);
-
-                            var singleUser = (from o in _config.Users.Collection
-                                              where o.UserName.ToLower() == userLogin?.UserName?.ToLower()
-                                              && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()
-                                              select o).FirstOrDefault();
-
-                            if (singleUser != null)
+                            if (_config.Users.Collection.Where(o =>
+                                o.UserName.ToLower() == registerLogin.UserName.ToLower() && o.PasswordHash.ToLower() == registerLogin.PasswordHash.ToLower()).Any())
                             {
-                                _loggedInPeers.Add(peer.Id);
-                                Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin?.UserName?.ToLower(), _loggedInPeers.Count());
+                                _loggedInPeers.Add(connectionId);
+                                Console.WriteLine("Registered session: {0}, User: {1} (Logged in users {2}).", connectionId, registerLogin.UserName.ToLower(), _loggedInPeers.Count);
                             }
                             else
                             {
-                                Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", peer.Id, userLogin?.UserName?.ToLower(), _loggedInPeers.Count());
+                                Console.WriteLine("Failed to register session: {0}, User: {1} (Logged in users {2}).", connectionId, registerLogin.UserName.ToLower(), _loggedInPeers.Count);
                             }
-
-                            _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(new NpGenericBooleanResult() { Value = singleUser != null }));
                         }
                     }
                     catch (Exception ex)
@@ -74,15 +109,17 @@ namespace NetProxy.Service
                             CustomText = "An error occured while logging in.",
                             Exception = ex
                         });
-
-                        _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                     }
+                }
+                else
+                {
+                    throw new Exception("Unknown notification.");
                 }
 
                 return; //If the peer is not logged in, don't go any further.
             }
-
-            if (packet.Label == Constants.CommandLables.GuiRequestProxyList)
+            /*
+            if (payload is GUIRequestProxyList)
             {
                 try
                 {
@@ -110,7 +147,7 @@ namespace NetProxy.Service
                         }
                     }
 
-                    _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(gridItems));
+                    _messageServer.SendTo(connectionId, packet.Label, JsonConvert.SerializeObject(gridItems));
                 }
                 catch (Exception ex)
                 {
@@ -121,10 +158,10 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiRequestProxyStatsList)
+            else if (payload is GUIRequestProxyStatsList)
             {
                 try
                 {
@@ -148,7 +185,7 @@ namespace NetProxy.Service
                         }
                     }
 
-                    _packeteer.SendTo(peer.Id, packet.Label, JsonConvert.SerializeObject(stats));
+                    _messageServer.SendTo(connectionId, packet.Label, JsonConvert.SerializeObject(stats));
                 }
                 catch (Exception ex)
                 {
@@ -158,10 +195,10 @@ namespace NetProxy.Service
                         CustomText = "Failed to get proxy stats list.",
                         Exception = ex
                     });
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiRequestProxy)
+            else if (payload is GUIRequestProxy)
             {
                 try
                 {
@@ -172,7 +209,7 @@ namespace NetProxy.Service
                         if (proxy != null)
                         {
                             string value = JsonConvert.SerializeObject(proxy.Configuration);
-                            _packeteer.SendTo(peer.Id, packet.Label, value);
+                            _messageServer.SendTo(connectionId, packet.Label, value);
                         }
                     }
                 }
@@ -185,17 +222,17 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiRequestUserList)
+            else if (payload is GUIRequestUserList)
             {
                 try
                 {
                     lock (_config)
                     {
                         string value = JsonConvert.SerializeObject(_config.Users);
-                        _packeteer.SendTo(peer.Id, packet.Label, value);
+                        _messageServer.SendTo(connectionId, packet.Label, value);
                     }
                 }
                 catch (Exception ex)
@@ -207,10 +244,10 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistUserList)
+            else if (payload is GUIPersistUserList)
             {
                 try
                 {
@@ -238,10 +275,10 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistUpsertProxy)
+            else if (payload is GUIPersistUpsertProxy)
             {
                 try
                 {
@@ -281,10 +318,10 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistDeleteProxy)
+            else if (payload is GUIPersistDeleteProxy)
             {
                 try
                 {
@@ -313,10 +350,10 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistStopProxy)
+            else if (payload is GUIPersistStopProxy)
             {
                 try
                 {
@@ -343,10 +380,10 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to stop proxy: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "Failed to stop proxy: " + ex.Message);
                 }
             }
-            else if (packet.Label == Constants.CommandLables.GuiPersistStartProxy)
+            else if (payload is GUIPersistStartProxy)
             {
                 try
                 {
@@ -362,7 +399,7 @@ namespace NetProxy.Service
                         {
                             if (existingProxy.Start() == false)
                             {
-                                _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start proxy.");
+                                _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "Failed to start proxy.");
                             }
                         }
                     }
@@ -375,9 +412,10 @@ namespace NetProxy.Service
                         CustomText = "Failed to start proxy.",
                         Exception = ex
                     });
-                    _packeteer.SendTo(peer.Id, Constants.CommandLables.GuiSendMessage, "Failed to start proxy: " + ex.Message);
+                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "Failed to start proxy: " + ex.Message);
                 }
             }
+            */
         }
 
         public void SaveConfiguration()
@@ -516,7 +554,7 @@ namespace NetProxy.Service
                 NpUtility.EnsureNotNull(_config);
 
                 Console.WriteLine("Starting management interface on port {0}.", _config.ManagementPort);
-                _packeteer.Start(_config.ManagementPort);
+                _messageServer.Start(_config.ManagementPort);
 
                 Console.WriteLine("starting proxys...");
                 _proxies.Start();
@@ -538,7 +576,7 @@ namespace NetProxy.Service
             {
                 SaveConfiguration();
 
-                _packeteer.Stop();
+                _messageServer.Stop();
                 _proxies.Stop();
             }
             catch (Exception ex)

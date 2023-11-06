@@ -7,7 +7,7 @@ namespace NetProxy.Service
 {
     public static class HttpUtility
     {
-        public static readonly List<string> HttpVerbs = new()
+        public static readonly List<string> HttpVerbStrings = new()
         {
             "connect","delete","get","head","options","patch","post","put","trace"
         };
@@ -79,7 +79,7 @@ namespace NetProxy.Service
         {
             var possibleHttpHeader = Encoding.UTF8.GetString(bytes.Take(10).ToArray()).ToLower();
 
-            foreach (var verb in HttpVerbs)
+            foreach (var verb in HttpVerbStrings)
             {
                 if (possibleHttpHeader.StartsWith(verb))
                 {
@@ -224,9 +224,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string InsertHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -252,9 +251,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string UpsertHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -280,9 +278,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string UpdateHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -307,9 +304,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string DeleteHttpHostHeaderValue(string headerText, string name, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             if (existingMatch != null)
             {

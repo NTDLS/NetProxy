@@ -23,11 +23,11 @@
 
   <ItemGroup>
     <PackageReference Include="NTDLS.Persistence" Version="1.0.0" />
+    <PackageReference Include="NTDLS.ReliableMessaging" Version="1.0.0" />
     <PackageReference Include="WinForms.DataVisualization" Version="1.9.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetProxy.Hub\NetProxy.MessageHub.csproj" />
     <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
   </ItemGroup>
 

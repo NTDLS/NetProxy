@@ -1,13 +1,9 @@
 ﻿using NetProxy.Client.Classes;
-using NetProxy.Hub;
-using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.MessageHubPayloads.Queries;
-using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
-using NetProxy.MessageHub.MessageFraming.Payloads;
-using Newtonsoft.Json;
 using NTDLS.Persistence;
+using NTDLS.ReliableMessaging;
 using System.ComponentModel;
 
 namespace NetProxy.Client.Forms
@@ -134,7 +130,6 @@ namespace NetProxy.Client.Forms
             _connectMessage = "Failed to connect.";
 
             _messageClient = new HubClient();
-            _messageClient.OnNotificationReceived += _messageClient_OnNotificationReceived;
 
             NpUtility.EnsureNotNull(_worker);
 
@@ -147,8 +142,6 @@ namespace NetProxy.Client.Forms
                     _messageClient.Connect(_connectionInfo.ServerName, _connectionInfo.Port);
                     _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
                     _loginConnectionEvent = new AutoResetEvent(false);
-
-                    //_messageClient.SendNotification(new GUIRequestLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password)));
 
                     _messageClient.SendQuery<GUIRequestLoginReply>(new GUIRequestLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
                         {
@@ -184,21 +177,6 @@ namespace NetProxy.Client.Forms
             }
 
             _messageClient.Disconnect();
-        }
-
-
-        private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
-        {
-            if (payload is GUIRequestLogin)
-            {
-                //var result = JsonConvert.DeserializeObject<NpGenericBooleanResult>(packet.Payload);
-                //NpUtility.EnsureNotNull(result);
-
-                //NpUtility.EnsureNotNull(_loginConnectionEvent);
-
-                //_loginResult = result.Value;
-                //_loginConnectionEvent.Set();
-            }
         }
 
         private void buttonCancel_Click(object? sender, EventArgs e)

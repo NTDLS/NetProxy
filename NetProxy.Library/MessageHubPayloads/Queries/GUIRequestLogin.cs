@@ -1,4 +1,4 @@
-﻿using NetProxy.MessageHub.MessageFraming.Payloads;
+﻿using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
@@ -14,7 +14,7 @@ namespace NetProxy.Library.MessageHubPayloads.Queries
         }
     }
 
-    public class GUIRequestLoginReply : IFramePayloadReply
+    public class GUIRequestLoginReply : IFramePayloadQueryReply
     {
         public bool Result { get; set; }
 

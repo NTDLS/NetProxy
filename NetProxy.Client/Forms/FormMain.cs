@@ -1,11 +1,10 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Client.Properties;
-using NetProxy.Hub;
-using NetProxy.Hub.MessageFraming;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
-using Newtonsoft.Json;
+using NTDLS.ReliableMessaging;
+using NTDLS.StreamFraming.Payloads;
 using System.Net;
 
 namespace NetProxy.Client.Forms
@@ -58,7 +57,7 @@ namespace NetProxy.Client.Forms
 
                     _connectionInfo = formConnect.GetConnectionInfo();
 
-                    _messageClient = LoginPacketeerFactory.GetNewPacketeer(_connectionInfo);
+                    _messageClient = LoginPacketeerFactory.GetNewMessageHubClient(_connectionInfo);
                     if (_messageClient != null)
                     {
                         _connectionLost = OnConnectionLost;
@@ -77,7 +76,7 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-        
+
         private void _messageClient_OnDisconnected(Guid connectionId)
         {
             if (_connectionLost != null)
@@ -86,7 +85,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void _messageClient_OnNotificationReceived(Guid connectionId, MessageHub.MessageFraming.Payloads.IFramePayloadNotification payload)
+        private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
             /*
             if (packet.Label == Constants.CommandLables.GuiRequestProxyList)

@@ -1,11 +1,10 @@
 ﻿using NetProxy.Client.Classes;
-using NetProxy.Hub;
 using NetProxy.Library;
 using NetProxy.Library.MessageHubPayloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
-using NetProxy.MessageHub.MessageFraming.Payloads;
-using Newtonsoft.Json;
+using NTDLS.ReliableMessaging;
+using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Client.Forms
 {
@@ -28,7 +27,7 @@ namespace NetProxy.Client.Forms
             _populateProxyInformation = OnPopulateProxyInformation;
 
             _proxyId = proxyId ?? Guid.NewGuid();
-            _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            _packeteer = LoginPacketeerFactory.GetNewMessageHubClient(connectionInfo);
             if (_packeteer == null)
             {
                 Close();

@@ -1,4 +1,4 @@
-﻿using NetProxy.MessageHub.MessageFraming.Payloads;
+﻿using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Library.MessageHubPayloads.Notifications
 {

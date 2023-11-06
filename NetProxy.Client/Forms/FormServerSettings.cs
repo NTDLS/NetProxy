@@ -1,12 +1,9 @@
 ﻿using NetProxy.Client.Classes;
-using NetProxy.Hub;
-using NetProxy.Hub.MessageFraming;
-using NetProxy.Library;
 using NetProxy.Library.MessageHubPayloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
-using NetProxy.MessageHub.MessageFraming.Payloads;
-using Newtonsoft.Json;
+using NTDLS.ReliableMessaging;
+using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Client.Forms
 {
@@ -41,7 +38,7 @@ namespace NetProxy.Client.Forms
 
             _populateGrid = OnPopulateGrid;
 
-            _messageClient = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
+            _messageClient = LoginPacketeerFactory.GetNewMessageHubClient(connectionInfo);
             if (_messageClient == null)
             {
                 Close();

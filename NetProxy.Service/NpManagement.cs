@@ -1,12 +1,12 @@
-﻿using NetProxy.Hub;
-using NetProxy.Library;
+﻿using NetProxy.Library;
 using NetProxy.Library.MessageHubPayloads.Notifications;
 using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
-using NetProxy.MessageHub.MessageFraming.Payloads;
 using NetProxy.Service.Proxy;
 using NTDLS.Persistence;
+using NTDLS.ReliableMessaging;
+using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Service
 {
@@ -15,7 +15,7 @@ namespace NetProxy.Service
         private NpConfiguration? _config;
         private readonly HubServer _messageServer = new();
         private readonly NpProxyCollection _proxies = new();
-        private readonly HashSet<Guid> _loggedInPeers = new();
+        private readonly HashSet<Guid> _authenticatedConnections = new();
 
         public NpManagement()
         {
@@ -24,7 +24,7 @@ namespace NetProxy.Service
             _messageServer.OnDisconnected += _MessageHubServer_OnDisconnected;
         }
 
-        private IFramePayloadReply _messageServer_OnQueryReceived(Guid connectionId, IFramePayloadQuery payload)
+        private IFramePayloadQueryReply _messageServer_OnQueryReceived(Guid connectionId, IFramePayloadQuery payload)
         {
             NpUtility.EnsureNotNull(_config);
 
@@ -37,12 +37,12 @@ namespace NetProxy.Service
                         if (_config.Users.Collection.Where(o =>
                             o.UserName.ToLower() == userLogin.UserName.ToLower() && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()).Any())
                         {
-                            _loggedInPeers.Add(connectionId);
-                            Console.WriteLine("Logged in session: {0}, User: {1} (Logged in users {2}).", connectionId, userLogin.UserName.ToLower(), _loggedInPeers.Count);
+                            _authenticatedConnections.Add(connectionId);
+                            Console.WriteLine($"Logged in connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                         }
                         else
                         {
-                            Console.WriteLine("Failed Login session: {0}, User: {1} (Logged in users {2}).", connectionId, userLogin.UserName.ToLower(), _loggedInPeers.Count);
+                            Console.WriteLine($"Failed login connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                         }
 
                         return new GUIRequestLoginReply(true);
@@ -72,16 +72,16 @@ namespace NetProxy.Service
 
             lock (_config)
             {
-                _loggedInPeers.Remove(connectionId);
+                _authenticatedConnections.Remove(connectionId);
             }
-            Console.WriteLine("Disconnected Session: {0} (Logged in users {1}).", connectionId, _loggedInPeers.Count());
+            Console.WriteLine($"Deregistered connection: {connectionId} (Logged in users {_authenticatedConnections.Count}).");
         }
 
         private void _MessageHubServer_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
             NpUtility.EnsureNotNull(_config);
 
-            if (_loggedInPeers.Contains(connectionId) == false)
+            if (_authenticatedConnections.Contains(connectionId) == false)
             {
                 if (payload is GUIRegisterLogin registerLogin)
                 {
@@ -92,12 +92,12 @@ namespace NetProxy.Service
                             if (_config.Users.Collection.Where(o =>
                                 o.UserName.ToLower() == registerLogin.UserName.ToLower() && o.PasswordHash.ToLower() == registerLogin.PasswordHash.ToLower()).Any())
                             {
-                                _loggedInPeers.Add(connectionId);
-                                Console.WriteLine("Registered session: {0}, User: {1} (Logged in users {2}).", connectionId, registerLogin.UserName.ToLower(), _loggedInPeers.Count);
+                                _authenticatedConnections.Add(connectionId);
+                                Console.WriteLine($"Registered connection: {connectionId}, User: {registerLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
                             else
                             {
-                                Console.WriteLine("Failed to register session: {0}, User: {1} (Logged in users {2}).", connectionId, registerLogin.UserName.ToLower(), _loggedInPeers.Count);
+                                Console.WriteLine($"Failed to register connection: {connectionId}, User: {registerLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
                         }
                     }
@@ -113,7 +113,7 @@ namespace NetProxy.Service
                 }
                 else
                 {
-                    throw new Exception("Unknown notification.");
+                    throw new Exception("Unhandled pre-login notification.");
                 }
 
                 return; //If the peer is not logged in, don't go any further.
@@ -158,9 +158,11 @@ namespace NetProxy.Service
                         Exception = ex
                     });
 
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    _messageServer.SendNotification(connectionId, new GUISendMessage($"The operation failed: {ex.Message}"));
                 }
             }
+            */
+            /*
             else if (payload is GUIRequestProxyStatsList)
             {
                 try
@@ -416,6 +418,8 @@ namespace NetProxy.Service
                 }
             }
             */
+
+            throw new Exception("Unhandled notification.");
         }
 
         public void SaveConfiguration()

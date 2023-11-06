@@ -349,6 +349,20 @@ namespace NetProxy.Service.Proxy
                     #endregion
 
                     _peer?.Write(buffer, bufferLength);
+
+                    #region Buffer resize.
+                    if (bufferLength == buffer.Length && buffer.Length < _listener.Proxy.Configuration.MaxBufferSize)
+                    {
+                        //If we read as much data as we could fit in the buffer, resize it a bit up to the maximum.
+                        int newBufferSize = (int)(buffer.Length + (buffer.Length * 0.20));
+                        if (newBufferSize > _listener.Proxy.Configuration.MaxBufferSize)
+                        {
+                            newBufferSize = _listener.Proxy.Configuration.MaxBufferSize;
+                        }
+
+                        buffer = new byte[newBufferSize];
+                    }
+                    #endregion
                 }
             }
             catch

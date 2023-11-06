@@ -19,10 +19,9 @@
 
         public const string TitleCaption = "NetProxy";
         public const int DefaultManagementPort = 5854;
-        public const int DefaultInitialBufferSize = 4096;
-        public const int DefaultMaxBufferSize = 1048576;
-        public const int DefaultStickySessionExpiration = 3600;
-        public const int DefaultSpinLockCount = 1000000;
+        public const int DefaultInitialBufferSize = 10 * 1024;
+        public const int DefaultMaxBufferSize = 64 * 1024;
+        public const int DefaultStickySessionExpiration = 60 * 60;
         public const int DefaultAcceptBacklogSize = 10;
     }
 
@@ -53,7 +52,7 @@
 
     public enum TrafficType
     {
-        Binary,
+        Raw,
         Http,
         Https
     }
@@ -79,12 +78,5 @@
         Request,
         Response,
         Any
-    }
-
-    public enum HttpHeaderLineBreakType
-    {
-        None,
-        DoubleCrlf,
-        DoubleLf
     }
 }

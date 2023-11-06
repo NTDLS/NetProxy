@@ -86,10 +86,10 @@ namespace NetProxy.Client.Forms
             tabPageAdvanced = new TabPage();
             groupBox4 = new GroupBox();
             textBoxStickySessionCacheExpiration = new TextBox();
+            textBoxAcceptBacklogSize = new TextBox();
             label15 = new Label();
             groupBox1 = new GroupBox();
             textBoxMaxBufferSize = new TextBox();
-            textBoxAcceptBacklogSize = new TextBox();
             textBoxInitialBufferSize = new TextBox();
             buttonCancel = new Button();
             buttonSave = new Button();
@@ -129,7 +129,7 @@ namespace NetProxy.Client.Forms
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(102, 28);
+            label3.Location = new Point(18, 29);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(59, 15);
@@ -139,7 +139,7 @@ namespace NetProxy.Client.Forms
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(42, 18);
+            label4.Location = new Point(4, 18);
             label4.Margin = new Padding(4, 0, 4, 0);
             label4.Name = "label4";
             label4.Size = new Size(63, 15);
@@ -149,7 +149,7 @@ namespace NetProxy.Client.Forms
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(108, 57);
+            label5.Location = new Point(24, 58);
             label5.Margin = new Padding(4, 0, 4, 0);
             label5.Name = "label5";
             label5.Size = new Size(53, 15);
@@ -291,7 +291,7 @@ namespace NetProxy.Client.Forms
             // 
             comboBoxBindingProtocol.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxBindingProtocol.FormattingEnabled = true;
-            comboBoxBindingProtocol.Location = new Point(115, 45);
+            comboBoxBindingProtocol.Location = new Point(75, 45);
             comboBoxBindingProtocol.Margin = new Padding(4, 3, 4, 3);
             comboBoxBindingProtocol.Name = "comboBoxBindingProtocol";
             comboBoxBindingProtocol.Size = new Size(140, 23);
@@ -300,12 +300,12 @@ namespace NetProxy.Client.Forms
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new Point(10, 50);
+            label10.Location = new Point(15, 48);
             label10.Margin = new Padding(4, 0, 4, 0);
             label10.Name = "label10";
-            label10.Size = new Size(96, 15);
+            label10.Size = new Size(52, 15);
             label10.TabIndex = 11;
-            label10.Text = "Binding Protocol";
+            label10.Text = "Protocol";
             // 
             // dataGridViewBindings
             // 
@@ -342,7 +342,7 @@ namespace NetProxy.Client.Forms
             // 
             // textBoxListenPort
             // 
-            textBoxListenPort.Location = new Point(115, 15);
+            textBoxListenPort.Location = new Point(75, 15);
             textBoxListenPort.Margin = new Padding(4, 3, 4, 3);
             textBoxListenPort.Name = "textBoxListenPort";
             textBoxListenPort.Size = new Size(140, 23);
@@ -357,7 +357,7 @@ namespace NetProxy.Client.Forms
             tabPageHTTPHeaders.Name = "tabPageHTTPHeaders";
             tabPageHTTPHeaders.Size = new Size(588, 316);
             tabPageHTTPHeaders.TabIndex = 2;
-            tabPageHTTPHeaders.Text = "HTTPHeaders";
+            tabPageHTTPHeaders.Text = "HTTP Headers";
             // 
             // dataGridViewHTTPHeaders
             // 
@@ -551,6 +551,14 @@ namespace NetProxy.Client.Forms
             textBoxStickySessionCacheExpiration.Size = new Size(116, 23);
             textBoxStickySessionCacheExpiration.TabIndex = 17;
             // 
+            // textBoxAcceptBacklogSize
+            // 
+            textBoxAcceptBacklogSize.Location = new Point(169, 27);
+            textBoxAcceptBacklogSize.Margin = new Padding(4, 3, 4, 3);
+            textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
+            textBoxAcceptBacklogSize.Size = new Size(116, 23);
+            textBoxAcceptBacklogSize.TabIndex = 12;
+            // 
             // label15
             // 
             label15.AutoSize = true;
@@ -578,23 +586,15 @@ namespace NetProxy.Client.Forms
             // 
             // textBoxMaxBufferSize
             // 
-            textBoxMaxBufferSize.Location = new Point(169, 54);
+            textBoxMaxBufferSize.Location = new Point(85, 55);
             textBoxMaxBufferSize.Margin = new Padding(4, 3, 4, 3);
             textBoxMaxBufferSize.Name = "textBoxMaxBufferSize";
             textBoxMaxBufferSize.Size = new Size(116, 23);
             textBoxMaxBufferSize.TabIndex = 11;
             // 
-            // textBoxAcceptBacklogSize
-            // 
-            textBoxAcceptBacklogSize.Location = new Point(169, 27);
-            textBoxAcceptBacklogSize.Margin = new Padding(4, 3, 4, 3);
-            textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
-            textBoxAcceptBacklogSize.Size = new Size(116, 23);
-            textBoxAcceptBacklogSize.TabIndex = 12;
-            // 
             // textBoxInitialBufferSize
             // 
-            textBoxInitialBufferSize.Location = new Point(169, 25);
+            textBoxInitialBufferSize.Location = new Point(85, 26);
             textBoxInitialBufferSize.Margin = new Padding(4, 3, 4, 3);
             textBoxInitialBufferSize.Name = "textBoxInitialBufferSize";
             textBoxInitialBufferSize.Size = new Size(116, 23);

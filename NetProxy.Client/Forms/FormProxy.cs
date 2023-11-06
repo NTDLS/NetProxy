@@ -38,7 +38,7 @@ namespace NetProxy.Client.Forms
 
             var trafficTypes = new List<ComboItem>
             {
-                new ComboItem("Binary", TrafficType.Binary),
+                new ComboItem("Raw", TrafficType.Raw),
                 new ComboItem("HTTP", TrafficType.Http),
                 new ComboItem("HTTPS", TrafficType.Https)
             };

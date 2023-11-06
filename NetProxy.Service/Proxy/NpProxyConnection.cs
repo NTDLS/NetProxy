@@ -238,12 +238,14 @@ namespace NetProxy.Service.Proxy
 
             try
             {
-                byte[] buffer = new byte[_listener.Proxy.Configuration.InitialBufferSize];
+                var buffer = new byte[_listener.Proxy.Configuration.InitialBufferSize];
 
                 StringBuilder? httpRequestHeaderBuilder = null;
 
                 while (_keepRunning && Read(ref buffer, out int bufferLength))
                 {
+                    #region HTTP Header augmentation.
+
                     try
                     {
                         if (
@@ -343,6 +345,8 @@ namespace NetProxy.Service.Proxy
                         httpRequestHeaderBuilder = null;
                         Singletons.Logging.Write("An error occured while parsing the HTTP request header.", ex);
                     }
+
+                    #endregion
 
                     _peer?.Write(buffer, bufferLength);
                 }

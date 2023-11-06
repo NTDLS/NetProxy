@@ -72,7 +72,7 @@ namespace NetProxy.Service.Proxy
             {
                 _listener.Start();
 
-                Singletons.EventLog.WriteLog(NpLogging.Severity.Verbose, $"Listening inbound '{Proxy.Configuration.Name}' on port {Proxy.Configuration.ListenPort}");
+                Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Listening inbound '{Proxy.Configuration.Name}' on port {Proxy.Configuration.ListenPort}");
 
                 while (_keepRunning)
                 {
@@ -86,7 +86,7 @@ namespace NetProxy.Service.Proxy
 
                             _activeConnections.Use((o) => o.Add(activeConnection.Id, activeConnection));
 
-                            Singletons.EventLog.WriteLog(NpLogging.Severity.Verbose, $"Accepted inbound endpoint connection: {activeConnection.Id}");
+                            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Accepted inbound endpoint connection: {activeConnection.Id}");
                             activeConnection.RunInboundAsync();
                         }
                     }
@@ -94,7 +94,7 @@ namespace NetProxy.Service.Proxy
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteLog(NpLogging.Severity.Exception, $"InboundConnectionThreadProc: {ex.Message}");
+                Singletons.Logging.Write(NpLogging.Severity.Exception, $"InboundConnectionThreadProc: {ex.Message}");
             }
             finally
             {

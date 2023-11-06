@@ -7,7 +7,7 @@ namespace NetProxy.Service.Proxy
     public class NpProxy
     {
         public NpProxyStatistics Statistics { get; private set; }
-        public  NpProxyConfiguration Configuration { get; private set; }
+        public NpProxyConfiguration Configuration { get; private set; }
         private readonly List<NpProxyListener> _listeners = new();
         private bool _keepRunning = false;
 

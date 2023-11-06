@@ -5,7 +5,7 @@ namespace NetProxy.Service
     public static class Singletons
     {
         private static NpLogging? _eventLog = null;
-        public static NpLogging EventLog
+        public static NpLogging Logging
         {
             get
             {

@@ -36,7 +36,7 @@ namespace NetProxy.Service.Proxy
                     }
                     catch (Exception ex)
                     {
-                        Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                        Singletons.Logging.Write(new NpLogging.LoggingPayload
                         {
                             Severity = NpLogging.Severity.Exception,
                             CustomText = "Failed to start proxy.",
@@ -57,7 +57,7 @@ namespace NetProxy.Service.Proxy
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to stop proxy.",

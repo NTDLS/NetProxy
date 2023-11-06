@@ -29,7 +29,7 @@ namespace NetProxy.Library.Utilities
             WriteVerboseLogging = writeVerboseLogging;
         }
 
-        public void WriteLog(LoggingPayload payload)
+        public void Write(LoggingPayload payload)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace NetProxy.Library.Utilities
                     }
                 }
 
-                WriteLog(payload.Severity, errorMessage.ToString());
+                Write(payload.Severity, errorMessage.ToString());
             }
             catch
             {
@@ -97,7 +97,20 @@ namespace NetProxy.Library.Utilities
             }
         }
 
-        public void WriteLog(Severity severity, string eventText)
+        public void Write(string eventText, Exception exception)
+        {
+            try
+            {
+                Console.WriteLine($"<{Severity.Exception}> {eventText} ({exception.Message})");
+                //TODO: Write log to file...
+            }
+            catch
+            {
+                //Discard error - we don't want a failure to log a verbose event to cause service failure.
+            }
+        }
+
+        public void Write(Severity severity, string eventText)
         {
             try
             {
@@ -109,7 +122,6 @@ namespace NetProxy.Library.Utilities
                 }
 
                 //TODO: Write log to file...
-                //EventLog.WriteEntry(ApplicationName, eventText, eventLogEntryType);
             }
             catch
             {

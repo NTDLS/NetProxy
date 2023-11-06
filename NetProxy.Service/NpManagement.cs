@@ -68,7 +68,7 @@ namespace NetProxy.Service
                     }
                     catch (Exception ex)
                     {
-                        Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                        Singletons.Logging.Write(new NpLogging.LoggingPayload
                         {
                             Severity = NpLogging.Severity.Exception,
                             CustomText = "An error occured while logging in.",
@@ -114,7 +114,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to get proxy list.",
@@ -152,7 +152,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to get proxy stats list.",
@@ -178,7 +178,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to get proxy.",
@@ -200,7 +200,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to get user list.",
@@ -231,7 +231,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to save user list.",
@@ -274,7 +274,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to upsert proxy.",
@@ -306,7 +306,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to get delete proxy.",
@@ -336,7 +336,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to get stop proxy.",
@@ -369,7 +369,7 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                    Singletons.Logging.Write(new NpLogging.LoggingPayload
                     {
                         Severity = NpLogging.Severity.Exception,
                         CustomText = "Failed to start proxy.",
@@ -389,7 +389,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                Singletons.Logging.Write(new NpLogging.LoggingPayload
                 {
                     Severity = NpLogging.Severity.Exception,
                     CustomText = "Failed to save configuration.",
@@ -425,7 +425,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                Singletons.Logging.Write(new NpLogging.LoggingPayload
                 {
                     Severity = NpLogging.Severity.Exception,
                     CustomText = "Failed to load configuration.",
@@ -523,7 +523,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                Singletons.Logging.Write(new NpLogging.LoggingPayload
                 {
                     Severity = NpLogging.Severity.Exception,
                     CustomText = "Failed to start proxy.",
@@ -543,7 +543,7 @@ namespace NetProxy.Service
             }
             catch (Exception ex)
             {
-                Singletons.EventLog.WriteLog(new NpLogging.LoggingPayload
+                Singletons.Logging.Write(new NpLogging.LoggingPayload
                 {
                     Severity = NpLogging.Severity.Exception,
                     CustomText = "Failed to stop proxy.",

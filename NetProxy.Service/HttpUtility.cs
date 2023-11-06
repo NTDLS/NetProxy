@@ -1,5 +1,4 @@
 ﻿using NetProxy.Library;
-using System;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -12,7 +11,27 @@ namespace NetProxy.Service
             "connect","delete","get","head","options","patch","post","put","trace"
         };
 
-        public static bool StartsWithHTTPVerb(byte []bytes)
+        public static int FindDelimiterIndexInByteArray(byte[] buffer, int bufferLength, string delimiter)
+        {
+            for (int bufIdx = 0; bufIdx <= bufferLength - delimiter.Length; bufIdx++)
+            {
+                bool found = true;
+                for (int delIdx = 0; delIdx < delimiter.Length; delIdx++)
+                {
+                    if (buffer[bufIdx + delIdx] != delimiter[delIdx])
+                    {
+                        found = false;
+                    }
+                }
+                if (found)
+                {
+                    return bufIdx;
+                }
+            }
+            return -1;
+        }
+
+        public static bool StartsWithHTTPVerb(byte[] bytes)
         {
             var possibleHttpHeader = Encoding.UTF8.GetString(bytes.Take(10).ToArray()).ToLower();
 

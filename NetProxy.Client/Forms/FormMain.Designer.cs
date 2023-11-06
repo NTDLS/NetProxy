@@ -34,11 +34,11 @@
             System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-            this.dataGridViewRoutes = new System.Windows.Forms.DataGridView();
+            this.dataGridViewProxys = new System.Windows.Forms.DataGridView();
             this.ColumnStatus = new System.Windows.Forms.DataGridViewImageColumn();
             this.ColumnId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnRouterType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnProxyType = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColummListenPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnBytesTransferred = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnTotalConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -54,38 +54,38 @@
             this.statusStripMain = new System.Windows.Forms.StatusStrip();
             this.panelPerformance = new System.Windows.Forms.Panel();
             this.chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewRoutes)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProxys)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.panelPerformance.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartPerformance)).BeginInit();
             this.SuspendLayout();
             // 
-            // dataGridViewRoutes
+            // dataGridViewProxys
             // 
-            this.dataGridViewRoutes.AllowUserToAddRows = false;
-            this.dataGridViewRoutes.AllowUserToDeleteRows = false;
-            this.dataGridViewRoutes.AllowUserToResizeRows = false;
-            this.dataGridViewRoutes.BackgroundColor = System.Drawing.SystemColors.ButtonFace;
-            this.dataGridViewRoutes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewRoutes.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewProxys.AllowUserToAddRows = false;
+            this.dataGridViewProxys.AllowUserToDeleteRows = false;
+            this.dataGridViewProxys.AllowUserToResizeRows = false;
+            this.dataGridViewProxys.BackgroundColor = System.Drawing.SystemColors.ButtonFace;
+            this.dataGridViewProxys.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewProxys.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColumnStatus,
             this.ColumnId,
             this.ColumnName,
-            this.ColumnRouterType,
+            this.ColumnProxyType,
             this.ColummListenPort,
             this.ColumnBytesTransferred,
             this.ColumnTotalConnections,
             this.ColumnCurrentConnections});
-            this.dataGridViewRoutes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewRoutes.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dataGridViewRoutes.Location = new System.Drawing.Point(0, 124);
-            this.dataGridViewRoutes.MultiSelect = false;
-            this.dataGridViewRoutes.Name = "dataGridViewRoutes";
-            this.dataGridViewRoutes.ReadOnly = true;
-            this.dataGridViewRoutes.Size = new System.Drawing.Size(650, 246);
-            this.dataGridViewRoutes.TabIndex = 0;
-            this.dataGridViewRoutes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewRoutes_CellDoubleClick);
-            this.dataGridViewRoutes.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridViewRoutes_MouseDown);
+            this.dataGridViewProxys.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewProxys.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
+            this.dataGridViewProxys.Location = new System.Drawing.Point(0, 124);
+            this.dataGridViewProxys.MultiSelect = false;
+            this.dataGridViewProxys.Name = "dataGridViewProxys";
+            this.dataGridViewProxys.ReadOnly = true;
+            this.dataGridViewProxys.Size = new System.Drawing.Size(650, 246);
+            this.dataGridViewProxys.TabIndex = 0;
+            this.dataGridViewProxys.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewProxys_CellDoubleClick);
+            this.dataGridViewProxys.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridViewProxys_MouseDown);
             // 
             // ColumnStatus
             // 
@@ -111,13 +111,13 @@
             this.ColumnName.ReadOnly = true;
             this.ColumnName.Width = 200;
             // 
-            // ColumnRouterType
+            // ColumnProxyType
             // 
-            this.ColumnRouterType.DataPropertyName = "RouterType";
-            this.ColumnRouterType.HeaderText = "Type";
-            this.ColumnRouterType.Name = "ColumnRouterType";
-            this.ColumnRouterType.ReadOnly = true;
-            this.ColumnRouterType.Width = 80;
+            this.ColumnProxyType.DataPropertyName = "ProxyType";
+            this.ColumnProxyType.HeaderText = "Type";
+            this.ColumnProxyType.Name = "ColumnProxyType";
+            this.ColumnProxyType.ReadOnly = true;
+            this.ColumnProxyType.Width = 80;
             // 
             // ColummListenPort
             // 
@@ -272,7 +272,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(650, 392);
-            this.Controls.Add(this.dataGridViewRoutes);
+            this.Controls.Add(this.dataGridViewProxys);
             this.Controls.Add(this.statusStripMain);
             this.Controls.Add(this.panelPerformance);
             this.Controls.Add(this.menuStrip1);
@@ -282,7 +282,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "NetProxy";
             this.Shown += new System.EventHandler(this.FormMain_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewRoutes)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProxys)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.panelPerformance.ResumeLayout(false);
@@ -294,7 +294,7 @@
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridViewRoutes;
+        private System.Windows.Forms.DataGridView dataGridViewProxys;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
@@ -309,7 +309,7 @@
         private System.Windows.Forms.DataGridViewImageColumn ColumnStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnId;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnRouterType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnProxyType;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColummListenPort;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnBytesTransferred;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnTotalConnections;

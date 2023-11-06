@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using NetProxy.Library.Routing;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -6,6 +7,92 @@ namespace NetProxy.Service
 {
     public static class HttpUtility
     {
+        public static readonly List<string> HttpVerbStrings = new()
+        {
+            "connect","delete","get","head","options","patch","post","put","trace"
+        };
+
+        public static int FindDelimiterIndexInByteArray(byte[] buffer, int bufferLength, string delimiter)
+        {
+            for (int bufIdx = 0; bufIdx <= bufferLength - delimiter.Length; bufIdx++)
+            {
+                bool found = true;
+                for (int delIdx = 0; delIdx < delimiter.Length; delIdx++)
+                {
+                    if (buffer[bufIdx + delIdx] != delimiter[delIdx])
+                    {
+                        found = false;
+                    }
+                }
+                if (found)
+                {
+                    return bufIdx;
+                }
+            }
+            return -1;
+        }
+
+        public static string ApplyHttpHeaderRules(NpProxyConfiguration proxyConfig, string httpHeader, HttpHeaderType headerType, string httpRequestVerb, string headerDelimiter)
+        {
+            try
+            {
+                var availableRules = (from o in proxyConfig.HttpHeaderRules.Collection
+                                      where
+                                      (o.HeaderType == headerType || o.HeaderType == HttpHeaderType.Any)
+                                      && (o.Verb.ToString().ToUpper() == httpRequestVerb.ToUpper() || o.Verb == HttpVerb.Any)
+                                      && o.Enabled == true
+                                      select o).ToList();
+
+                foreach (var rule in availableRules)
+                {
+                    if (rule.Action == HttpHeaderAction.Upsert)
+                    {
+                        httpHeader = UpsertHttpHostHeaderValue(httpHeader, rule.Name, rule.Value, headerDelimiter);
+                    }
+                    else if (rule.Action == HttpHeaderAction.Update)
+                    {
+                        httpHeader = UpdateHttpHostHeaderValue(httpHeader, rule.Name, rule.Value, headerDelimiter);
+                    }
+                    else if (rule.Action == HttpHeaderAction.Insert)
+                    {
+                        httpHeader = InsertHttpHostHeaderValue(httpHeader, rule.Name, rule.Value, headerDelimiter);
+                    }
+                    else if (rule.Action == HttpHeaderAction.Delete)
+                    {
+                        httpHeader = DeleteHttpHostHeaderValue(httpHeader, rule.Name, headerDelimiter);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to process HTTP Header rules.", ex);
+            }
+
+            return httpHeader;
+        }
+
+        public static bool StartsWithHTTPVerb(byte[] bytes)
+        {
+            var possibleHttpHeader = Encoding.UTF8.GetString(bytes.Take(10).ToArray()).ToLower();
+
+            foreach (var verb in HttpVerbStrings)
+            {
+                if (possibleHttpHeader.StartsWith(verb))
+                {
+                    if (possibleHttpHeader.Length > verb.Length)
+                    {
+                        return char.IsWhiteSpace(possibleHttpHeader[verb.Length]);
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public static string? GetNextHeaderToken(string str, ref int position)
         {
             int spacePos = str.IndexOfAny(new char[] { ' ', '\n' }, position);
@@ -137,9 +224,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string InsertHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -165,9 +251,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string UpsertHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -193,9 +278,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string UpdateHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -220,9 +304,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string DeleteHttpHostHeaderValue(string headerText, string name, string lineBreak)
         {
-            Regex fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-
-            Match existingMatch = fieldFidner.Match(headerText);
+            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFidner.Match(headerText);
 
             if (existingMatch != null)
             {

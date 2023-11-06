@@ -4,12 +4,12 @@ namespace NetProxy.Service
 {
     public static class Singletons
     {
-        private static Logging? _eventLog = null;
-        public static Logging EventLog
+        private static NpLogging? _eventLog = null;
+        public static NpLogging Logging
         {
             get
             {
-                _eventLog ??= new Logging(false);
+                _eventLog ??= new NpLogging(false);
                 return _eventLog;
             }
         }

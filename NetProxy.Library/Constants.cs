@@ -4,17 +4,17 @@
     {
         public static class CommandLables
         {
-            public const string GuiRequestRouteList = "GUIRequestRouteList";
-            public const string GuiRequestRoute = "GUIRequestRoute";
+            public const string GuiRequestProxyList = "GUIRequestProxyList";
+            public const string GuiRequestProxy = "GUIRequestProxy";
             public const string GuiRequestLogin = "GUIRequestLogin";
             public const string GuiRequestUserList = "GUIRequestUserList";
             public const string GuiPersistUserList = "GUIPersistUserList";
-            public const string GuiPersistUpsertRoute = "GUIPersistUpsertRoute";
-            public const string GuiPersistDeleteRoute = "GUIPersistDeleteRoute";
-            public const string GuiPersistStopRoute = "GUIPersistStopRoute";
-            public const string GuiPersistStartRoute = "GUIPersistStartRoute";
+            public const string GuiPersistUpsertProxy = "GUIPersistUpsertProxy";
+            public const string GuiPersistDeleteProxy = "GUIPersistDeleteProxy";
+            public const string GuiPersistStopProxy = "GUIPersistStopProxy";
+            public const string GuiPersistStartProxy = "GUIPersistStartProxy";
             public const string GuiSendMessage = "GUISendMessage";
-            public const string GuiRequestRouteStatsList = "GUIRequestRouteStatsList";
+            public const string GuiRequestProxyStatsList = "GUIRequestProxyStatsList";
         }
 
         public const string TitleCaption = "NetProxy";
@@ -38,6 +38,13 @@
         Put
     }
 
+    public enum ConnectionDirection
+    {
+        Undefiend,
+        Inbound,
+        Outbound
+    }
+
     public enum BindingProtocal
     {
         Pv4,
@@ -55,7 +62,7 @@
     {
         FailOver,
         RoundRobbin,
-        Balanced
+        Balanced //AKA: Least connections.
     }
 
     public enum HttpHeaderAction

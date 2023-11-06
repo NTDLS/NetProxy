@@ -1,5 +1,4 @@
-﻿using NetProxy.Library;
-using Topshelf;
+﻿using Topshelf;
 
 namespace NetProxy.Service
 {
@@ -16,9 +15,9 @@ namespace NetProxy.Service
                     rc.RestartService(1);
                 });
 
-                x.Service<NetProxyService>(s =>
+                x.Service<NpService>(s =>
                 {
-                    s.ConstructUsing(hostSettings => new NetProxyService());
+                    s.ConstructUsing(hostSettings => new NpService());
                     s.WhenStarted(tc => tc.Start());
                     s.WhenStopped(tc => tc.Stop());
                 });

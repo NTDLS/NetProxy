@@ -18,7 +18,7 @@ namespace NetProxy.Client.Forms
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
         private bool _loginResult = false;
-        private Packeteer? _packeteer = null;
+        private NpHubPacketeer? _packeteer = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -131,10 +131,10 @@ namespace NetProxy.Client.Forms
             _loginResult = false;
             _connectMessage = "Failed to connect.";
 
-            _packeteer = new Packeteer();
+            _packeteer = new NpHubPacketeer();
             _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
 
-            Utility.EnsureNotNull(_worker);
+            NpUtility.EnsureNotNull(_worker);
 
             try
             {
@@ -145,10 +145,10 @@ namespace NetProxy.Client.Forms
                     _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
                     _loginConnectionEvent = new AutoResetEvent(false);
 
-                    UserLogin userLogin = new UserLogin()
+                    NpUserLogin userLogin = new NpUserLogin()
                     {
                         UserName = _connectionInfo.UserName,
-                        PasswordHash = Utility.Sha256(_connectionInfo.Password)
+                        PasswordHash = NpUtility.Sha256(_connectionInfo.Password)
                     };
 
                     _packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
@@ -178,14 +178,14 @@ namespace NetProxy.Client.Forms
             _packeteer.Disconnect();
         }
 
-        private void Packeteer_OnMessageReceived(Packeteer sender, Hub.Common.Peer peer, Frame packet)
+        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, Hub.Common.NpHubPeer peer, NpFrame packet)
         {
             if (packet.Label == Constants.CommandLables.GuiRequestLogin)
             {
-                var result = JsonConvert.DeserializeObject<GenericBooleanResult>(packet.Payload);
-                Utility.EnsureNotNull(result);
+                var result = JsonConvert.DeserializeObject<NpGenericBooleanResult>(packet.Payload);
+                NpUtility.EnsureNotNull(result);
 
-                Utility.EnsureNotNull(_loginConnectionEvent);
+                NpUtility.EnsureNotNull(_loginConnectionEvent);
 
                 _loginResult = result.Value;
                 _loginConnectionEvent.Set();

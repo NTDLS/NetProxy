@@ -7,7 +7,7 @@ namespace NetProxy.Client.Forms
     {
         public string PasswordHash
         {
-            get => Utility.Sha256(textBoxPassword1.Text);
+            get => NpUtility.Sha256(textBoxPassword1.Text);
         }
 
         public FormSetPassword()

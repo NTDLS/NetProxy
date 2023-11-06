@@ -125,7 +125,7 @@ namespace NetProxy.Client.Forms
                 );
             }
 
-            foreach (var httpHeaderRule in proxy.HttpHeaderRules.List)
+            foreach (var httpHeaderRule in proxy.HttpHeaderRules.Collection)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
                     new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }
@@ -247,7 +247,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            foreach (var httpHeaderRule in proxy.HttpHeaderRules.List)
+            foreach (var httpHeaderRule in proxy.HttpHeaderRules.Collection)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
                     new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }

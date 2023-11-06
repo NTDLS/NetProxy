@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using NetProxy.Library.Routing;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -29,6 +30,49 @@ namespace NetProxy.Service
                 }
             }
             return -1;
+        }
+
+        public static string ApplyHttpHeaderRules(NpProxyConfiguration proxyConfig, string httpHeader, HttpHeaderType headerType, string httpRequestVerb, string headerDelimiter)
+        {
+            try
+            {
+                var availableRules = (from o in proxyConfig.HttpHeaderRules.Collection
+                                      where
+                                      (o.HeaderType == headerType || o.HeaderType == HttpHeaderType.Any)
+                                      && (o.Verb.ToString().ToUpper() == httpRequestVerb.ToUpper() || o.Verb == HttpVerb.Any)
+                                      && o.Enabled == true
+                                      select o).ToList();
+
+                foreach (var rule in availableRules)
+                {
+                    if (rule.Action == HttpHeaderAction.Upsert)
+                    {
+                        httpHeader = UpsertHttpHostHeaderValue(httpHeader, rule.Name, rule.Value, headerDelimiter);
+                    }
+                    else if (rule.Action == HttpHeaderAction.Update)
+                    {
+                        httpHeader = UpdateHttpHostHeaderValue(httpHeader, rule.Name, rule.Value, headerDelimiter);
+                    }
+                    else if (rule.Action == HttpHeaderAction.Insert)
+                    {
+                        httpHeader = InsertHttpHostHeaderValue(httpHeader, rule.Name, rule.Value, headerDelimiter);
+                    }
+                    else if (rule.Action == HttpHeaderAction.Delete)
+                    {
+                        httpHeader = DeleteHttpHostHeaderValue(httpHeader, rule.Name, headerDelimiter);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to process HTTP Header rules.", ex);
+            }
+
+            return httpHeader;
         }
 
         public static bool StartsWithHTTPVerb(byte[] bytes)

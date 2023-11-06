@@ -2,11 +2,11 @@
 {
     public class NpHTTPHeaderRules
     {
-        public List<NpHttpHeaderRule> List = new();
+        public List<NpHttpHeaderRule> Collection = new();
 
         public void Add(NpHttpHeaderRule rule)
         {
-            List.Add(rule);
+            Collection.Add(rule);
         }
     }
 }

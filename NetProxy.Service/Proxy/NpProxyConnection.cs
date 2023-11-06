@@ -249,7 +249,25 @@ namespace NetProxy.Service.Proxy
                 {
                     try
                     {
-                        if (Direction == ConnectionDirection.Inbound && _listener.Proxy.Configuration.TrafficType == TrafficType.Http)
+                        if (
+                            //Only parse HTTP headers if the traffixe type is HTTP
+                            _listener.Proxy.Configuration.TrafficType == TrafficType.Http
+                            &&
+                            (
+                                // and the direction is inbound and we have request rules
+                                (
+                                    Direction == ConnectionDirection.Inbound
+                                    && _listener.Proxy.Configuration.HttpHeaderRules.Collection
+                                        .Where(o => (new[] { HttpHeaderType.Request, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
+                                )
+                                // or the direction is outbound and we have response rules.
+                                || (
+                                    Direction == ConnectionDirection.Outbound
+                                    && _listener.Proxy.Configuration.HttpHeaderRules.Collection
+                                        .Where(o => (new[] { HttpHeaderType.Response, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
+                                )
+                            )
+                        )
                         {
                             if (httpRequestHeaderBuilder != null) //We are reconstructing a fragmented HTTP request header.
                             {
@@ -262,31 +280,33 @@ namespace NetProxy.Service.Proxy
                                 httpRequestHeaderBuilder = new StringBuilder(stringContent);
                             }
 
+                            string headerDelimiter = string.Empty;
+
                             if (httpRequestHeaderBuilder != null)
                             {
-                                var headerType = HttpUtility.IsHttpHeader(httpRequestHeaderBuilder.ToString(), out string? verb);
+                                var headerType = HttpUtility.IsHttpHeader(httpRequestHeaderBuilder.ToString(), out string? requestVerb);
 
-                                if (headerType != HttpHeaderType.None)
+                                if (headerType != HttpHeaderType.None && requestVerb != null)
                                 {
-                                    var endOfHeaderIndex = HttpUtility.GetHttpHeaderEnd(httpRequestHeaderBuilder.ToString(), out string delimiter);
+                                    var endOfHeaderIndex = HttpUtility.GetHttpHeaderEnd(httpRequestHeaderBuilder.ToString(), out headerDelimiter);
                                     if (endOfHeaderIndex < 0)
                                     {
                                         continue; //We have a HTTP header but its a fragment. Wait on the remaining header.
                                     }
                                     else
                                     {
-                                        if (bufferLength > delimiter.Length * 2) // "\r\n" or "\r\n\r\n"
+                                        if (bufferLength > headerDelimiter.Length * 2) // "\r\n" or "\r\n\r\n"
                                         {
                                             //If we received more bytes than just the delimiter then we
                                             //  need to determine how many non-header bytes need to be sent to the peer.
 
-                                            int endOfHeaderInBufferIndex = HttpUtility.FindDelimiterIndexInByteArray(buffer, bufferLength, $"{delimiter}{delimiter}");
+                                            int endOfHeaderInBufferIndex = HttpUtility.FindDelimiterIndexInByteArray(buffer, bufferLength, $"{headerDelimiter}{headerDelimiter}");
                                             if (endOfHeaderInBufferIndex < 0)
                                             {
                                                 throw new Exception("Could not locate HTTP header in receive buffer.");
                                             }
 
-                                            int bufferEndOfHeaderOffset = endOfHeaderInBufferIndex + (delimiter.Length * 2);
+                                            int bufferEndOfHeaderOffset = endOfHeaderInBufferIndex + (headerDelimiter.Length * 2);
 
                                             if (bufferEndOfHeaderOffset > bufferLength)
                                             {
@@ -303,21 +323,20 @@ namespace NetProxy.Service.Proxy
                                             bufferLength = 0;
                                         }
                                     }
-                                }
 
-                                var httpRequestHeader = httpRequestHeaderBuilder.ToString();
-                                //TODO: apply the header rules:
-                                //....
+                                    //apply the header rules:
+                                    string modifiedHttpRequestHeader = HttpUtility.ApplyHttpHeaderRules
+                                        (_listener.Proxy.Configuration, httpRequestHeaderBuilder.ToString(), headerType, requestVerb, headerDelimiter);
+                                    httpRequestHeaderBuilder = null; //We have completed reconstrucing the header and performed modifications.
 
-                                //Send the modified header to the peer.
-                                _peer?.Write(Encoding.UTF8.GetBytes(httpRequestHeader));
+                                    //Send the modified header to the peer.
+                                    _peer?.Write(Encoding.UTF8.GetBytes(modifiedHttpRequestHeader));
 
-                                httpRequestHeaderBuilder = null; //We have completed reconstrucing the header and we have already sent it to the peer.
-
-                                if (bufferLength == 0)
-                                {
-                                    //All we received is the header, so thats all we have to send at this time.
-                                    continue;
+                                    if (bufferLength == 0)
+                                    {
+                                        //All we received is the header, so thats all we have to send at this time.
+                                        continue;
+                                    }
                                 }
                             }
                         }

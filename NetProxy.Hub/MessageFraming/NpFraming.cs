@@ -120,7 +120,7 @@ namespace NetProxy.Hub.MessageFraming
                     state.PayloadBuilderLength -= grossPayloadSize;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 //TODO: allow this to be logged.
             }

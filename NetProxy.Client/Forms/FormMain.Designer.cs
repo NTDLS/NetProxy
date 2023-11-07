@@ -34,285 +34,275 @@
             System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-            this.dataGridViewProxys = new System.Windows.Forms.DataGridView();
-            this.ColumnStatus = new System.Windows.Forms.DataGridViewImageColumn();
-            this.ColumnId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnProxyType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColummListenPort = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnBytesTransferred = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnTotalConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnCurrentConnections = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.changeConnectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.configurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.statusStripMain = new System.Windows.Forms.StatusStrip();
-            this.panelPerformance = new System.Windows.Forms.Panel();
-            this.chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProxys)).BeginInit();
-            this.menuStrip1.SuspendLayout();
-            this.panelPerformance.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.chartPerformance)).BeginInit();
-            this.SuspendLayout();
+            dataGridViewProxys = new DataGridView();
+            ColumnStatus = new DataGridViewImageColumn();
+            ColumnId = new DataGridViewTextBoxColumn();
+            ColumnName = new DataGridViewTextBoxColumn();
+            ColumnProxyType = new DataGridViewTextBoxColumn();
+            ColummListenPort = new DataGridViewTextBoxColumn();
+            ColumnBytesTransferred = new DataGridViewTextBoxColumn();
+            ColumnTotalConnections = new DataGridViewTextBoxColumn();
+            ColumnCurrentConnections = new DataGridViewTextBoxColumn();
+            menuStrip1 = new MenuStrip();
+            fileToolStripMenuItem = new ToolStripMenuItem();
+            changeConnectionToolStripMenuItem = new ToolStripMenuItem();
+            exitToolStripMenuItem = new ToolStripMenuItem();
+            settingsToolStripMenuItem = new ToolStripMenuItem();
+            configurationToolStripMenuItem = new ToolStripMenuItem();
+            helpToolStripMenuItem = new ToolStripMenuItem();
+            aboutToolStripMenuItem = new ToolStripMenuItem();
+            statusStripMain = new StatusStrip();
+            panelPerformance = new Panel();
+            chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).BeginInit();
+            menuStrip1.SuspendLayout();
+            panelPerformance.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)chartPerformance).BeginInit();
+            SuspendLayout();
             // 
             // dataGridViewProxys
             // 
-            this.dataGridViewProxys.AllowUserToAddRows = false;
-            this.dataGridViewProxys.AllowUserToDeleteRows = false;
-            this.dataGridViewProxys.AllowUserToResizeRows = false;
-            this.dataGridViewProxys.BackgroundColor = System.Drawing.SystemColors.ButtonFace;
-            this.dataGridViewProxys.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewProxys.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.ColumnStatus,
-            this.ColumnId,
-            this.ColumnName,
-            this.ColumnProxyType,
-            this.ColummListenPort,
-            this.ColumnBytesTransferred,
-            this.ColumnTotalConnections,
-            this.ColumnCurrentConnections});
-            this.dataGridViewProxys.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewProxys.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dataGridViewProxys.Location = new System.Drawing.Point(0, 124);
-            this.dataGridViewProxys.MultiSelect = false;
-            this.dataGridViewProxys.Name = "dataGridViewProxys";
-            this.dataGridViewProxys.ReadOnly = true;
-            this.dataGridViewProxys.Size = new System.Drawing.Size(650, 246);
-            this.dataGridViewProxys.TabIndex = 0;
-            this.dataGridViewProxys.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewProxys_CellDoubleClick);
-            this.dataGridViewProxys.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridViewProxys_MouseDown);
+            dataGridViewProxys.AllowUserToAddRows = false;
+            dataGridViewProxys.AllowUserToDeleteRows = false;
+            dataGridViewProxys.AllowUserToResizeRows = false;
+            dataGridViewProxys.BackgroundColor = SystemColors.ButtonFace;
+            dataGridViewProxys.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewProxys.Columns.AddRange(new DataGridViewColumn[] { ColumnStatus, ColumnId, ColumnName, ColumnProxyType, ColummListenPort, ColumnBytesTransferred, ColumnTotalConnections, ColumnCurrentConnections });
+            dataGridViewProxys.Dock = DockStyle.Fill;
+            dataGridViewProxys.EditMode = DataGridViewEditMode.EditProgrammatically;
+            dataGridViewProxys.Location = new Point(0, 139);
+            dataGridViewProxys.Margin = new Padding(4, 3, 4, 3);
+            dataGridViewProxys.MultiSelect = false;
+            dataGridViewProxys.Name = "dataGridViewProxys";
+            dataGridViewProxys.ReadOnly = true;
+            dataGridViewProxys.Size = new Size(758, 291);
+            dataGridViewProxys.TabIndex = 0;
+            dataGridViewProxys.CellDoubleClick += dataGridViewProxys_CellDoubleClick;
+            dataGridViewProxys.MouseDown += dataGridViewProxys_MouseDown;
             // 
             // ColumnStatus
             // 
-            this.ColumnStatus.Frozen = true;
-            this.ColumnStatus.HeaderText = "Status";
-            this.ColumnStatus.Name = "ColumnStatus";
-            this.ColumnStatus.ReadOnly = true;
-            this.ColumnStatus.Width = 45;
+            ColumnStatus.Frozen = true;
+            ColumnStatus.HeaderText = "Status";
+            ColumnStatus.Name = "ColumnStatus";
+            ColumnStatus.ReadOnly = true;
+            ColumnStatus.Width = 45;
             // 
             // ColumnId
             // 
-            this.ColumnId.DataPropertyName = "Id";
-            this.ColumnId.HeaderText = "Id";
-            this.ColumnId.Name = "ColumnId";
-            this.ColumnId.ReadOnly = true;
-            this.ColumnId.Visible = false;
+            ColumnId.DataPropertyName = "Id";
+            ColumnId.HeaderText = "Id";
+            ColumnId.Name = "ColumnId";
+            ColumnId.ReadOnly = true;
+            ColumnId.Visible = false;
             // 
             // ColumnName
             // 
-            this.ColumnName.DataPropertyName = "Name";
-            this.ColumnName.HeaderText = "Name";
-            this.ColumnName.Name = "ColumnName";
-            this.ColumnName.ReadOnly = true;
-            this.ColumnName.Width = 200;
+            ColumnName.DataPropertyName = "Name";
+            ColumnName.HeaderText = "Name";
+            ColumnName.Name = "ColumnName";
+            ColumnName.ReadOnly = true;
+            ColumnName.Width = 200;
             // 
             // ColumnProxyType
             // 
-            this.ColumnProxyType.DataPropertyName = "ProxyType";
-            this.ColumnProxyType.HeaderText = "Type";
-            this.ColumnProxyType.Name = "ColumnProxyType";
-            this.ColumnProxyType.ReadOnly = true;
-            this.ColumnProxyType.Width = 80;
+            ColumnProxyType.DataPropertyName = "ProxyType";
+            ColumnProxyType.HeaderText = "Type";
+            ColumnProxyType.Name = "ColumnProxyType";
+            ColumnProxyType.ReadOnly = true;
+            ColumnProxyType.Width = 80;
             // 
             // ColummListenPort
             // 
-            this.ColummListenPort.DataPropertyName = "ListenPort";
-            this.ColummListenPort.HeaderText = "Port";
-            this.ColummListenPort.Name = "ColummListenPort";
-            this.ColummListenPort.ReadOnly = true;
-            this.ColummListenPort.Width = 50;
+            ColummListenPort.DataPropertyName = "ListenPort";
+            ColummListenPort.HeaderText = "Port";
+            ColummListenPort.Name = "ColummListenPort";
+            ColummListenPort.ReadOnly = true;
+            ColummListenPort.Width = 50;
             // 
             // ColumnBytesTransferred
             // 
-            this.ColumnBytesTransferred.HeaderText = "Bytes Transferred";
-            this.ColumnBytesTransferred.Name = "ColumnBytesTransferred";
-            this.ColumnBytesTransferred.ReadOnly = true;
-            this.ColumnBytesTransferred.Width = 80;
+            ColumnBytesTransferred.HeaderText = "Bytes Transferred";
+            ColumnBytesTransferred.Name = "ColumnBytesTransferred";
+            ColumnBytesTransferred.ReadOnly = true;
+            ColumnBytesTransferred.Width = 80;
             // 
             // ColumnTotalConnections
             // 
-            this.ColumnTotalConnections.HeaderText = "Total Conn.";
-            this.ColumnTotalConnections.Name = "ColumnTotalConnections";
-            this.ColumnTotalConnections.ReadOnly = true;
-            this.ColumnTotalConnections.Width = 70;
+            ColumnTotalConnections.HeaderText = "Total Conn.";
+            ColumnTotalConnections.Name = "ColumnTotalConnections";
+            ColumnTotalConnections.ReadOnly = true;
+            ColumnTotalConnections.Width = 70;
             // 
             // ColumnCurrentConnections
             // 
-            this.ColumnCurrentConnections.HeaderText = "Curr. Conn.";
-            this.ColumnCurrentConnections.Name = "ColumnCurrentConnections";
-            this.ColumnCurrentConnections.ReadOnly = true;
-            this.ColumnCurrentConnections.Width = 50;
+            ColumnCurrentConnections.HeaderText = "Curr. Conn.";
+            ColumnCurrentConnections.Name = "ColumnCurrentConnections";
+            ColumnCurrentConnections.ReadOnly = true;
+            ColumnCurrentConnections.Width = 50;
             // 
             // menuStrip1
             // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.settingsToolStripMenuItem,
-            this.helpToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(650, 24);
-            this.menuStrip1.TabIndex = 1;
-            this.menuStrip1.Text = "menuStrip1";
+            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, settingsToolStripMenuItem, helpToolStripMenuItem });
+            menuStrip1.Location = new Point(0, 0);
+            menuStrip1.Name = "menuStrip1";
+            menuStrip1.Padding = new Padding(7, 2, 0, 2);
+            menuStrip1.Size = new Size(758, 24);
+            menuStrip1.TabIndex = 1;
+            menuStrip1.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.changeConnectionToolStripMenuItem,
-            this.exitToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeConnectionToolStripMenuItem, exitToolStripMenuItem });
+            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            fileToolStripMenuItem.Size = new Size(37, 20);
+            fileToolStripMenuItem.Text = "File";
             // 
             // changeConnectionToolStripMenuItem
             // 
-            this.changeConnectionToolStripMenuItem.Name = "changeConnectionToolStripMenuItem";
-            this.changeConnectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.changeConnectionToolStripMenuItem.Text = "Change Connection";
-            this.changeConnectionToolStripMenuItem.Click += new System.EventHandler(this.changeConnectionToolStripMenuItem_Click);
+            changeConnectionToolStripMenuItem.Name = "changeConnectionToolStripMenuItem";
+            changeConnectionToolStripMenuItem.Size = new Size(180, 22);
+            changeConnectionToolStripMenuItem.Text = "Change Connection";
+            changeConnectionToolStripMenuItem.Click += changeConnectionToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.Size = new Size(180, 22);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // settingsToolStripMenuItem
             // 
-            this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.configurationToolStripMenuItem});
-            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.settingsToolStripMenuItem.Text = "Settings";
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem });
+            settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            settingsToolStripMenuItem.Size = new Size(61, 20);
+            settingsToolStripMenuItem.Text = "Settings";
             // 
             // configurationToolStripMenuItem
             // 
-            this.configurationToolStripMenuItem.Name = "configurationToolStripMenuItem";
-            this.configurationToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.configurationToolStripMenuItem.Text = "Configuration";
-            this.configurationToolStripMenuItem.Click += new System.EventHandler(this.configurationToolStripMenuItem_Click);
+            configurationToolStripMenuItem.Name = "configurationToolStripMenuItem";
+            configurationToolStripMenuItem.Size = new Size(148, 22);
+            configurationToolStripMenuItem.Text = "Configuration";
+            configurationToolStripMenuItem.Click += configurationToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { aboutToolStripMenuItem });
+            helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            helpToolStripMenuItem.Size = new Size(44, 20);
+            helpToolStripMenuItem.Text = "Help";
             // 
             // aboutToolStripMenuItem
             // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
-            this.aboutToolStripMenuItem.Text = "About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            aboutToolStripMenuItem.Size = new Size(107, 22);
+            aboutToolStripMenuItem.Text = "About";
+            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // statusStripMain
             // 
-            this.statusStripMain.Location = new System.Drawing.Point(0, 370);
-            this.statusStripMain.Name = "statusStripMain";
-            this.statusStripMain.Size = new System.Drawing.Size(650, 22);
-            this.statusStripMain.TabIndex = 2;
-            this.statusStripMain.Text = "statusStrip1";
+            statusStripMain.Location = new Point(0, 430);
+            statusStripMain.Name = "statusStripMain";
+            statusStripMain.Padding = new Padding(1, 0, 16, 0);
+            statusStripMain.Size = new Size(758, 22);
+            statusStripMain.TabIndex = 2;
+            statusStripMain.Text = "statusStrip1";
             // 
             // panelPerformance
             // 
-            this.panelPerformance.Controls.Add(this.chartPerformance);
-            this.panelPerformance.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelPerformance.Location = new System.Drawing.Point(0, 24);
-            this.panelPerformance.Name = "panelPerformance";
-            this.panelPerformance.Size = new System.Drawing.Size(650, 100);
-            this.panelPerformance.TabIndex = 3;
+            panelPerformance.Controls.Add(chartPerformance);
+            panelPerformance.Dock = DockStyle.Top;
+            panelPerformance.Location = new Point(0, 24);
+            panelPerformance.Margin = new Padding(4, 3, 4, 3);
+            panelPerformance.Name = "panelPerformance";
+            panelPerformance.Size = new Size(758, 115);
+            panelPerformance.TabIndex = 3;
             // 
             // chartPerformance
             // 
-            this.chartPerformance.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.chartPerformance.BackSecondaryColor = System.Drawing.Color.White;
+            chartPerformance.BackColor = Color.WhiteSmoke;
+            chartPerformance.BackSecondaryColor = Color.White;
             chartArea1.AxisX.LabelStyle.Enabled = false;
             chartArea1.AxisX.MajorGrid.Enabled = false;
-            chartArea1.BackColor = System.Drawing.Color.WhiteSmoke;
+            chartArea1.BackColor = Color.WhiteSmoke;
             chartArea1.Name = "ChartArea1";
-            this.chartPerformance.ChartAreas.Add(chartArea1);
-            this.chartPerformance.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.BackColor = System.Drawing.Color.WhiteSmoke;
+            chartPerformance.ChartAreas.Add(chartArea1);
+            chartPerformance.Dock = DockStyle.Fill;
+            legend1.BackColor = Color.WhiteSmoke;
             legend1.Name = "Legend1";
-            this.chartPerformance.Legends.Add(legend1);
-            this.chartPerformance.Location = new System.Drawing.Point(0, 0);
-            this.chartPerformance.Name = "chartPerformance";
+            chartPerformance.Legends.Add(legend1);
+            chartPerformance.Location = new Point(0, 0);
+            chartPerformance.Margin = new Padding(4, 3, 4, 3);
+            chartPerformance.Name = "chartPerformance";
             series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
-            series1.Color = System.Drawing.Color.Red;
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series1.Color = Color.Red;
             series1.Legend = "Legend1";
             series1.Name = "KB/s Sent";
             series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
-            series2.Color = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series2.Color = Color.FromArgb(0, 192, 0);
             series2.Legend = "Legend1";
             series2.Name = "KB/s Recv";
             series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
-            series3.Color = System.Drawing.Color.Blue;
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series3.Color = Color.Blue;
             series3.Legend = "Legend1";
             series3.Name = "Connections";
-            this.chartPerformance.Series.Add(series1);
-            this.chartPerformance.Series.Add(series2);
-            this.chartPerformance.Series.Add(series3);
-            this.chartPerformance.Size = new System.Drawing.Size(650, 100);
-            this.chartPerformance.TabIndex = 0;
-            this.chartPerformance.Text = "chart1";
+            chartPerformance.Series.Add(series1);
+            chartPerformance.Series.Add(series2);
+            chartPerformance.Series.Add(series3);
+            chartPerformance.Size = new Size(758, 115);
+            chartPerformance.TabIndex = 0;
+            chartPerformance.Text = "chart1";
             // 
             // FormMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(650, 392);
-            this.Controls.Add(this.dataGridViewProxys);
-            this.Controls.Add(this.statusStripMain);
-            this.Controls.Add(this.panelPerformance);
-            this.Controls.Add(this.menuStrip1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MainMenuStrip = this.menuStrip1;
-            this.Name = "FormMain";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "NetProxy";
-            this.Shown += new System.EventHandler(this.FormMain_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProxys)).EndInit();
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
-            this.panelPerformance.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.chartPerformance)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(758, 452);
+            Controls.Add(dataGridViewProxys);
+            Controls.Add(statusStripMain);
+            Controls.Add(panelPerformance);
+            Controls.Add(menuStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MainMenuStrip = menuStrip1;
+            Margin = new Padding(4, 3, 4, 3);
+            Name = "FormMain";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "NetProxy";
+            Shown += FormMain_Shown;
+            ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).EndInit();
+            menuStrip1.ResumeLayout(false);
+            menuStrip1.PerformLayout();
+            panelPerformance.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)chartPerformance).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridViewProxys;
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem changeConnectionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem configurationToolStripMenuItem;
-        private System.Windows.Forms.StatusStrip statusStripMain;
-        private System.Windows.Forms.Panel panelPerformance;
+        private DataGridView dataGridViewProxys;
+        private MenuStrip menuStrip1;
+        private ToolStripMenuItem fileToolStripMenuItem;
+        private ToolStripMenuItem exitToolStripMenuItem;
+        private ToolStripMenuItem helpToolStripMenuItem;
+        private ToolStripMenuItem aboutToolStripMenuItem;
+        private ToolStripMenuItem changeConnectionToolStripMenuItem;
+        private ToolStripMenuItem settingsToolStripMenuItem;
+        private ToolStripMenuItem configurationToolStripMenuItem;
+        private StatusStrip statusStripMain;
+        private Panel panelPerformance;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartPerformance;
-        private System.Windows.Forms.DataGridViewImageColumn ColumnStatus;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnId;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnProxyType;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColummListenPort;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnBytesTransferred;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnTotalConnections;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnCurrentConnections;
+        private DataGridViewImageColumn ColumnStatus;
+        private DataGridViewTextBoxColumn ColumnId;
+        private DataGridViewTextBoxColumn ColumnName;
+        private DataGridViewTextBoxColumn ColumnProxyType;
+        private DataGridViewTextBoxColumn ColummListenPort;
+        private DataGridViewTextBoxColumn ColumnBytesTransferred;
+        private DataGridViewTextBoxColumn ColumnTotalConnections;
+        private DataGridViewTextBoxColumn ColumnCurrentConnections;
     }
 }

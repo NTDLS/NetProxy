@@ -10,7 +10,7 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormConnect : Form
     {
-        private ConnectionInfo _connectionInfo = new();
+        private readonly ConnectionInfo _connectionInfo = new();
         private FormProgress? _formProgress = null;
         private AutoResetEvent? _loginConnectionEvent = null;
         private BackgroundWorker? _worker = null;
@@ -143,7 +143,7 @@ namespace NetProxy.Client.Forms
                     _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
                     _loginConnectionEvent = new AutoResetEvent(false);
 
-                    _messageClient.SendQuery<QueryLoginReply>(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
+                    _messageClient.Query<QueryLoginReply>(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
                         {
                             if (o.IsCompletedSuccessfully && o.Result?.Result == true)
                             {

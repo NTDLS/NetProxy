@@ -60,15 +60,17 @@ namespace NetProxy.Service.Proxy
 
         public void RemoveActiveConnection(NpProxyConnection connection)
         {
-            _activeConnections.Use((o) =>
+            if (Proxy.IsRunning) //Avoid race condition.
             {
-                if (o.Remove(connection.Id))
+                _activeConnections.Use((o) =>
                 {
-                    Proxy.Statistics.Use((o) => { o.CurrentConnections--; });
-                }
-                connection.Stop(false);
-            });
-
+                    if (o.Remove(connection.Id))
+                    {
+                        Proxy.Statistics.Use((o) => { o.CurrentConnections--; });
+                    }
+                });
+            }
+            connection.Stop(false);
         }
 
         void InboundListenerThreadProc()

@@ -49,7 +49,7 @@ namespace NetProxy.Client.Forms
 
             try
             {
-                _messageClient?.SendQuery<QueryProxyStatsisticsReply>(new QueryProxyStatsistics()).ContinueWith((o) =>
+                _messageClient?.Query<QueryProxyStatsisticsReply>(new QueryProxyStatsistics()).ContinueWith((o) =>
                 {
                     if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
                     {
@@ -98,7 +98,7 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-        private void _messageClient_OnDisconnected(Guid connectionId)
+        private void _messageClient_OnDisconnected(MessageClient client, Guid connectionId)
         {
             if (_connectionLost != null)
             {
@@ -106,7 +106,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void _messageClient_OnNotificationReceived(Guid connectionId, IFrameNotification payload)
+        private void _messageClient_OnNotificationReceived(MessageClient client, Guid connectionId, IFrameNotification payload)
         {
             if (payload is NotifificationMessage message)
             {
@@ -118,7 +118,7 @@ namespace NetProxy.Client.Forms
         {
             NpUtility.EnsureNotNull(_messageClient);
 
-            _messageClient.SendQuery<QueryProxyConfigurationListReply>(new QueryProxyConfigurationList()).ContinueWith((o) =>
+            _messageClient.Query<QueryProxyConfigurationListReply>(new QueryProxyConfigurationList()).ContinueWith((o) =>
             {
                 if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
                 {
@@ -426,7 +426,7 @@ namespace NetProxy.Client.Forms
                 case "Start":
                     NpUtility.EnsureNotNull(_messageClient);
                     NpUtility.EnsureNotNull(proxyId);
-                    _messageClient.SendNotification(new NotifificationStartProxy(proxyId));
+                    _messageClient.Notify(new NotifificationStartProxy(proxyId));
                     RefreshProxyList();
                     break;
                 case "Stop":
@@ -435,7 +435,7 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Stop the selected proxy?", Constants.TitleCaption, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.SendNotification(new NotifificationStopProxy(proxyId));
+                        _messageClient.Notify(new NotifificationStopProxy(proxyId));
                         RefreshProxyList();
                     }
 
@@ -457,7 +457,7 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Delete the selected proxy?", Constants.TitleCaption,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.SendNotification(new NotifificationDeleteProxy(proxyId));
+                        _messageClient.Notify(new NotifificationDeleteProxy(proxyId));
                         RefreshProxyList();
                     }
                     break;

@@ -51,7 +51,7 @@ namespace NetProxy.Client.Forms
             NpUtility.EnsureNotNull(_messageClient);
             NpUtility.EnsureNotNull(_populateGrid);
 
-            _messageClient.SendQuery<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
+            _messageClient.Query<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
             {
                 if (t.IsCompletedSuccessfully && t.Result?.Collection != null)
                 {
@@ -92,7 +92,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            _messageClient.SendNotification(new NotifificationPersistUserList(users));
+            _messageClient.Notify(new NotifificationPersistUserList(users));
 
             DialogResult = DialogResult.OK;
             Close();

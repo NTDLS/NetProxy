@@ -25,7 +25,7 @@ namespace NetProxy.Service
             _messageServer.OnDisconnected += _MessageHubServer_OnDisconnected;
         }
 
-        private IFrameQueryReply _messageServer_OnQueryReceived(Guid connectionId, IFrameQuery payload)
+        private IFrameQueryReply _messageServer_OnQueryReceived(MessageServer server, Guid connectionId, IFrameQuery payload)
         {
             NpUtility.EnsureNotNull(_config);
 
@@ -187,7 +187,7 @@ namespace NetProxy.Service
             throw new Exception("Unhandled query.");
         }
 
-        private void _MessageHubServer_OnDisconnected(Guid connectionId)
+        private void _MessageHubServer_OnDisconnected(MessageServer server, Guid connectionId)
         {
             NpUtility.EnsureNotNull(_config);
 
@@ -198,7 +198,7 @@ namespace NetProxy.Service
             Console.WriteLine($"Deregistered connection: {connectionId} (Logged in users {_authenticatedConnections.Count}).");
         }
 
-        private void _MessageHubServer_OnNotificationReceived(Guid connectionId, IFrameNotification payload)
+        private void _MessageHubServer_OnNotificationReceived(MessageServer server, Guid connectionId, IFrameNotification payload)
         {
             NpUtility.EnsureNotNull(_config);
 
@@ -344,7 +344,7 @@ namespace NetProxy.Service
 
                         if (existingProxy?.Start() != true)
                         {
-                            _messageServer.SendNotification(connectionId, new NotifificationMessage("Failed to start proxy."));
+                            _messageServer.Notify(connectionId, new NotifificationMessage("Failed to start proxy."));
                         }
                     }
                 }

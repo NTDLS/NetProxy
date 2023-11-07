@@ -92,7 +92,7 @@ namespace NetProxy.Client.Forms
                 NpUtility.EnsureNotNull(_proxyId);
                 NpUtility.EnsureNotNull(_populateProxyInformation);
 
-                _messageClient.SendQuery<QueryProxyConfigurationReply>(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
+                _messageClient.Query<QueryProxyConfigurationReply>(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
                 {
                     if (t.IsCompletedSuccessfully && t.Result?.ProxyConfiguration != null)
                     {
@@ -264,7 +264,7 @@ namespace NetProxy.Client.Forms
             }
 
             NpUtility.EnsureNotNull(_messageClient);
-            _messageClient.SendNotification(new NotifificationUpsertProxy(proxy));
+            _messageClient.Notify(new NotifificationUpsertProxy(proxy));
 
             Thread.Sleep(500);
 

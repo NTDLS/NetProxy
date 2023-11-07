@@ -38,7 +38,13 @@ namespace NetProxy.Service.Proxy
         {
             if (_outboundEndpoint != null)
             {
-                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesWritten += (ulong)buffer.Length);
+                _listener.EndpointStatistics.Use((o) =>
+                {
+                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    {
+                        o[_outboundEndpoint.Id].BytesWritten += (ulong)buffer.Length;
+                    }
+                });
             }
             _listener.Proxy.Statistics.Use((o) => o.BytesWritten += (ulong)buffer.Length);
 
@@ -50,7 +56,13 @@ namespace NetProxy.Service.Proxy
         {
             if (_outboundEndpoint != null)
             {
-                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesWritten += (ulong)length);
+                _listener.EndpointStatistics.Use((o) =>
+                {
+                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    {
+                        o[_outboundEndpoint.Id].BytesWritten += (ulong)length;
+                    }
+                });
             }
             _listener.Proxy.Statistics.Use((o) => o.BytesWritten += (ulong)length);
 
@@ -65,7 +77,13 @@ namespace NetProxy.Service.Proxy
 
             if (_outboundEndpoint != null)
             {
-                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesRead += (ulong)bytesRead);
+                _listener.EndpointStatistics.Use((o) =>
+                {
+                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    {
+                        o[_outboundEndpoint.Id].BytesRead += (ulong)bytesRead;
+                    }
+                });
             }
             _listener.Proxy.Statistics.Use((o) => o.BytesRead += (ulong)bytesRead);
 
@@ -232,9 +250,12 @@ namespace NetProxy.Service.Proxy
             {
                 _listener.EndpointStatistics.Use((o) =>
                 {
-                    var stat = o[_outboundEndpoint.Id];
-                    stat.CurrentConnections++;
-                    stat.TotalConnections++;
+                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    {
+                        var stat = o[_outboundEndpoint.Id];
+                        stat.CurrentConnections++;
+                        stat.TotalConnections++;
+                    }
                 });
             }
             #endregion
@@ -380,8 +401,11 @@ namespace NetProxy.Service.Proxy
                 {
                     _listener.EndpointStatistics.Use((o) =>
                     {
-                        var stat = o[_outboundEndpoint.Id];
-                        stat.CurrentConnections--;
+                        if (o.ContainsKey(_outboundEndpoint.Id))
+                        {
+                            var stat = o[_outboundEndpoint.Id];
+                            stat.CurrentConnections--;
+                        }
                     });
                 }
                 #endregion
@@ -394,7 +418,9 @@ namespace NetProxy.Service.Proxy
         {
             _keepRunning = false;
             try { _stream.Close(); } catch { }
+            try { _stream.Dispose(); } catch { }
             try { _tcpclient.Close(); } catch { }
+            try { _tcpclient.Dispose(); } catch { }
 
             if (waitOnThread)
             {

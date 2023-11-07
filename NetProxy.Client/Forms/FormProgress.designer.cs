@@ -30,86 +30,93 @@ namespace NetProxy.Client.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.spinningProgress1 = new NetProxy.Client.Controls.SpinningProgress();
-            this.cmdCancel = new System.Windows.Forms.Button();
-            this.pbProgress = new System.Windows.Forms.ProgressBar();
-            this.lblHeader = new System.Windows.Forms.Label();
-            this.lblBody = new System.Windows.Forms.Label();
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProgress));
+            spinningProgress1 = new SpinningProgress();
+            cmdCancel = new Button();
+            pbProgress = new ProgressBar();
+            lblHeader = new Label();
+            lblBody = new Label();
+            SuspendLayout();
             // 
             // spinningProgress1
             // 
-            this.spinningProgress1.AutoIncrementFrequency = 100D;
-            this.spinningProgress1.Location = new System.Drawing.Point(12, 12);
-            this.spinningProgress1.Name = "spinningProgress1";
-            this.spinningProgress1.Size = new System.Drawing.Size(30, 30);
-            this.spinningProgress1.TabIndex = 0;
+            spinningProgress1.AutoIncrementFrequency = 100D;
+            spinningProgress1.Location = new Point(14, 14);
+            spinningProgress1.Margin = new Padding(5, 3, 5, 3);
+            spinningProgress1.Name = "spinningProgress1";
+            spinningProgress1.Size = new Size(35, 35);
+            spinningProgress1.TabIndex = 0;
             // 
             // cmdCancel
             // 
-            this.cmdCancel.Enabled = false;
-            this.cmdCancel.Location = new System.Drawing.Point(245, 104);
-            this.cmdCancel.Name = "cmdCancel";
-            this.cmdCancel.Size = new System.Drawing.Size(75, 23);
-            this.cmdCancel.TabIndex = 1;
-            this.cmdCancel.Text = "Cancel";
-            this.cmdCancel.UseVisualStyleBackColor = true;
-            this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
+            cmdCancel.Enabled = false;
+            cmdCancel.Location = new Point(286, 120);
+            cmdCancel.Margin = new Padding(4, 3, 4, 3);
+            cmdCancel.Name = "cmdCancel";
+            cmdCancel.Size = new Size(88, 27);
+            cmdCancel.TabIndex = 1;
+            cmdCancel.Text = "Cancel";
+            cmdCancel.UseVisualStyleBackColor = true;
+            cmdCancel.Click += cmdCancel_Click;
             // 
             // pbProgress
             // 
-            this.pbProgress.Location = new System.Drawing.Point(51, 75);
-            this.pbProgress.Name = "pbProgress";
-            this.pbProgress.Size = new System.Drawing.Size(269, 23);
-            this.pbProgress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
-            this.pbProgress.TabIndex = 2;
+            pbProgress.Location = new Point(59, 87);
+            pbProgress.Margin = new Padding(4, 3, 4, 3);
+            pbProgress.Name = "pbProgress";
+            pbProgress.Size = new Size(314, 27);
+            pbProgress.Style = ProgressBarStyle.Marquee;
+            pbProgress.TabIndex = 2;
             // 
             // lblHeader
             // 
-            this.lblHeader.Location = new System.Drawing.Point(48, 12);
-            this.lblHeader.Name = "lblHeader";
-            this.lblHeader.Size = new System.Drawing.Size(272, 33);
-            this.lblHeader.TabIndex = 3;
-            this.lblHeader.Text = "Header Text";
+            lblHeader.Location = new Point(56, 14);
+            lblHeader.Margin = new Padding(4, 0, 4, 0);
+            lblHeader.Name = "lblHeader";
+            lblHeader.Size = new Size(317, 38);
+            lblHeader.TabIndex = 3;
+            lblHeader.Text = "Header Text";
             // 
             // lblBody
             // 
-            this.lblBody.Location = new System.Drawing.Point(48, 45);
-            this.lblBody.Name = "lblBody";
-            this.lblBody.Size = new System.Drawing.Size(272, 27);
-            this.lblBody.TabIndex = 4;
-            this.lblBody.Text = "Body Text";
+            lblBody.Location = new Point(56, 52);
+            lblBody.Margin = new Padding(4, 0, 4, 0);
+            lblBody.Name = "lblBody";
+            lblBody.Size = new Size(317, 31);
+            lblBody.TabIndex = 4;
+            lblBody.Text = "Body Text";
             // 
             // FormProgress
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(332, 139);
-            this.ControlBox = false;
-            this.Controls.Add(this.lblBody);
-            this.Controls.Add(this.lblHeader);
-            this.Controls.Add(this.pbProgress);
-            this.Controls.Add(this.cmdCancel);
-            this.Controls.Add(this.spinningProgress1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "FormProgress";
-            this.ShowInTaskbar = false;
-            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Please wait...";
-            this.Shown += new System.EventHandler(this.FormProgress_Shown);
-            this.ResumeLayout(false);
-
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(387, 160);
+            ControlBox = false;
+            Controls.Add(lblBody);
+            Controls.Add(lblHeader);
+            Controls.Add(pbProgress);
+            Controls.Add(cmdCancel);
+            Controls.Add(spinningProgress1);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Margin = new Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "FormProgress";
+            ShowInTaskbar = false;
+            SizeGripStyle = SizeGripStyle.Hide;
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "Please wait...";
+            Shown += FormProgress_Shown;
+            ResumeLayout(false);
         }
 
         #endregion
 
         private SpinningProgress spinningProgress1;
-        private System.Windows.Forms.Button cmdCancel;
-        private System.Windows.Forms.ProgressBar pbProgress;
-        private System.Windows.Forms.Label lblHeader;
-        private System.Windows.Forms.Label lblBody;
+        private Button cmdCancel;
+        private ProgressBar pbProgress;
+        private Label lblHeader;
+        private Label lblBody;
     }
 }

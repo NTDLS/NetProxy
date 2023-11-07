@@ -29,100 +29,106 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormSetPassword));
-            this.textBoxPassword1 = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.textBoxPassword2 = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.buttonSave = new System.Windows.Forms.Button();
-            this.SuspendLayout();
+            textBoxPassword1 = new TextBox();
+            label3 = new Label();
+            buttonCancel = new Button();
+            textBoxPassword2 = new TextBox();
+            label1 = new Label();
+            buttonSave = new Button();
+            SuspendLayout();
             // 
             // textBoxPassword1
             // 
-            this.textBoxPassword1.Location = new System.Drawing.Point(74, 12);
-            this.textBoxPassword1.Name = "textBoxPassword1";
-            this.textBoxPassword1.PasswordChar = '*';
-            this.textBoxPassword1.Size = new System.Drawing.Size(161, 20);
-            this.textBoxPassword1.TabIndex = 0;
+            textBoxPassword1.Location = new Point(86, 14);
+            textBoxPassword1.Margin = new Padding(4, 3, 4, 3);
+            textBoxPassword1.Name = "textBoxPassword1";
+            textBoxPassword1.PasswordChar = '*';
+            textBoxPassword1.Size = new Size(187, 23);
+            textBoxPassword1.TabIndex = 0;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(15, 15);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(53, 13);
-            this.label3.TabIndex = 9;
-            this.label3.Text = "Password";
+            label3.AutoSize = true;
+            label3.Location = new Point(18, 17);
+            label3.Margin = new Padding(4, 0, 4, 0);
+            label3.Name = "label3";
+            label3.Size = new Size(57, 15);
+            label3.TabIndex = 9;
+            label3.Text = "Password";
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(87, 64);
-            this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(71, 23);
-            this.buttonCancel.TabIndex = 3;
-            this.buttonCancel.Text = "Cancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
-            this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
+            buttonCancel.Location = new Point(102, 74);
+            buttonCancel.Margin = new Padding(4, 3, 4, 3);
+            buttonCancel.Name = "buttonCancel";
+            buttonCancel.Size = new Size(83, 27);
+            buttonCancel.TabIndex = 3;
+            buttonCancel.Text = "Cancel";
+            buttonCancel.UseVisualStyleBackColor = true;
+            buttonCancel.Click += buttonCancel_Click;
             // 
             // textBoxPassword2
             // 
-            this.textBoxPassword2.Location = new System.Drawing.Point(74, 38);
-            this.textBoxPassword2.Name = "textBoxPassword2";
-            this.textBoxPassword2.PasswordChar = '*';
-            this.textBoxPassword2.Size = new System.Drawing.Size(161, 20);
-            this.textBoxPassword2.TabIndex = 1;
+            textBoxPassword2.Location = new Point(86, 44);
+            textBoxPassword2.Margin = new Padding(4, 3, 4, 3);
+            textBoxPassword2.Name = "textBoxPassword2";
+            textBoxPassword2.PasswordChar = '*';
+            textBoxPassword2.Size = new Size(187, 23);
+            textBoxPassword2.TabIndex = 1;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(26, 41);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(42, 13);
-            this.label1.TabIndex = 11;
-            this.label1.Text = "Confirm";
+            label1.AutoSize = true;
+            label1.Location = new Point(30, 47);
+            label1.Margin = new Padding(4, 0, 4, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(51, 15);
+            label1.TabIndex = 11;
+            label1.Text = "Confirm";
             // 
             // buttonSave
             // 
-            this.buttonSave.Location = new System.Drawing.Point(164, 64);
-            this.buttonSave.Name = "buttonSave";
-            this.buttonSave.Size = new System.Drawing.Size(71, 23);
-            this.buttonSave.TabIndex = 2;
-            this.buttonSave.Text = "Ok";
-            this.buttonSave.UseVisualStyleBackColor = true;
-            this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
+            buttonSave.Location = new Point(191, 74);
+            buttonSave.Margin = new Padding(4, 3, 4, 3);
+            buttonSave.Name = "buttonSave";
+            buttonSave.Size = new Size(83, 27);
+            buttonSave.TabIndex = 2;
+            buttonSave.Text = "Ok";
+            buttonSave.UseVisualStyleBackColor = true;
+            buttonSave.Click += buttonSave_Click;
             // 
             // FormSetPassword
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(255, 100);
-            this.Controls.Add(this.buttonSave);
-            this.Controls.Add(this.textBoxPassword2);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.textBoxPassword1);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.buttonCancel);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "FormSetPassword";
-            this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "FormSetPassword";
-            this.Load += new System.EventHandler(this.FormSetPassword_Load);
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(298, 115);
+            Controls.Add(buttonSave);
+            Controls.Add(textBoxPassword2);
+            Controls.Add(label1);
+            Controls.Add(textBoxPassword1);
+            Controls.Add(label3);
+            Controls.Add(buttonCancel);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Margin = new Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "FormSetPassword";
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "FormSetPassword";
+            Load += FormSetPassword_Load;
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.TextBox textBoxPassword1;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.TextBox textBoxPassword2;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button buttonSave;
+        private TextBox textBoxPassword1;
+        private Label label3;
+        private Button buttonCancel;
+        private TextBox textBoxPassword2;
+        private Label label1;
+        private Button buttonSave;
     }
 }

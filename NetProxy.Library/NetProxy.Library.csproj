@@ -12,11 +12,16 @@
     <Version>2.0.0.0</Version>
     <Company>NetworkDLS</Company>
     <Product>NetProxy</Product>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="AppIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NTDLS.ReliableMessaging" Version="1.0.1" />
+    <PackageReference Include="NTDLS.ReliableMessaging" Version="1.2.0" />
     <PackageReference Include="protobuf-net" Version="3.2.26" />
   </ItemGroup>
 

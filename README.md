@@ -9,7 +9,7 @@ As always, the service is high performance, secure, and can be remotely administ
 
 If you require similar routing but through firewalls where you have no control, then be sure to check out https://github.com/NTDLS/NetTunnel
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/46aa456b-716b-48d7-b535-4efb28d3d8ce)
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/cdd3eadb-50ba-4e30-8bad-ffdf93e4d2c3)
 
 ![image](https://github.com/NTDLS/NetProxy/assets/11428567/02094550-08ed-4563-bca6-6b227da9e85a)
 

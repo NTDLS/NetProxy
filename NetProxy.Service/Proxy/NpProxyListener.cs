@@ -8,7 +8,7 @@ namespace NetProxy.Service.Proxy
     internal class NpProxyListener
     {
         private readonly TcpListener _listener;
-        private readonly Thread _thread;
+        private Thread? _thread;
         private bool _keepRunning;
         private readonly CriticalResource<Dictionary<Guid, NpProxyConnection>> _activeConnections = new();
 
@@ -21,7 +21,7 @@ namespace NetProxy.Service.Proxy
         {
             Proxy = proxy;
             _listener = listener;
-            _thread = new Thread(InboundListenerThreadProc);
+          
 
             EndpointStatistics.Use((o) =>
             {
@@ -33,6 +33,7 @@ namespace NetProxy.Service.Proxy
         public void StartAsync()
         {
             _keepRunning = true;
+            _thread = new Thread(InboundListenerThreadProc);
             _thread.Start();
         }
 
@@ -52,7 +53,8 @@ namespace NetProxy.Service.Proxy
             });
 
             _keepRunning = false;
-            _thread.Join();
+            _thread?.Join();
+            _thread = null;
         }
 
         public void RemoveActiveConnection(NpProxyConnection connection)

@@ -63,6 +63,12 @@ namespace NetProxy.Service.Proxy
 
         public void Stop()
         {
+            if (_keepRunning == false)
+            {
+                return;
+            }
+            _keepRunning = false;
+
             foreach (var listener in _listeners)
             {
                 listener.Stop();

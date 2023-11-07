@@ -40,7 +40,7 @@ namespace NetProxy.Client.Forms
 
         private void StatsTimer_Tick(object? sender, EventArgs e)
         {
-            _messageClient?.SendQuery<GUIRequestProxyStatsReply>(new GUIRequestProxyStats()).ContinueWith((o) =>
+            _messageClient?.SendQuery<QueryProxyStatsisticsReply>(new QueryProxyStatsistics()).ContinueWith((o) =>
             {
                 if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
                 {
@@ -94,7 +94,7 @@ namespace NetProxy.Client.Forms
 
         private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
-            if (payload is GUISendMessage message)
+            if (payload is NotifificationMessage message)
             {
                 Invoke(_sendMessage, message.Text);
             }
@@ -104,7 +104,7 @@ namespace NetProxy.Client.Forms
         {
             NpUtility.EnsureNotNull(_messageClient);
 
-            _messageClient.SendQuery<GUIRequestProxyListReply>(new GUIRequestProxyList()).ContinueWith((o) =>
+            _messageClient.SendQuery<QueryProxyConfigurationListReply>(new QueryProxyConfigurationList()).ContinueWith((o) =>
             {
                 if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
                 {
@@ -377,12 +377,11 @@ namespace NetProxy.Client.Forms
 
         private void Menu_ItemClicked(object? sender, ToolStripItemClickedEventArgs e)
         {
-            /*
-            string proxyId = string.Empty;
+            Guid proxyId = Guid.Empty;
 
             if (dataGridViewProxys.CurrentRow != null)
             {
-                proxyId = dataGridViewProxys.CurrentRow.Cells[ColumnId.Index].Value?.ToString() ?? "";
+                proxyId = Guid.Parse(dataGridViewProxys.CurrentRow.Cells[ColumnId.Index].Value?.ToString() ?? "");
             }
 
             if (e.ClickedItem?.Text != "Browse")
@@ -408,7 +407,7 @@ namespace NetProxy.Client.Forms
                 case "Start":
                     NpUtility.EnsureNotNull(_messageClient);
                     NpUtility.EnsureNotNull(proxyId);
-                    _messageClient.SendAll(Constants.CommandLables.GuiPersistStartProxy, proxyId);
+                    _messageClient.SendNotification(new NotifificationStartProxy(proxyId));
                     RefreshProxyList();
                     break;
                 case "Stop":
@@ -417,7 +416,7 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Stop the selected proxy?", Constants.TitleCaption, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.SendAll(Constants.CommandLables.GuiPersistStopProxy, proxyId);
+                        _messageClient.SendNotification(new NotifificationStopProxy(proxyId));
                         RefreshProxyList();
                     }
 
@@ -425,7 +424,7 @@ namespace NetProxy.Client.Forms
                 case "Edit":
                     NpUtility.EnsureNotNull(_connectionInfo);
                     NpUtility.EnsureNotNull(proxyId);
-                    using (FormProxy formProxy = new FormProxy(_connectionInfo, proxyId))
+                    using (FormProxy formProxy = new FormProxy(_connectionInfo, (proxyId)))
                     {
                         if (formProxy.ShowDialog() == DialogResult.OK)
                         {
@@ -439,12 +438,11 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Delete the selected proxy?", Constants.TitleCaption,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.SendAll(Constants.CommandLables.GuiPersistDeleteProxy, proxyId);
+                        _messageClient.SendNotification(new NotifificationDeleteProxy(proxyId));
                         RefreshProxyList();
                     }
                     break;
             }
-            */
         }
 
         #endregion

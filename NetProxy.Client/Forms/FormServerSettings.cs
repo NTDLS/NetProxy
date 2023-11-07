@@ -1,9 +1,9 @@
 ﻿using NetProxy.Client.Classes;
-using NetProxy.Library.MessageHubPayloads;
+using NetProxy.Library.MessageHubPayloads.Notifications;
+using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
-using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Client.Forms
 {
@@ -11,11 +11,11 @@ namespace NetProxy.Client.Forms
     {
         private HubClient? _messageClient = null;
 
-        private delegate void PopulateGrid(NpUsers users);
+        private delegate void PopulateGrid(List<NpUser> users);
         private PopulateGrid? _populateGrid = null;
-        private void OnPopulateGrid(NpUsers users)
+        private void OnPopulateGrid(List<NpUser> users)
         {
-            foreach (var user in users.Collection)
+            foreach (var user in users)
             {
                 object[] values = new object[5];
                 values[ColumnId.Index] = user.Id;
@@ -44,26 +44,20 @@ namespace NetProxy.Client.Forms
                 Close();
                 return;
             }
-            _messageClient.OnNotificationReceived += _messageClient_OnNotificationReceived;
         }
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
             NpUtility.EnsureNotNull(_messageClient);
-            _messageClient.SendNotification(new GUIRequestUserList());
-        }
+            NpUtility.EnsureNotNull(_populateGrid);
 
-        private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
-        {
-            /*
-            if (packet.Label == Constants.CommandLables.GuiRequestUserList)
+            _messageClient.SendQuery<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
             {
-                NpUtility.EnsureNotNull(_populateGrid);
-                var collection = JsonConvert.DeserializeObject<NpUsers>(packet.Payload);
-                NpUtility.EnsureNotNull(collection);
-                Invoke(_populateGrid, new object[] { collection });
-            }
-            */
+                if (t.IsCompletedSuccessfully && t.Result?.Collection != null)
+                {
+                    Invoke(_populateGrid, new object[] { t.Result.Collection });
+                }
+            });
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
@@ -74,30 +68,31 @@ namespace NetProxy.Client.Forms
 
         private void buttonSave_Click(object? sender, EventArgs e)
         {
-            NpUsers users = new NpUsers();
+            NpUtility.EnsureNotNull(_messageClient);
+
+            var users = new List<NpUser>();
 
             foreach (DataGridViewRow row in dataGridViewUsers.Rows)
             {
                 if ((((string)row.Cells[ColumnUsername.Index].Value) ?? string.Empty) != string.Empty)
                 {
-                    string hash = (string)row.Cells[ColumnPassword.Index].Value;
-                    if (hash == null || hash == string.Empty)
+                    string passwordHash = (string)row.Cells[ColumnPassword.Index].Value;
+                    if (string.IsNullOrEmpty(passwordHash) == false)
                     {
-                        hash = NpUtility.Sha256(string.Empty);
+                        passwordHash = NpUtility.Sha256(string.Empty);
                     }
 
                     users.Add(new NpUser
                     {
                         Id = (string)row.Cells[ColumnId.Index].Value,
                         UserName = (string)row.Cells[ColumnUsername.Index].Value,
-                        PasswordHash = (string)row.Cells[ColumnPassword.Index].Value,
+                        PasswordHash = passwordHash,
                         Description = (string)row.Cells[ColumnDescription.Index].Value
                     });
                 }
             }
 
-            NpUtility.EnsureNotNull(_messageClient);
-            //_messageClient.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
+            _messageClient.SendNotification(new NotifificationPersistUserList(users));
 
             DialogResult = DialogResult.OK;
             Close();

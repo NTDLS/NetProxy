@@ -1,6 +1,6 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Library;
-using NetProxy.Library.MessageHubPayloads;
+using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
@@ -92,7 +92,15 @@ namespace NetProxy.Client.Forms
             {
                 NpUtility.EnsureNotNull(_packeteer);
                 NpUtility.EnsureNotNull(_proxyId);
-                _packeteer.SendNotification(new GUIRequestProxy((Guid)_proxyId));
+                NpUtility.EnsureNotNull(_populateProxyInformation);
+
+                _packeteer.SendQuery<QueryProxyConfigurationReply>(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
+                {
+                    if (t.IsCompletedSuccessfully && t.Result?.ProxyConfiguration != null)
+                    {
+                        Invoke(_populateProxyInformation, t.Result?.ProxyConfiguration);
+                    }
+                });
             }
         }
 
@@ -136,7 +144,7 @@ namespace NetProxy.Client.Forms
 
         private void _packeteer_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
-            if (payload is GUIRequestProxy)
+            if (payload is QueryProxyConfiguration)
             {
                 //NpUtility.EnsureNotNull(_populateProxyInformation);
                 //Invoke(_populateProxyInformation, JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload));

@@ -3,11 +3,11 @@ using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class GUIRequestProxyList : IFramePayloadQuery
+    public class QueryProxyConfigurationList : IFramePayloadQuery
     {
     }
 
-    public class GUIRequestProxyListReply : IFramePayloadQueryReply
+    public class QueryProxyConfigurationListReply : IFramePayloadQueryReply
     {
         public string? Message { get; set; }
 

@@ -2,25 +2,21 @@
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class GUIRequestLogin : IFramePayloadQuery
+    public class QueryLogin : IFramePayloadQuery
     {
         public string UserName { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
 
-        public GUIRequestLogin(string userName, string passwordHash)
+        public QueryLogin(string userName, string passwordHash)
         {
             UserName = userName;
             PasswordHash = passwordHash;
         }
     }
 
-    public class GUIRequestLoginReply : IFramePayloadQueryReply
+    public class QueryLoginReply : IFramePayloadQueryReply
     {
-        public bool Result { get; set; }
-
-        public GUIRequestLoginReply(bool result)
-        {
-            Result = result;
-        }
+        public bool Result { get; set; } = false;
+        public string? Message { get; set; }
     }
 }

@@ -2,12 +2,12 @@
 
 namespace NetProxy.Library.MessageHubPayloads.Notifications
 {
-    public class GUIRegisterLogin : IFramePayloadNotification
+    public class NotifificationRegisterLogin : IFramePayloadNotification
     {
         public string UserName { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
 
-        public GUIRegisterLogin(string userName, string passwordHash)
+        public NotifificationRegisterLogin(string userName, string passwordHash)
         {
             UserName = userName;
             PasswordHash = passwordHash;

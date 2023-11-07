@@ -13,7 +13,7 @@ namespace NetProxy.Client.Classes
             try
             {
                 client.Connect(connectionInfo.ServerName, connectionInfo.Port);
-                client.SendNotification(new GUIRegisterLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
+                client.SendNotification(new NotifificationRegisterLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
                 return client;
             }
             catch

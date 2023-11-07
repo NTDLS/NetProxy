@@ -143,7 +143,7 @@ namespace NetProxy.Client.Forms
                     _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
                     _loginConnectionEvent = new AutoResetEvent(false);
 
-                    _messageClient.SendQuery<GUIRequestLoginReply>(new GUIRequestLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
+                    _messageClient.SendQuery<QueryLoginReply>(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
                         {
                             if (o.IsCompletedSuccessfully && o.Result?.Result == true)
                             {

@@ -5,11 +5,9 @@ using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
-using Newtonsoft.Json;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
 using NTDLS.StreamFraming.Payloads;
-using System.Net.Sockets;
 
 namespace NetProxy.Service
 {
@@ -33,7 +31,9 @@ namespace NetProxy.Service
 
             if (_authenticatedConnections.Contains(connectionId) == false)
             {
-                if (payload is GUIRequestLogin userLogin)
+                var reply = new QueryLoginReply();
+
+                if (payload is QueryLogin userLogin)
                 {
                     try
                     {
@@ -50,20 +50,16 @@ namespace NetProxy.Service
                                 Console.WriteLine($"Failed login connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
 
-                            return new GUIRequestLoginReply(true);
+                            reply.Result = true;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Singletons.Logging.Write(new NpLogging.LoggingPayload
-                        {
-                            Severity = NpLogging.Severity.Exception,
-                            CustomText = "An error occured while logging in.",
-                            Exception = ex
-                        });
+                        Singletons.Logging.Write("An error occured while logging in.", ex);
+                        reply.Message = ex.Message;
                     }
 
-                    return new GUIRequestLoginReply(false);
+                    return reply;
                 }
                 else
                 {
@@ -71,9 +67,9 @@ namespace NetProxy.Service
                 }
             }
 
-            if (payload is GUIRequestProxyList)
+            if (payload is QueryProxyConfigurationList)
             {
-                var response = new GUIRequestProxyListReply();
+                var reply = new QueryProxyConfigurationListReply();
 
                 try
                 {
@@ -95,23 +91,23 @@ namespace NetProxy.Service
                                 Bindings = proxy.Configuration.Bindings
                             };
 
-                            response.Collection.Add(augmentedProxy);
+                            reply.Collection.Add(augmentedProxy);
                         }
                     }
 
-                    return response;
+                    return reply;
                 }
                 catch (Exception ex)
                 {
                     Singletons.Logging.Write("Failed to get proxy list.", ex);
-                    response.Message = ex.Message;
+                    reply.Message = ex.Message;
                 }
 
-                return response;
+                return reply;
             }
-            else if (payload is GUIRequestProxyStats)
+            else if (payload is QueryProxyStatsistics)
             {
-                var response = new GUIRequestProxyStatsReply();
+                var reply = new QueryProxyStatsisticsReply();
 
                 try
                 {
@@ -129,7 +125,7 @@ namespace NetProxy.Service
                                 CurrentConnections = proxy.CurrentConnectionCount
 
                             };
-                            response.Collection.Add(augmentedProxy);
+                            reply.Collection.Add(augmentedProxy);
                         }
                     }
 
@@ -137,10 +133,52 @@ namespace NetProxy.Service
                 catch (Exception ex)
                 {
                     Singletons.Logging.Write("Failed to get proxy stats list.", ex);
-                    response.Message = ex.Message;
+                    reply.Message = ex.Message;
                 }
 
-                return response;
+                return reply;
+            }
+            else if (payload is QueryProxyConfiguration proxyRequest)
+            {
+                var reply = new QueryProxyConfigurationReply();
+
+                try
+                {
+                    lock (_config)
+                    {
+                        var proxy = _proxies[proxyRequest.Id];
+                        if (proxy != null)
+                        {
+                            reply.ProxyConfiguration = proxy.Configuration;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Singletons.Logging.Write("Failed to get proxy.", ex);
+                    reply.Message = ex.Message;
+                }
+
+                return reply;
+            }
+            else if (payload is QueryUserList)
+            {
+                var reply = new QueryUserListReply();
+
+                try
+                {
+                    lock (_config)
+                    {
+                        reply.Collection = _config.Users.Collection;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Singletons.Logging.Write("Failed to get user list.", ex);
+                    reply.Message = ex.Message;
+                }
+
+                return reply;
             }
 
             throw new Exception("Unhandled query.");
@@ -163,7 +201,7 @@ namespace NetProxy.Service
 
             if (_authenticatedConnections.Contains(connectionId) == false)
             {
-                if (payload is GUIRegisterLogin registerLogin)
+                if (payload is NotifificationRegisterLogin registerLogin)
                 {
                     try
                     {
@@ -183,12 +221,7 @@ namespace NetProxy.Service
                     }
                     catch (Exception ex)
                     {
-                        Singletons.Logging.Write(new NpLogging.LoggingPayload
-                        {
-                            Severity = NpLogging.Severity.Exception,
-                            CustomText = "An error occured while logging in.",
-                            Exception = ex
-                        });
+                        Singletons.Logging.Write("An error occured while logging in.", ex);
                     }
                 }
                 else
@@ -199,100 +232,35 @@ namespace NetProxy.Service
                 return; //If the peer is not logged in, don't go any further.
             }
 
-
-            /*
-
-            else if (payload is GUIRequestProxy)
+            if (payload is NotifificationPersistUserList persistUserList)
             {
                 try
                 {
                     lock (_config)
                     {
-                        Guid proxyId = Guid.Parse(packet.Payload);
-                        var proxy = _proxies[proxyId];
-                        if (proxy != null)
+                        _config.Users.Collection.Clear();
+
+                        foreach (var user in persistUserList.Collection)
                         {
-                            string value = JsonConvert.SerializeObject(proxy.Configuration);
-                            _messageServer.SendTo(connectionId, packet.Label, value);
+                            _config.Users.Add(user);
                         }
+                        SaveConfiguration();
                     }
                 }
                 catch (Exception ex)
                 {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get proxy.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    Singletons.Logging.Write("Failed to save user list.", ex);
                 }
             }
-            else if (payload is GUIRequestUserList)
+            else if (payload is NotifificationUpsertProxy persistUpsertProxy)
             {
                 try
                 {
-                    lock (_config)
-                    {
-                        string value = JsonConvert.SerializeObject(_config.Users);
-                        _messageServer.SendTo(connectionId, packet.Label, value);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get user list.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
-                }
-            }
-            else if (payload is GUIPersistUserList)
-            {
-                try
-                {
-                    var value = JsonConvert.DeserializeObject<NpUsers>(packet.Payload);
-                    if (value != null)
-                    {
-                        lock (_config)
-                        {
-                            _config.Users.Collection.Clear();
-
-                            foreach (var user in value.Collection)
-                            {
-                                _config.Users.Add(user);
-                            }
-                            SaveConfiguration();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to save user list.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
-                }
-            }
-            else if (payload is GUIPersistUpsertProxy)
-            {
-                try
-                {
-                    var value = JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload);
-                    NpUtility.EnsureNotNull(value);
 
                     lock (_config)
                     {
                         var existingProxy = (from o in _proxies
-                                             where o.Configuration.Id == value.Id
+                                             where o.Configuration.Id == persistUpsertProxy.ProxyConfiguration.Id
                                              select o).FirstOrDefault();
 
                         if (existingProxy != null)
@@ -301,7 +269,7 @@ namespace NetProxy.Service
                             _proxies.Remove(existingProxy);
                         }
 
-                        var newProxy = new NpProxy(value);
+                        var newProxy = new NpProxy(persistUpsertProxy.ProxyConfiguration);
 
                         _proxies.Add(newProxy);
 
@@ -315,26 +283,18 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to upsert proxy.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    Singletons.Logging.Write("Failed to upsert proxy.", ex);
                 }
             }
-            else if (payload is GUIPersistDeleteProxy)
+            else if (payload is NotifificationDeleteProxy persistDeleteProxy)
             {
                 try
                 {
-                    Guid proxyId = Guid.Parse(packet.Payload);
 
                     lock (_config)
                     {
                         var existingProxy = (from o in _proxies
-                                             where o.Configuration.Id == proxyId
+                                             where o.Configuration.Id == persistDeleteProxy.Id
                                              select o).FirstOrDefault();
 
                         if (existingProxy != null)
@@ -347,81 +307,54 @@ namespace NetProxy.Service
                 }
                 catch (Exception ex)
                 {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get delete proxy.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
+                    Singletons.Logging.Write("Failed to delete proxy.", ex);
                 }
             }
-            else if (payload is GUIPersistStopProxy)
+            else if (payload is NotifificationStopProxy persistStopProxy)
             {
                 try
                 {
-                    Guid proxyId = Guid.Parse(packet.Payload);
+                    lock (_config)
+                    {
+                        var existingProxy = (from o in _proxies
+                                             where o.Configuration.Id == persistStopProxy.Id
+                                             select o).FirstOrDefault();
+
+                        existingProxy?.Stop();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Singletons.Logging.Write("Failed to stop proxy.", ex);
+                }
+            }
+            else if (payload is NotifificationStartProxy persistStartProxy)
+            {
+                try
+                {
 
                     lock (_config)
                     {
                         var existingProxy = (from o in _proxies
-                                             where o.Configuration.Id == proxyId
+                                             where o.Configuration.Id == persistStartProxy.Id
                                              select o).FirstOrDefault();
 
-                        if (existingProxy != null)
+                        if (existingProxy?.Start() != true)
                         {
-                            existingProxy.Stop();
+                            _messageServer.SendNotification(connectionId, new NotifificationMessage("Failed to start proxy."));
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get stop proxy.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "Failed to stop proxy: " + ex.Message);
+                    Singletons.Logging.Write("Failed to start proxy.", ex);
                 }
             }
-            else if (payload is GUIPersistStartProxy)
+            else
             {
-                try
-                {
-                    Guid proxyId = Guid.Parse(packet.Payload);
+                throw new Exception("Unhandled notification.");
 
-                    lock (_config)
-                    {
-                        var existingProxy = (from o in _proxies
-                                             where o.Configuration.Id == proxyId
-                                             select o).FirstOrDefault();
-
-                        if (existingProxy != null)
-                        {
-                            if (existingProxy.Start() == false)
-                            {
-                                _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "Failed to start proxy.");
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to start proxy.",
-                        Exception = ex
-                    });
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "Failed to start proxy: " + ex.Message);
-                }
             }
-            */
-
-            throw new Exception("Unhandled notification.");
         }
 
         public void SaveConfiguration()

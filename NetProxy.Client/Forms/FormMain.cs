@@ -5,11 +5,9 @@ using NetProxy.Library.MessageHubPayloads.Notifications;
 using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
-using Newtonsoft.Json.Linq;
 using NTDLS.ReliableMessaging;
 using NTDLS.StreamFraming.Payloads;
 using System.Net;
-using System.Windows.Forms.DataVisualization.Charting;
 
 namespace NetProxy.Client.Forms
 {

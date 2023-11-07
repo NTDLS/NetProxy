@@ -1,27 +1,23 @@
-﻿using NetProxy.Hub;
-using NetProxy.Library;
-using NetProxy.Library.Payloads;
+﻿using NetProxy.Library.MessageHubPayloads.Notifications;
 using NetProxy.Library.Utilities;
-using Newtonsoft.Json;
+using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Client.Classes
 {
     public static class LoginPacketeerFactory
     {
-        public static NpHubPacketeer? GetNewPacketeer(ConnectionInfo connectionInfo)
+        public static HubClient? GetNewMessageHubClient(ConnectionInfo connectionInfo)
         {
-            NpHubPacketeer packeteer = new NpHubPacketeer();
+            var client = new HubClient();
 
-            if (packeteer.Connect(connectionInfo.ServerName, connectionInfo.Port))
+            try
             {
-                var userLogin = new NpUserLogin()
-                {
-                    UserName = connectionInfo.UserName,
-                    PasswordHash = NpUtility.Sha256(connectionInfo.Password)
-                };
-
-                packeteer.SendAll(Constants.CommandLables.GuiRequestLogin, JsonConvert.SerializeObject(userLogin));
-                return packeteer;
+                client.Connect(connectionInfo.ServerName, connectionInfo.Port);
+                client.SendNotification(new NotifificationRegisterLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
+                return client;
+            }
+            catch
+            {
             }
 
             return null;

@@ -5,11 +5,11 @@
         private readonly SemaphoreSlim _semaphoreToRequestStop;
         private readonly Thread _thread;
 
-        private readonly NpManagement _management;
+        private readonly NpServiceManager _management;
 
         public NpService()
         {
-            _management = new NpManagement();
+            _management = new NpServiceManager();
             _semaphoreToRequestStop = new SemaphoreSlim(0);
             _thread = new Thread(ServiceThreadProc);
         }

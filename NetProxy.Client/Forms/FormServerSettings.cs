@@ -1,22 +1,21 @@
 ﻿using NetProxy.Client.Classes;
-using NetProxy.Hub;
-using NetProxy.Hub.MessageFraming;
-using NetProxy.Library;
+using NetProxy.Library.MessageHubPayloads.Notifications;
+using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
-using Newtonsoft.Json;
+using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private NpHubPacketeer? _packeteer = null;
+        private HubClient? _messageClient = null;
 
-        private delegate void PopulateGrid(NpUsers users);
+        private delegate void PopulateGrid(List<NpUser> users);
         private PopulateGrid? _populateGrid = null;
-        private void OnPopulateGrid(NpUsers users)
+        private void OnPopulateGrid(List<NpUser> users)
         {
-            foreach (var user in users.Collection)
+            foreach (var user in users)
             {
                 object[] values = new object[5];
                 values[ColumnId.Index] = user.Id;
@@ -39,64 +38,61 @@ namespace NetProxy.Client.Forms
 
             _populateGrid = OnPopulateGrid;
 
-            _packeteer = LoginPacketeerFactory.GetNewPacketeer(connectionInfo);
-            if (_packeteer == null)
+            _messageClient = LoginPacketeerFactory.GetNewMessageHubClient(connectionInfo);
+            if (_messageClient == null)
             {
                 Close();
                 return;
             }
-            _packeteer.OnMessageReceived += Packeteer_OnMessageReceived;
         }
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiRequestUserList);
-        }
+            NpUtility.EnsureNotNull(_messageClient);
+            NpUtility.EnsureNotNull(_populateGrid);
 
-        private void Packeteer_OnMessageReceived(NpHubPacketeer sender, NetProxy.Hub.Common.NpHubPeer peer, NpFrame packet)
-        {
-            if (packet.Label == Constants.CommandLables.GuiRequestUserList)
+            _messageClient.SendQuery<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
             {
-                NpUtility.EnsureNotNull(_populateGrid);
-                var collection = JsonConvert.DeserializeObject<NpUsers>(packet.Payload);
-                NpUtility.EnsureNotNull(collection);
-                Invoke(_populateGrid, new object[] { collection });
-            }
+                if (t.IsCompletedSuccessfully && t.Result?.Collection != null)
+                {
+                    Invoke(_populateGrid, new object[] { t.Result.Collection });
+                }
+            });
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.Disconnect();
+            NpUtility.EnsureNotNull(_messageClient);
+            _messageClient.Disconnect();
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
         {
-            NpUsers users = new NpUsers();
+            NpUtility.EnsureNotNull(_messageClient);
+
+            var users = new List<NpUser>();
 
             foreach (DataGridViewRow row in dataGridViewUsers.Rows)
             {
                 if ((((string)row.Cells[ColumnUsername.Index].Value) ?? string.Empty) != string.Empty)
                 {
-                    string hash = (string)row.Cells[ColumnPassword.Index].Value;
-                    if (hash == null || hash == string.Empty)
+                    string passwordHash = (string)row.Cells[ColumnPassword.Index].Value;
+                    if (string.IsNullOrEmpty(passwordHash) == false)
                     {
-                        hash = NpUtility.Sha256(string.Empty);
+                        passwordHash = NpUtility.Sha256(string.Empty);
                     }
 
                     users.Add(new NpUser
                     {
                         Id = (string)row.Cells[ColumnId.Index].Value,
                         UserName = (string)row.Cells[ColumnUsername.Index].Value,
-                        PasswordHash = (string)row.Cells[ColumnPassword.Index].Value,
+                        PasswordHash = passwordHash,
                         Description = (string)row.Cells[ColumnDescription.Index].Value
                     });
                 }
             }
 
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.SendAll(Constants.CommandLables.GuiPersistUserList, JsonConvert.SerializeObject(users));
+            _messageClient.SendNotification(new NotifificationPersistUserList(users));
 
             DialogResult = DialogResult.OK;
             Close();

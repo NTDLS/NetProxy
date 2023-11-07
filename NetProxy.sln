@@ -3,13 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetProxy.Library", "NetProxy.Library\NetProxy.Library.csproj", "{481595BC-3AD5-494B-9607-329291654078}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetProxy.Library", "NetProxy.Library\NetProxy.Library.csproj", "{481595BC-3AD5-494B-9607-329291654078}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetProxy.Service", "NetProxy.Service\NetProxy.Service.csproj", "{E7DD34E9-0511-4D18-94F4-54CCF9AA29B4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetProxy.Service", "NetProxy.Service\NetProxy.Service.csproj", "{E7DD34E9-0511-4D18-94F4-54CCF9AA29B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetProxy.Client", "NetProxy.Client\NetProxy.Client.csproj", "{AB9C1235-5810-4AA0-B337-6386FC8FE8CE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetProxy.Hub", "NetProxy.Hub\NetProxy.Hub.csproj", "{C5AF6D1B-E2B0-4A8D-908B-E8AF55E1645E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetProxy.Client", "NetProxy.Client\NetProxy.Client.csproj", "{AB9C1235-5810-4AA0-B337-6386FC8FE8CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		{AB9C1235-5810-4AA0-B337-6386FC8FE8CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB9C1235-5810-4AA0-B337-6386FC8FE8CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB9C1235-5810-4AA0-B337-6386FC8FE8CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C5AF6D1B-E2B0-4A8D-908B-E8AF55E1645E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C5AF6D1B-E2B0-4A8D-908B-E8AF55E1645E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C5AF6D1B-E2B0-4A8D-908B-E8AF55E1645E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C5AF6D1B-E2B0-4A8D-908B-E8AF55E1645E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

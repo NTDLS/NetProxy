@@ -3,7 +3,7 @@ using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class QueryProxyConfiguration : IFramePayloadQuery
+    public class QueryProxyConfiguration : IFrameQuery
     {
         public Guid Id { get; set; }
 
@@ -13,7 +13,7 @@ namespace NetProxy.Library.MessageHubPayloads.Queries
         }
     }
 
-    public class QueryProxyConfigurationReply : IFramePayloadQueryReply
+    public class QueryProxyConfigurationReply : IFrameQueryReply
     {
         public string? Message { get; set; }
 

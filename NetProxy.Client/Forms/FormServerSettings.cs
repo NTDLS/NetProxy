@@ -9,10 +9,10 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private HubClient? _messageClient = null;
+        private readonly MessageClient? _messageClient = null;
 
         private delegate void PopulateGrid(List<NpUser> users);
-        private PopulateGrid? _populateGrid = null;
+        private readonly PopulateGrid? _populateGrid = null;
         private void OnPopulateGrid(List<NpUser> users)
         {
             foreach (var user in users)
@@ -38,7 +38,7 @@ namespace NetProxy.Client.Forms
 
             _populateGrid = OnPopulateGrid;
 
-            _messageClient = LoginPacketeerFactory.GetNewMessageHubClient(connectionInfo);
+            _messageClient = MessageClientFactory.Create(connectionInfo);
             if (_messageClient == null)
             {
                 Close();

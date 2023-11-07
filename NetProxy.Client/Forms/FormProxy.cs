@@ -1,16 +1,16 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Library;
+using NetProxy.Library.MessageHubPayloads.Notifications;
 using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
-using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormProxy : Form
     {
-        private HubClient? _packeteer = null;
+        private MessageClient? _messageClient = null;
         private Guid? _proxyId = null;
         private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
         private PopulateProxyInformation? _populateProxyInformation;
@@ -27,14 +27,12 @@ namespace NetProxy.Client.Forms
             _populateProxyInformation = OnPopulateProxyInformation;
 
             _proxyId = proxyId ?? Guid.NewGuid();
-            _packeteer = LoginPacketeerFactory.GetNewMessageHubClient(connectionInfo);
-            if (_packeteer == null)
+            _messageClient = MessageClientFactory.Create(connectionInfo);
+            if (_messageClient == null)
             {
                 Close();
                 return;
             }
-
-            _packeteer.OnNotificationReceived += _packeteer_OnNotificationReceived;
 
             var trafficTypes = new List<ComboItem>
             {
@@ -90,11 +88,11 @@ namespace NetProxy.Client.Forms
         {
             if (_proxyId != null)
             {
-                NpUtility.EnsureNotNull(_packeteer);
+                NpUtility.EnsureNotNull(_messageClient);
                 NpUtility.EnsureNotNull(_proxyId);
                 NpUtility.EnsureNotNull(_populateProxyInformation);
 
-                _packeteer.SendQuery<QueryProxyConfigurationReply>(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
+                _messageClient.SendQuery<QueryProxyConfigurationReply>(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
                 {
                     if (t.IsCompletedSuccessfully && t.Result?.ProxyConfiguration != null)
                     {
@@ -139,15 +137,6 @@ namespace NetProxy.Client.Forms
                 dataGridViewHTTPHeaders.Rows.Add(
                     new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }
                 );
-            }
-        }
-
-        private void _packeteer_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
-        {
-            if (payload is QueryProxyConfiguration)
-            {
-                //NpUtility.EnsureNotNull(_populateProxyInformation);
-                //Invoke(_populateProxyInformation, JsonConvert.DeserializeObject<NpProxyConfiguration>(packet.Payload));
             }
         }
 
@@ -274,8 +263,8 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            NpUtility.EnsureNotNull(_packeteer);
-            //_packeteer.SendAll(Constants.CommandLables.GuiPersistUpsertProxy, JsonConvert.SerializeObject(proxy));
+            NpUtility.EnsureNotNull(_messageClient);
+            _messageClient.SendNotification(new NotifificationUpsertProxy(proxy));
 
             Thread.Sleep(500);
 
@@ -291,8 +280,8 @@ namespace NetProxy.Client.Forms
 
         private void FormProxy_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            NpUtility.EnsureNotNull(_packeteer);
-            _packeteer.Disconnect();
+            NpUtility.EnsureNotNull(_messageClient);
+            _messageClient.Disconnect();
         }
 
         private void comboBoxTrafficType_SelectedIndexChanged(object? sender, EventArgs e)

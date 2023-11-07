@@ -2,7 +2,7 @@
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class QueryLogin : IFramePayloadQuery
+    public class QueryLogin : IFrameQuery
     {
         public string UserName { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
@@ -14,7 +14,7 @@ namespace NetProxy.Library.MessageHubPayloads.Queries
         }
     }
 
-    public class QueryLoginReply : IFramePayloadQueryReply
+    public class QueryLoginReply : IFrameQueryReply
     {
         public bool Result { get; set; } = false;
         public string? Message { get; set; }

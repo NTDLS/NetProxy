@@ -16,7 +16,7 @@ namespace NetProxy.Client.Forms
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
         private bool _loginResult = false;
-        private HubClient? _messageClient = null;
+        private MessageClient? _messageClient = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -129,7 +129,7 @@ namespace NetProxy.Client.Forms
             _loginResult = false;
             _connectMessage = "Failed to connect.";
 
-            _messageClient = new HubClient();
+            _messageClient = new MessageClient();
 
             NpUtility.EnsureNotNull(_worker);
 

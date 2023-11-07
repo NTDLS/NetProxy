@@ -3,7 +3,7 @@ using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Library.MessageHubPayloads.Notifications
 {
-    public class NotifificationPersistUserList : IFramePayloadNotification
+    public class NotifificationPersistUserList : IFrameNotification
     {
         public List<NpUser> Collection { get; set; }
 

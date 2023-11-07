@@ -4,21 +4,18 @@ using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Client.Classes
 {
-    public static class LoginPacketeerFactory
+    public static class MessageClientFactory
     {
-        public static HubClient? GetNewMessageHubClient(ConnectionInfo connectionInfo)
+        public static MessageClient? Create(ConnectionInfo connectionInfo)
         {
-            var client = new HubClient();
-
             try
             {
+                var client = new MessageClient();
                 client.Connect(connectionInfo.ServerName, connectionInfo.Port);
                 client.SendNotification(new NotifificationRegisterLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
                 return client;
             }
-            catch
-            {
-            }
+            catch { }
 
             return null;
         }

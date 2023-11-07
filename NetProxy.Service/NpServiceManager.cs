@@ -14,7 +14,7 @@ namespace NetProxy.Service
     public class NpServiceManager
     {
         private NpConfiguration? _config;
-        private readonly HubServer _messageServer = new();
+        private readonly MessageServer _messageServer = new();
         private readonly NpProxyCollection _proxies = new();
         private readonly HashSet<Guid> _authenticatedConnections = new();
 
@@ -25,7 +25,7 @@ namespace NetProxy.Service
             _messageServer.OnDisconnected += _MessageHubServer_OnDisconnected;
         }
 
-        private IFramePayloadQueryReply _messageServer_OnQueryReceived(Guid connectionId, IFramePayloadQuery payload)
+        private IFrameQueryReply _messageServer_OnQueryReceived(Guid connectionId, IFrameQuery payload)
         {
             NpUtility.EnsureNotNull(_config);
 
@@ -195,7 +195,7 @@ namespace NetProxy.Service
             Console.WriteLine($"Deregistered connection: {connectionId} (Logged in users {_authenticatedConnections.Count}).");
         }
 
-        private void _MessageHubServer_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
+        private void _MessageHubServer_OnNotificationReceived(Guid connectionId, IFrameNotification payload)
         {
             NpUtility.EnsureNotNull(_config);
 

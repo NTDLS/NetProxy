@@ -2,7 +2,7 @@
 
 namespace NetProxy.Library.MessageHubPayloads.Notifications
 {
-    public class NotifificationStartProxy : IFramePayloadNotification
+    public class NotifificationStartProxy : IFrameNotification
     {
         public Guid Id { get; set; }
 

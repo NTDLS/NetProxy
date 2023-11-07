@@ -14,7 +14,7 @@ namespace NetProxy.Client.Forms
     public partial class FormMain : Form
     {
         private ConnectionInfo? _connectionInfo = null;
-        private HubClient? _messageClient = null;
+        private MessageClient? _messageClient = null;
         private readonly System.Windows.Forms.Timer? _statsTimer = null;
 
         public FormMain()
@@ -65,7 +65,7 @@ namespace NetProxy.Client.Forms
 
                     _connectionInfo = formConnect.GetConnectionInfo();
 
-                    _messageClient = LoginPacketeerFactory.GetNewMessageHubClient(_connectionInfo);
+                    _messageClient = MessageClientFactory.Create(_connectionInfo);
                     if (_messageClient != null)
                     {
                         _connectionLost = OnConnectionLost;
@@ -92,7 +92,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
+        private void _messageClient_OnNotificationReceived(Guid connectionId, IFrameNotification payload)
         {
             if (payload is NotifificationMessage message)
             {

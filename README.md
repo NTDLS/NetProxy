@@ -8,3 +8,15 @@ This application runs as a Windows Service and allows you to redirect TCP/IP tra
 As always, the service is high performance, secure, and can be remotely administered through an easy to use management interface.
 
 If you require similar routing but through firewalls where you have no control, then be sure to check out https://github.com/NTDLS/NetTunnel
+
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/46aa456b-716b-48d7-b535-4efb28d3d8ce)
+
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/02094550-08ed-4563-bca6-6b227da9e85a)
+
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/0a70bb69-d457-4c8a-b04c-a304ce80f312)
+
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/aab92b62-79f3-4dbb-aa4c-266bfc214b2b)
+
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/03622ca0-145e-441c-8aa0-b0bca65fd3b5)
+
+![image](https://github.com/NTDLS/NetProxy/assets/11428567/8f64d630-1683-4e7c-b285-e1d9b6de689d)

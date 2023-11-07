@@ -249,12 +249,12 @@
             series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
             series1.Color = System.Drawing.Color.Red;
             series1.Legend = "Legend1";
-            series1.Name = "MB/s Sent";
+            series1.Name = "KB/s Sent";
             series2.ChartArea = "ChartArea1";
             series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
             series2.Color = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             series2.Legend = "Legend1";
-            series2.Name = "MB/s Recv";
+            series2.Name = "KB/s Recv";
             series3.ChartArea = "ChartArea1";
             series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StepLine;
             series3.Color = System.Drawing.Color.Blue;

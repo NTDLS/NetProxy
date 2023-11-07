@@ -5,9 +5,11 @@ using NetProxy.Library.MessageHubPayloads.Notifications;
 using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
+using Newtonsoft.Json.Linq;
 using NTDLS.ReliableMessaging;
 using NTDLS.StreamFraming.Payloads;
 using System.Net;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace NetProxy.Client.Forms
 {
@@ -38,15 +40,29 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        bool timerTicking = false;
         private void StatsTimer_Tick(object? sender, EventArgs e)
         {
-            _messageClient?.SendQuery<QueryProxyStatsisticsReply>(new QueryProxyStatsistics()).ContinueWith((o) =>
+            if (timerTicking)
             {
-                if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
+                return;
+            }
+            timerTicking = true;
+
+            try
+            {
+                _messageClient?.SendQuery<QueryProxyStatsisticsReply>(new QueryProxyStatsistics()).ContinueWith((o) =>
                 {
-                    Invoke(_populateProxyListStats, o.Result.Collection);
-                }
-            });
+                    if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
+                    {
+                        Invoke(_populateProxyListStats, o.Result.Collection);
+                    }
+                });
+            }
+            finally
+            {
+                timerTicking = false;
+            }
         }
 
         private bool ChangeConnection()
@@ -182,43 +198,48 @@ namespace NetProxy.Client.Forms
 
         double _lastBytesSent = -1;
         double _lastBytesRecv = -1;
+        int chartPointCount = 0;
+        const int maxChartPointCount = 50;
 
         public delegate void PopulateProxyListStats(List<NpProxyGridStats> stats);
 
         readonly PopulateProxyListStats _populateProxyListStats;
         public void OnPopulateProxyListStats(List<NpProxyGridStats> stats)
         {
-            var sentSeries = chartPerformance.Series["MB/s Sent"];
-            var recvSeries = chartPerformance.Series["MB/s Recv"];
+            var sentSeries = chartPerformance.Series["KB/s Sent"];
+            var recvSeries = chartPerformance.Series["KB/s Recv"];
             var connectionsSeries = chartPerformance.Series["Connections"];
 
             var bytesSent = stats.Sum(od => (od.BytesWritten / 1024.0));
             var bytesRecv = stats.Sum(od => (od.BytesRead / 1024.0));
             var currentConn = stats.Sum(od => od.CurrentConnections);
 
-            if (_lastBytesSent >= 0)
+            if (_lastBytesSent >= 0 || _lastBytesRecv >= 0)
             {
                 double value = 0;
 
                 value = bytesSent - _lastBytesSent;
-                sentSeries.Points.Add(value > 0 ? value : 0);
+                sentSeries.Points.AddXY(chartPointCount, value > 0 ? value : 0);
 
                 value = bytesRecv - _lastBytesRecv;
-                recvSeries.Points.Add(value > 0 ? value : 0);
+                recvSeries.Points.AddXY(chartPointCount, value > 0 ? value : 0);
 
-                value = currentConn;
-                connectionsSeries.Points.Add(value > 0 ? value : 0);
+                connectionsSeries.Points.AddXY(chartPointCount, currentConn);
             }
 
             _lastBytesSent = bytesSent;
             _lastBytesRecv = bytesRecv;
 
-            if (sentSeries.Points.Count > 50)
+            if (chartPointCount > maxChartPointCount)
             {
                 sentSeries.Points.RemoveAt(0);
                 recvSeries.Points.RemoveAt(0);
                 connectionsSeries.Points.RemoveAt(0);
             }
+            chartPointCount++;
+
+            chartPerformance.ChartAreas[0].AxisX.Minimum = chartPointCount - maxChartPointCount;
+            chartPerformance.ChartAreas[0].AxisX.Maximum = chartPointCount;
 
             foreach (DataGridViewRow row in dataGridViewProxys.Rows)
             {

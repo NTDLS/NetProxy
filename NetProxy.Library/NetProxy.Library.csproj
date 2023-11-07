@@ -6,10 +6,10 @@
     <Nullable>enable</Nullable>
 
     <Copyright>Copyright © 2023 NetworkDLS</Copyright>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
-    <VersionPrefix>1.0.1.0</VersionPrefix>
-    <Version>1.0.1.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <VersionPrefix>2.0.0.0</VersionPrefix>
+    <Version>2.0.0.0</Version>
     <Company>NetworkDLS</Company>
     <Product>NetProxy</Product>
   </PropertyGroup>

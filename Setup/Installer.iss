@@ -1,7 +1,7 @@
 [Setup]
 ;-- Main Setup Information
  AppName                         = NetProxy
- AppVerName                      = NetProxy 1.0.1.0
+ AppVerName                      = NetProxy 2.0.0.0
  AppCopyright                    = Copyright © 1995-2023 NetworkDLS.
  DefaultDirName                  = {commonpf}\NetworkDLS\NetProxy
  DefaultGroupName                = NetworkDLS\NetProxy
@@ -18,7 +18,7 @@
  AppPublisher    = NetworkDLS
  AppPublisherURL = http://www.NetworkDLS.com/
  AppUpdatesURL   = http://www.NetworkDLS.com/
- AppVersion      = 1.0.1.0
+ AppVersion      = 2.0.0.0
 
 [Components]
  Name: Base;            Description: "Base Install";       Types: full compact custom;  Flags: Fixed;

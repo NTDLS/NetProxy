@@ -1,6 +1,8 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Client.Properties;
 using NetProxy.Library;
+using NetProxy.Library.MessageHubPayloads.Notifications;
+using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
@@ -38,7 +40,13 @@ namespace NetProxy.Client.Forms
 
         private void StatsTimer_Tick(object? sender, EventArgs e)
         {
-            //_messageClient?.SendAll(Constants.CommandLables.GuiRequestProxyStatsList);
+            _messageClient?.SendQuery<GUIRequestProxyStatsReply>(new GUIRequestProxyStats()).ContinueWith((o) =>
+            {
+                if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
+                {
+                    Invoke(_populateProxyListStats, o.Result.Collection);
+                }
+            });
         }
 
         private bool ChangeConnection()
@@ -76,7 +84,6 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-
         private void _messageClient_OnDisconnected(Guid connectionId)
         {
             if (_connectionLost != null)
@@ -87,26 +94,24 @@ namespace NetProxy.Client.Forms
 
         private void _messageClient_OnNotificationReceived(Guid connectionId, IFramePayloadNotification payload)
         {
-            /*
-            if (packet.Label == Constants.CommandLables.GuiRequestProxyList)
+            if (payload is GUISendMessage message)
             {
-                Invoke(_populateProxyList, JsonConvert.DeserializeObject<List<NpProxyGridItem>>(packet.Payload));
+                Invoke(_sendMessage, message.Text);
             }
-            else if (packet.Label == Constants.CommandLables.GuiSendMessage)
-            {
-                Invoke(_sendMessage, packet.Payload);
-            }
-            if (packet.Label == Constants.CommandLables.GuiRequestProxyStatsList)
-            {
-                Invoke(_populateProxyListStats, JsonConvert.DeserializeObject<List<NpProxyGridStats>>(packet.Payload));
-            }
-            */
         }
 
         private void RefreshProxyList()
         {
             NpUtility.EnsureNotNull(_messageClient);
-            //_messageClient.SendAll(Constants.CommandLables.GuiRequestProxyList);
+
+            _messageClient.SendQuery<GUIRequestProxyListReply>(new GUIRequestProxyList()).ContinueWith((o) =>
+            {
+                if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
+                {
+                    Invoke(_populateProxyList, o.Result.Collection);
+                }
+            });
+
         }
 
         #region Delegates.

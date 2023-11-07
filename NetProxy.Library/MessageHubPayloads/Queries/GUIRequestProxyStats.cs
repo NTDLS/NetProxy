@@ -3,14 +3,13 @@ using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class GUIRequestProxyList : IFramePayloadQuery
+    public class GUIRequestProxyStats : IFramePayloadQuery
     {
     }
 
-    public class GUIRequestProxyListReply : IFramePayloadQueryReply
+    public class GUIRequestProxyStatsReply : IFramePayloadQueryReply
     {
         public string? Message { get; set; }
-
-        public List<NpProxyGridItem> Collection { get; set; } = new();
+        public List<NpProxyGridStats> Collection { get; set; } = new();
     }
 }

@@ -4,12 +4,11 @@ namespace NetProxy.Library.MessageHubPayloads.Notifications
 {
     public class GUISendMessage : IFramePayloadNotification
     {
-        public string Message { get; set; }
+        public string Text { get; set; }
 
-        public GUISendMessage(string message)
+        public GUISendMessage(string text)
         {
-            Message = message;
-
+            Text = text;
         }
     }
 }

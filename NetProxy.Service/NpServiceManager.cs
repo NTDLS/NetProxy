@@ -1,23 +1,26 @@
 ﻿using NetProxy.Library;
 using NetProxy.Library.MessageHubPayloads.Notifications;
 using NetProxy.Library.MessageHubPayloads.Queries;
+using NetProxy.Library.Payloads;
 using NetProxy.Library.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
+using Newtonsoft.Json;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
 using NTDLS.StreamFraming.Payloads;
+using System.Net.Sockets;
 
 namespace NetProxy.Service
 {
-    public class NpManagement
+    public class NpServiceManager
     {
         private NpConfiguration? _config;
         private readonly HubServer _messageServer = new();
         private readonly NpProxyCollection _proxies = new();
         private readonly HashSet<Guid> _authenticatedConnections = new();
 
-        public NpManagement()
+        public NpServiceManager()
         {
             _messageServer.OnNotificationReceived += _MessageHubServer_OnNotificationReceived;
             _messageServer.OnQueryReceived += _messageServer_OnQueryReceived;
@@ -28,42 +31,119 @@ namespace NetProxy.Service
         {
             NpUtility.EnsureNotNull(_config);
 
-            if (payload is GUIRequestLogin userLogin)
+            if (_authenticatedConnections.Contains(connectionId) == false)
             {
+                if (payload is GUIRequestLogin userLogin)
+                {
+                    try
+                    {
+                        lock (_config)
+                        {
+                            if (_config.Users.Collection.Where(o =>
+                                o.UserName.ToLower() == userLogin.UserName.ToLower() && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()).Any())
+                            {
+                                _authenticatedConnections.Add(connectionId);
+                                Console.WriteLine($"Logged in connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed login connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
+                            }
+
+                            return new GUIRequestLoginReply(true);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Singletons.Logging.Write(new NpLogging.LoggingPayload
+                        {
+                            Severity = NpLogging.Severity.Exception,
+                            CustomText = "An error occured while logging in.",
+                            Exception = ex
+                        });
+                    }
+
+                    return new GUIRequestLoginReply(false);
+                }
+                else
+                {
+                    throw new Exception("Unhandled pre-login query.");
+                }
+            }
+
+            if (payload is GUIRequestProxyList)
+            {
+                var response = new GUIRequestProxyListReply();
+
                 try
                 {
                     lock (_config)
                     {
-                        if (_config.Users.Collection.Where(o =>
-                            o.UserName.ToLower() == userLogin.UserName.ToLower() && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()).Any())
+                        foreach (var proxy in _proxies)
                         {
-                            _authenticatedConnections.Add(connectionId);
-                            Console.WriteLine($"Logged in connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Failed login connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
-                        }
+                            var augmentedProxy = new NpProxyGridItem()
+                            {
+                                Id = proxy.Configuration.Id,
+                                Name = proxy.Configuration.Name,
+                                TrafficType = proxy.Configuration.TrafficType,
+                                ProxyType = proxy.Configuration.TrafficType.ToString() + " / " + proxy.Configuration.BindingProtocal.ToString(),
+                                BindingProtocal = proxy.Configuration.BindingProtocal,
+                                Description = proxy.Configuration.Description,
+                                IsRunning = proxy.IsRunning,
+                                ListenPort = proxy.Configuration.ListenPort,
+                                ListenOnAllAddresses = proxy.Configuration.ListenOnAllAddresses,
+                                Bindings = proxy.Configuration.Bindings
+                            };
 
-                        return new GUIRequestLoginReply(true);
+                            response.Collection.Add(augmentedProxy);
+                        }
                     }
+
+                    return response;
                 }
                 catch (Exception ex)
                 {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "An error occured while logging in.",
-                        Exception = ex
-                    });
+                    Singletons.Logging.Write("Failed to get proxy list.", ex);
+                    response.Message = ex.Message;
                 }
 
-                return new GUIRequestLoginReply(false);
+                return response;
             }
-            else
+            else if (payload is GUIRequestProxyStats)
             {
-                throw new Exception("Unknown query.");
+                var response = new GUIRequestProxyStatsReply();
+
+                try
+                {
+                    lock (_config)
+                    {
+                        foreach (var proxy in _proxies)
+                        {
+                            var augmentedProxy = new NpProxyGridStats()
+                            {
+                                Id = proxy.Configuration.Id,
+                                IsRunning = proxy.IsRunning,
+                                BytesReceived = proxy.Statistics.BytesReceived,
+                                BytesSent = proxy.Statistics.BytesSent,
+                                TotalConnections = proxy.Statistics.TotalConnections,
+                                CurrentConnections = proxy.CurrentConnectionCount
+
+                            };
+                            response.Collection.Add(augmentedProxy);
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Singletons.Logging.Write("Failed to get proxy stats list.", ex);
+                    response.Message = ex.Message;
+                }
+
+                return response;
             }
+
+            throw new Exception("Unhandled query.");
         }
 
         private void _MessageHubServer_OnDisconnected(Guid connectionId)
@@ -118,88 +198,10 @@ namespace NetProxy.Service
 
                 return; //If the peer is not logged in, don't go any further.
             }
+
+
             /*
-            if (payload is GUIRequestProxyList)
-            {
-                try
-                {
-                    List<NpProxyGridItem> gridItems = new();
 
-                    lock (_config)
-                    {
-                        foreach (var proxy in _proxies)
-                        {
-                            NpProxyGridItem augmentedProxy = new()
-                            {
-                                Id = proxy.Configuration.Id,
-                                Name = proxy.Configuration.Name,
-                                TrafficType = proxy.Configuration.TrafficType,
-                                ProxyType = proxy.Configuration.TrafficType.ToString() + " / " + proxy.Configuration.BindingProtocal.ToString(),
-                                BindingProtocal = proxy.Configuration.BindingProtocal,
-                                Description = proxy.Configuration.Description,
-                                IsRunning = proxy.IsRunning,
-                                ListenPort = proxy.Configuration.ListenPort,
-                                ListenOnAllAddresses = proxy.Configuration.ListenOnAllAddresses,
-                                Bindings = proxy.Configuration.Bindings
-                            };
-
-                            gridItems.Add(augmentedProxy);
-                        }
-                    }
-
-                    _messageServer.SendTo(connectionId, packet.Label, JsonConvert.SerializeObject(gridItems));
-                }
-                catch (Exception ex)
-                {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get proxy list.",
-                        Exception = ex
-                    });
-
-                    _messageServer.SendNotification(connectionId, new GUISendMessage($"The operation failed: {ex.Message}"));
-                }
-            }
-            */
-            /*
-            else if (payload is GUIRequestProxyStatsList)
-            {
-                try
-                {
-                    List<NpProxyGridStats> stats = new List<NpProxyGridStats>();
-
-                    lock (_config)
-                    {
-                        foreach (var proxy in _proxies)
-                        {
-                            NpProxyGridStats augmentedProxy = new NpProxyGridStats()
-                            {
-                                Id = proxy.Configuration.Id,
-                                IsRunning = proxy.IsRunning,
-                                BytesReceived = proxy.Statistics.BytesReceived,
-                                BytesSent = proxy.Statistics.BytesSent,
-                                TotalConnections = proxy.Statistics.TotalConnections,
-                                CurrentConnections = proxy.CurrentConnectionCount
-
-                            };
-                            stats.Add(augmentedProxy);
-                        }
-                    }
-
-                    _messageServer.SendTo(connectionId, packet.Label, JsonConvert.SerializeObject(stats));
-                }
-                catch (Exception ex)
-                {
-                    Singletons.Logging.Write(new NpLogging.LoggingPayload
-                    {
-                        Severity = NpLogging.Severity.Exception,
-                        CustomText = "Failed to get proxy stats list.",
-                        Exception = ex
-                    });
-                    _messageServer.SendTo(connectionId, Constants.CommandLables.GuiSendMessage, "The operation failed: " + ex.Message);
-                }
-            }
             else if (payload is GUIRequestProxy)
             {
                 try

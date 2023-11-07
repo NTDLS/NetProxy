@@ -390,7 +390,6 @@ namespace NetProxy.Service.Proxy
             _listener.RemoveActiveConnection(this);
         }
 
-
         public void Stop(bool waitOnThread)
         {
             _keepRunning = false;

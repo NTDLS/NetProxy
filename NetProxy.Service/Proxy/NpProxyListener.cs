@@ -21,18 +21,19 @@ namespace NetProxy.Service.Proxy
         {
             Proxy = proxy;
             _listener = listener;
-          
-
-            EndpointStatistics.Use((o) =>
-            {
-                //Add empty endpoint statistics for each endpoint.
-                Proxy.Configuration.Endpoints.Collection.ForEach(e => o.Add(e.Id, new NpProxyEndpointStatistics()));
-            });
         }
 
         public void StartAsync()
         {
             _keepRunning = true;
+
+            EndpointStatistics.Use((o) =>
+            {
+                o.Clear();
+                //Add empty endpoint statistics for each endpoint.
+                Proxy.Configuration.Endpoints.Collection.ForEach(e => o.Add(e.Id, new NpProxyEndpointStatistics()));
+            });
+
             _thread = new Thread(InboundListenerThreadProc);
             _thread.Start();
         }

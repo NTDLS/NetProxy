@@ -40,6 +40,7 @@ namespace NetProxy.Service.Proxy
             {
                 _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesWritten += (ulong)buffer.Length);
             }
+            _listener.Proxy.Statistics.Use((o) => o.BytesWritten += (ulong)buffer.Length);
 
             LastActivityDateTime = DateTime.UtcNow;
             _stream.Write(buffer);
@@ -51,24 +52,26 @@ namespace NetProxy.Service.Proxy
             {
                 _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesWritten += (ulong)length);
             }
+            _listener.Proxy.Statistics.Use((o) => o.BytesWritten += (ulong)length);
 
             LastActivityDateTime = DateTime.UtcNow;
             _stream.Write(buffer, 0, length);
         }
 
-        public bool Read(ref byte[] buffer, out int outLength)
+        public bool Read(ref byte[] buffer, out int outBytesRead)
         {
             LastActivityDateTime = DateTime.UtcNow;
-            int length = _stream.Read(buffer, 0, buffer.Length);
+            int bytesRead = _stream.Read(buffer, 0, buffer.Length);
 
             if (_outboundEndpoint != null)
             {
-                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesRead += (ulong)length);
+                _listener.EndpointStatistics.Use((o) => o[_outboundEndpoint.Id].BytesRead += (ulong)bytesRead);
             }
+            _listener.Proxy.Statistics.Use((o) => o.BytesRead += (ulong)bytesRead);
 
-            outLength = length;
+            outBytesRead = bytesRead;
 
-            return length > 0;
+            return bytesRead > 0;
         }
 
         /// <summary>
@@ -348,7 +351,7 @@ namespace NetProxy.Service.Proxy
 
                     #endregion
 
-                    _peer?.Write(buffer, bufferLength);
+                    _peer?.Write(buffer, bufferLength); //Send data to remote peer.
 
                     #region Buffer resize.
                     if (bufferLength == buffer.Length && buffer.Length < _listener.Proxy.Configuration.MaxBufferSize)
@@ -379,7 +382,6 @@ namespace NetProxy.Service.Proxy
                     {
                         var stat = o[_outboundEndpoint.Id];
                         stat.CurrentConnections--;
-
                     });
                 }
                 #endregion

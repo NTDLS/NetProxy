@@ -115,17 +115,20 @@ namespace NetProxy.Service
                     {
                         foreach (var proxy in _proxies)
                         {
-                            var augmentedProxy = new NpProxyGridStats()
+                            proxy.Statistics.Use((o) =>
                             {
-                                Id = proxy.Configuration.Id,
-                                IsRunning = proxy.IsRunning,
-                                BytesReceived = proxy.Statistics.BytesReceived,
-                                BytesSent = proxy.Statistics.BytesSent,
-                                TotalConnections = proxy.Statistics.TotalConnections,
-                                CurrentConnections = proxy.CurrentConnectionCount
+                                var statistics = new NpProxyGridStats()
+                                {
+                                    Id = proxy.Configuration.Id,
+                                    IsRunning = proxy.IsRunning,
+                                    BytesRead = o.BytesRead,
+                                    BytesWritten = o.BytesWritten,
+                                    TotalConnections = o.TotalConnections,
+                                    CurrentConnections = o.CurrentConnections
 
-                            };
-                            reply.Collection.Add(augmentedProxy);
+                                };
+                                reply.Collection.Add(statistics);
+                            });
                         }
                     }
 

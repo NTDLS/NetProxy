@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library.Routing;
+using NTDLS.Semaphore;
 using System.Net;
 using System.Net.Sockets;
 
@@ -6,17 +7,16 @@ namespace NetProxy.Service.Proxy
 {
     public class NpProxy
     {
-        public NpProxyStatistics Statistics { get; private set; }
+        internal CriticalResource<NpProxyStatistics> Statistics { get; private set; } = new();
+
         public NpProxyConfiguration Configuration { get; private set; }
         private readonly List<NpProxyListener> _listeners = new();
         private bool _keepRunning = false;
 
         public bool IsRunning => _keepRunning;
-        public int CurrentConnectionCount => 1000;
 
         public NpProxy(NpProxyConfiguration configuration)
         {
-            Statistics = new NpProxyStatistics();
             Configuration = configuration;
         }
 

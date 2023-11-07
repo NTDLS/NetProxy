@@ -59,9 +59,13 @@ namespace NetProxy.Service.Proxy
         {
             _activeConnections.Use((o) =>
             {
-                o.Remove(connection.Id);
+                if (o.Remove(connection.Id))
+                {
+                    Proxy.Statistics.Use((o) => { o.CurrentConnections--; });
+                }
                 connection.Stop(false);
             });
+
         }
 
         void InboundListenerThreadProc()
@@ -85,6 +89,12 @@ namespace NetProxy.Service.Proxy
                             var activeConnection = new NpProxyConnection(this, tcpClient);
 
                             _activeConnections.Use((o) => o.Add(activeConnection.Id, activeConnection));
+
+                            Proxy.Statistics.Use((o) =>
+                            {
+                                o.CurrentConnections++;
+                                o.TotalConnections++;
+                            });
 
                             Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Accepted inbound endpoint connection: {activeConnection.Id}");
                             activeConnection.RunInboundAsync();

@@ -192,8 +192,8 @@ namespace NetProxy.Client.Forms
             var recvSeries = chartPerformance.Series["MB/s Recv"];
             var connectionsSeries = chartPerformance.Series["Connections"];
 
-            var bytesSent = stats.Sum(od => (od.BytesSent / 1024.0));
-            var bytesRecv = stats.Sum(od => (od.BytesReceived / 1024.0));
+            var bytesSent = stats.Sum(od => (od.BytesWritten / 1024.0));
+            var bytesRecv = stats.Sum(od => (od.BytesRead / 1024.0));
             var currentConn = stats.Sum(od => od.CurrentConnections);
 
             if (_lastBytesSent >= 0)
@@ -227,7 +227,7 @@ namespace NetProxy.Client.Forms
                 var stat = (from o in stats where o.Id.ToString() == proxyId select o).FirstOrDefault();
                 if (stat != null)
                 {
-                    row.Cells[ColumnBytesTransferred.Index].Value = NpFormatters.FormatFileSize(stat.BytesSent + stat.BytesReceived);
+                    row.Cells[ColumnBytesTransferred.Index].Value = NpFormatters.FormatFileSize(stat.BytesWritten + stat.BytesRead);
                     row.Cells[ColumnTotalConnections.Index].Value = NpFormatters.FormatNumeric(stat.TotalConnections);
                     row.Cells[ColumnCurrentConnections.Index].Value = NpFormatters.FormatNumeric(stat.CurrentConnections);
                     ((NpProxyGridItem)row.DataBoundItem).IsRunning = stat.IsRunning;

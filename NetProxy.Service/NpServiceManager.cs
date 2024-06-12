@@ -20,7 +20,6 @@ namespace NetProxy.Service
 
         public NpServiceManager()
         {
-
             _messageServer.OnNotificationReceived += _messageServer_OnNotificationReceived;
             _messageServer.OnQueryReceived += _messageServer_OnQueryReceived;
             _messageServer.OnDisconnected += _messageServer_OnDisconnected;
@@ -351,7 +350,6 @@ namespace NetProxy.Service
             else
             {
                 throw new Exception("Unhandled notification.");
-
             }
         }
 

@@ -109,10 +109,7 @@ namespace NetProxy.Service.Proxy
             }
             catch (Exception ex)
             {
-                Singletons.Logging.Write(NpLogging.Severity.Exception, $"InboundConnectionThreadProc: {ex.Message}");
-            }
-            finally
-            {
+                Singletons.Logging.Write("InboundListenerThreadProc", ex);
             }
         }
     }

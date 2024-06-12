@@ -54,9 +54,9 @@ namespace NetProxy.Service.Proxy
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                //TODO: Log this.
+                Singletons.Logging.Write("Failed to start proxy.", ex);
             }
             return false;
         }

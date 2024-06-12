@@ -1,4 +1,4 @@
-﻿using NetProxy.Library.Payloads.ReliableMessages.Notifications;
+﻿using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
 
@@ -12,7 +12,13 @@ namespace NetProxy.Client.Classes
             {
                 var client = new RmClient();
                 client.Connect(connectionInfo.ServerName, connectionInfo.Port);
-                client.Notify(new NotificationRegisterLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
+
+                var loginResult = client.Query(new QueryLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password))).Result;
+                if (loginResult.Result != true)
+                {
+                    throw new Exception("Login failed.");
+                }
+
                 return client;
             }
             catch { }

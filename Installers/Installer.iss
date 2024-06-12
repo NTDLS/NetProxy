@@ -1,38 +1,38 @@
+#define AppVersion "2.1.0"
+
 [Setup]
 ;-- Main Setup Information
  AppName                         = NetProxy
- AppVerName                      = NetProxy 2.0.1.0
+ AppVersion                      = {#AppVersion}
+ AppVerName                      = NetTunnel {#AppVersion}
  AppCopyright                    = Copyright © 1995-2024 NetworkDLS.
  DefaultDirName                  = {commonpf}\NetworkDLS\NetProxy
  DefaultGroupName                = NetworkDLS\NetProxy
- SetupIconFile                    = "..\Images\AppIcon.ico"
+ SetupIconFile                   = "..\Images\AppIcon.ico"
  UninstallDisplayIcon            = {app}\NetProxy.Client.Exe
  PrivilegesRequired              = PowerUser
  Uninstallable                   = Yes
  Compression                     = zip/9
- OutputBaseFilename              = NetProxy
+ OutputBaseFilename              = NetProxy {#AppVersion}
  ArchitecturesInstallIn64BitMode = x64
- ArchitecturesAllowed            = x86 x64
+ ArchitecturesAllowed            = x64
+ AppPublisher                    = NetworkDLS
+ AppPublisherURL                 = http://www.NetworkDLS.com/
+ AppUpdatesURL                   = http://www.NetworkDLS.com/
 
-;-- Windows 2000 & XP (Support Dialog)
- AppPublisher    = NetworkDLS
- AppPublisherURL = http://www.NetworkDLS.com/
- AppUpdatesURL   = http://www.NetworkDLS.com/
- AppVersion      = 2.0.1.0
-
-[Components]
+ [Components]
  Name: Base;            Description: "Base Install";       Types: full compact custom;  Flags: Fixed;
  Name: Base\Management; Description: "Management Console"; Types: full compact custom;
- Name: Service;         Description: "Proxy Service";     Types: full compact custom;
+ Name: Service;         Description: "Proxy Service";      Types: full compact custom;
 
 [Files]
- Source: "..\NetProxy.Client\bin\Release\net7.0-windows\*.exe";           DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Client\bin\Release\net7.0-windows\*.json";          DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Client\bin\Release\net7.0-windows\*.dll";           DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net7.0\*.json";                 DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net7.0\*.exe";                  DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net7.0\*.dll";                  DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net7.0\runtimes\*.*";           DestDir: "{app}\runtimes";   Components: Service;         Flags: IgnoreVersion recursesubdirs;
+ Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.exe";        DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
+ Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.json";       DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
+ Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.dll";        DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\*.json";                 DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\*.exe";                  DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\*.dll";                  DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\runtimes\*.*";           DestDir: "{app}\runtimes";   Components: Service;         Flags: IgnoreVersion recursesubdirs;
  
 [Icons]
  Name: "{group}\Manage NetProxy"; Filename: "{app}\NetProxy.Client.Exe"; WorkingDir: "{app}"; Components: Base\Management;

@@ -359,8 +359,8 @@ namespace NetProxy.Service
         {
             try
             {
-                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _config);
-                CommonApplicationData.SaveToDisk(Constants.TitleCaption, _proxies.CloneConfigurations());
+                CommonApplicationData.SaveToDisk(Constants.FriendlyName, _config);
+                CommonApplicationData.SaveToDisk(Constants.FriendlyName, _proxies.CloneConfigurations());
             }
             catch (Exception ex)
             {
@@ -392,10 +392,10 @@ namespace NetProxy.Service
                 });
 
                 Console.WriteLine("Server configuration...");
-                _config = CommonApplicationData.LoadFromDisk(Constants.TitleCaption, defaultConfiguration);
+                _config = CommonApplicationData.LoadFromDisk(Constants.FriendlyName, defaultConfiguration);
 
                 Console.WriteLine("Proxy configuration...");
-                var proxies = CommonApplicationData.LoadFromDisk(Constants.TitleCaption, new List<NpProxyConfiguration>());
+                var proxies = CommonApplicationData.LoadFromDisk(Constants.FriendlyName, new List<NpProxyConfiguration>());
                 foreach (var proxy in proxies)
                 {
                     Console.WriteLine("Adding proxy {0}.", proxy.Name);
@@ -484,7 +484,7 @@ namespace NetProxy.Service
             }
             //------------------------------------------------------------------------------------------------------------------
 
-            CommonApplicationData.SaveToDisk(Constants.TitleCaption, proxies.CloneConfigurations());
+            CommonApplicationData.SaveToDisk(Constants.FriendlyName, proxies.CloneConfigurations());
         }
 
         public void Start()

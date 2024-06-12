@@ -33,7 +33,7 @@ namespace NetProxy.Client.Forms
         {
             AcceptButton = buttonConnect;
 
-            var preferences = CommonApplicationData.LoadFromDisk(Constants.TitleCaption,
+            var preferences = CommonApplicationData.LoadFromDisk(Constants.FriendlyName,
                 new LoginFormPreferences
                 {
                     ServerName = "127.0.0.1",
@@ -64,14 +64,14 @@ namespace NetProxy.Client.Forms
                 }
                 catch
                 {
-                    MessageBox.Show("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    MessageBox.Show("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return;
                 }
             }
 
             if (TestConnection())
             {
-                CommonApplicationData.SaveToDisk(Constants.TitleCaption,
+                CommonApplicationData.SaveToDisk(Constants.FriendlyName,
                     new LoginFormPreferences
                     {
                         ServerName = verbatimServerName,
@@ -83,7 +83,7 @@ namespace NetProxy.Client.Forms
             }
             else
             {
-                MessageBox.Show(_connectMessage, Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(_connectMessage, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
         }

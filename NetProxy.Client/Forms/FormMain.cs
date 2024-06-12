@@ -166,7 +166,7 @@ namespace NetProxy.Client.Forms
         readonly SendMessage _sendMessage;
         public void OnSendMessage(string message)
         {
-            MessageBox.Show(message, Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+            MessageBox.Show(message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
         }
 
         public delegate void PopulateProxyList(List<NpProxyGridItem> proxies);
@@ -442,7 +442,7 @@ namespace NetProxy.Client.Forms
                     RefreshProxyList();
                     break;
                 case "Stop":
-                    if (MessageBox.Show(@"Stop the selected proxy?", Constants.TitleCaption, MessageBoxButtons.YesNo,
+                    if (MessageBox.Show(@"Stop the selected proxy?", Constants.FriendlyName, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId.EnsureNotNullOrEmpty()));
@@ -460,7 +460,7 @@ namespace NetProxy.Client.Forms
                     }
                     break;
                 case "Delete":
-                    if (MessageBox.Show(@"Delete the selected proxy?", Constants.TitleCaption,
+                    if (MessageBox.Show(@"Delete the selected proxy?", Constants.FriendlyName,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId.EnsureNotNullOrEmpty()));

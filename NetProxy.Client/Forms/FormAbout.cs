@@ -35,7 +35,7 @@ namespace NetProxy.Client.Forms
         {
             AcceptButton = cmdOk;
             CancelButton = cmdOk;
-            Text = "NetworkDLS " + Constants.TitleCaption + " : About";
+            Text = "NetworkDLS " + Constants.FriendlyName + " : About";
 
             var files = Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location) ?? "", "*.dll", SearchOption.AllDirectories).ToList();
             files.AddRange(Directory.EnumerateFiles(Path.GetDirectoryName(_assembly.Location) ?? "", "*.exe", SearchOption.AllDirectories).ToList());

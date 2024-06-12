@@ -64,29 +64,6 @@ namespace NetProxy.Library.Utilities
             return stringBuilder.ToString();
         }
 
-        public static bool ValidateInt32(string value)
-        {
-            return ValidateInt32(value, int.MinValue, int.MaxValue);
-        }
-
-        public static bool ValidateInt32(string value, int min, int max)
-        {
-            value = (value ?? "").Trim();
-
-            if (value.Length == 0)
-            {
-                return false;
-            }
-
-            int numeric;
-            if (int.TryParse(value, out numeric))
-            {
-                return numeric >= min && numeric <= max;
-            }
-
-            return false;
-        }
-
         [Conditional("DEBUG")]
         public static void AssertIfDebug(bool condition, string message)
         {

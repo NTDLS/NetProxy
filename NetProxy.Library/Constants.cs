@@ -2,7 +2,7 @@
 {
     public static class Constants
     {
-        public const string TitleCaption = "NetProxy";
+        public const string FriendlyName = "NetProxy";
         public const int DefaultManagementPort = 5854;
         public const int DefaultInitialBufferSize = 10 * 1024;
         public const int DefaultMaxBufferSize = 64 * 1024;

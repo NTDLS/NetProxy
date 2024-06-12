@@ -25,7 +25,7 @@ namespace NetProxy.Client.Forms
         {
             if (textBoxPassword1.Text != textBoxPassword2.Text)
             {
-                MessageBox.Show("The passwords do not match.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The passwords do not match.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 

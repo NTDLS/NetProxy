@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetProxy.Service", "NetProx
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetProxy.Client", "NetProxy.Client\NetProxy.Client.csproj", "{AB9C1235-5810-4AA0-B337-6386FC8FE8CE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installers", "Installers", "{F60953DA-27D7-4C82-BDAE-58633D3DA011}"
+	ProjectSection(SolutionItems) = preProject
+		Installers\Installer.iss = Installers\Installer.iss
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

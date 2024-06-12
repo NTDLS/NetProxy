@@ -192,5 +192,11 @@ namespace NetProxy.Client.Forms
                 textBoxPassword.Focus();
             }
         }
+
+        private void buttonAbout_Click(object sender, EventArgs e)
+        {
+            using var form = new FormAbout();
+            form.ShowDialog();
+        }
     }
 }

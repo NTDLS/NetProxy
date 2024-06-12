@@ -37,6 +37,7 @@
             textBoxPassword = new TextBox();
             label3 = new Label();
             pictureBox1 = new PictureBox();
+            buttonAbout = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -117,11 +118,23 @@
             pictureBox1.TabIndex = 8;
             pictureBox1.TabStop = false;
             // 
+            // buttonAbout
+            // 
+            buttonAbout.Location = new Point(16, 115);
+            buttonAbout.Margin = new Padding(4, 3, 4, 3);
+            buttonAbout.Name = "buttonAbout";
+            buttonAbout.Size = new Size(83, 27);
+            buttonAbout.TabIndex = 9;
+            buttonAbout.Text = "About";
+            buttonAbout.UseVisualStyleBackColor = true;
+            buttonAbout.Click += buttonAbout_Click;
+            // 
             // FormConnect
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(380, 152);
+            Controls.Add(buttonAbout);
             Controls.Add(pictureBox1);
             Controls.Add(textBoxPassword);
             Controls.Add(label3);
@@ -155,5 +168,6 @@
         private TextBox textBoxPassword;
         private Label label3;
         private PictureBox pictureBox1;
+        private Button buttonAbout;
     }
 }

@@ -102,7 +102,17 @@ namespace NetProxy.Client.Forms
         {
             if (_connectionLost != null)
             {
-                Invoke(_connectionLost);
+                if (Visible)
+                {
+                    if (InvokeRequired)
+                    {
+                        Invoke(_connectionLost);
+                    }
+                    else
+                    {
+                        _connectionLost();
+                    }
+                }
             }
         }
 
@@ -139,9 +149,12 @@ namespace NetProxy.Client.Forms
             {
                 _statsTimer?.Stop();
                 dataGridViewProxys.DataSource = null;
-                if (ChangeConnection() == false)
+                if (Visible)
                 {
-                    Close();
+                    if (ChangeConnection() == false)
+                    {
+                        Close();
+                    }
                 }
             }
             catch
@@ -266,6 +279,14 @@ namespace NetProxy.Client.Forms
         #endregion
 
         #region Events. 
+
+        private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Visible = false;
+            _statsTimer?.Stop();
+            dataGridViewProxys.DataSource = null;
+            _messageClient?.Disconnect();
+        }
 
         private void dataGridViewProxys_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
@@ -474,10 +495,8 @@ namespace NetProxy.Client.Forms
 
         private void aboutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
-            using (var formAbout = new FormAbout())
-            {
-                formAbout.ShowDialog();
-            }
+            using var form = new FormAbout();
+            form.ShowDialog();
         }
 
         private void exitToolStripMenuItem_Click(object? sender, EventArgs e)

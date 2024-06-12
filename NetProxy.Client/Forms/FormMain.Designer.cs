@@ -272,6 +272,7 @@
             Name = "FormMain";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "NetProxy";
+            FormClosed += FormMain_FormClosed;
             Shown += FormMain_Shown;
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).EndInit();
             menuStrip1.ResumeLayout(false);

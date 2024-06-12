@@ -102,6 +102,8 @@ namespace NetProxy.Service.Proxy
                             });
 
                             Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Accepted inbound endpoint connection: {activeConnection.Id}");
+
+                            //This starts the process of establishing the associated outbound connection and pumping data.
                             activeConnection.RunInboundAsync();
                         }
                     }

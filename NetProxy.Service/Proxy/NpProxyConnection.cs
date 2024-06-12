@@ -8,6 +8,9 @@ using System.Text;
 
 namespace NetProxy.Service.Proxy
 {
+    /// <summary>
+    /// This is an endpoint, it contains all of the logic to serve both an inbound and an outbound connection.
+    /// </summary>
     internal class NpProxyConnection
     {
         public ConnectionDirection Direction { get; private set; }
@@ -34,15 +37,15 @@ namespace NetProxy.Service.Proxy
             _stream = tcpClient.GetStream();
         }
 
-        public void Write(byte[] buffer)
+        public void WriteBytesToPeer(byte[] buffer)
         {
             if (_outboundEndpoint != null)
             {
                 _listener.EndpointStatistics.Use((o) =>
                 {
-                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    if (o.TryGetValue(_outboundEndpoint.Id, out NpProxyEndpointStatistics? value))
                     {
-                        o[_outboundEndpoint.Id].BytesWritten += (ulong)buffer.Length;
+                        value.BytesWritten += (ulong)buffer.Length;
                     }
                 });
             }
@@ -52,15 +55,15 @@ namespace NetProxy.Service.Proxy
             _stream.Write(buffer);
         }
 
-        public void Write(byte[] buffer, int length)
+        public void WriteBytesToPeer(byte[] buffer, int length)
         {
             if (_outboundEndpoint != null)
             {
                 _listener.EndpointStatistics.Use((o) =>
                 {
-                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    if (o.TryGetValue(_outboundEndpoint.Id, out NpProxyEndpointStatistics? value))
                     {
-                        o[_outboundEndpoint.Id].BytesWritten += (ulong)length;
+                        value.BytesWritten += (ulong)length;
                     }
                 });
             }
@@ -70,7 +73,7 @@ namespace NetProxy.Service.Proxy
             _stream.Write(buffer, 0, length);
         }
 
-        public bool Read(ref byte[] buffer, out int outBytesRead)
+        public bool ReadBytesFromPeer(ref byte[] buffer, out int outBytesRead)
         {
             LastActivityDateTime = DateTime.UtcNow;
             int bytesRead = _stream.Read(buffer, 0, buffer.Length);
@@ -93,9 +96,9 @@ namespace NetProxy.Service.Proxy
         }
 
         /// <summary>
-        /// We received an inbound connection which is now open and ready. This is where we establish the connection to the associated endpoint.
+        /// We received an inbound connection which is now open and ready.
+        /// This is where we establish the connection to the associated outbound endpoint.
         /// </summary>
-        /// <exception cref="Exception"></exception>
         public void RunInboundAsync()
         {
             Direction = ConnectionDirection.Inbound;
@@ -122,6 +125,7 @@ namespace NetProxy.Service.Proxy
             TcpClient? establishedConnection = null;
 
             #region First try sticky sessions....
+
             if (_listener.Proxy.Configuration.UseStickySessions)
             {
                 if (_listener.StickySessionCache.TryGetValue(sessionKey, out NpStickySession? cacheItem) && cacheItem != null)
@@ -144,6 +148,7 @@ namespace NetProxy.Service.Proxy
                     }
                 }
             }
+
             #endregion
 
             //If and while we do not have a connection, lets determine what endpoint we should use.
@@ -225,6 +230,8 @@ namespace NetProxy.Service.Proxy
                 _listener.StickySessionCache.Set(sessionKey, new NpStickySession(endpoint.Address, endpoint.Port));
             }
 
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Outbound endpoint connection was established: {endpoint.Id}");
+
             _peer = new NpProxyConnection(_listener, establishedConnection);
             _peer.RunOutboundAsync(this, endpoint);
 
@@ -232,6 +239,9 @@ namespace NetProxy.Service.Proxy
             _dataPumpThread.Start();
         }
 
+        /// <summary>
+        /// Pump data for the outbound endpoint.
+        /// </summary>
         public void RunOutboundAsync(NpProxyConnection peer, NpEndpoint endpoint)
         {
             Direction = ConnectionDirection.Outbound;
@@ -250,9 +260,8 @@ namespace NetProxy.Service.Proxy
             {
                 _listener.EndpointStatistics.Use((o) =>
                 {
-                    if (o.ContainsKey(_outboundEndpoint.Id))
+                    if (o.TryGetValue(_outboundEndpoint.Id, out NpProxyEndpointStatistics? stat))
                     {
-                        var stat = o[_outboundEndpoint.Id];
                         stat.CurrentConnections++;
                         stat.TotalConnections++;
                     }
@@ -266,7 +275,7 @@ namespace NetProxy.Service.Proxy
 
                 StringBuilder? httpRequestHeaderBuilder = null;
 
-                while (_keepRunning && Read(ref buffer, out int bufferLength))
+                while (_keepRunning && ReadBytesFromPeer(ref buffer, out int bufferLength))
                 {
                     #region HTTP Header augmentation.
 
@@ -353,7 +362,7 @@ namespace NetProxy.Service.Proxy
                                     httpRequestHeaderBuilder = null; //We have completed reconstructing the header and performed modifications.
 
                                     //Send the modified header to the peer.
-                                    _peer?.Write(Encoding.UTF8.GetBytes(modifiedHttpRequestHeader));
+                                    _peer?.WriteBytesToPeer(Encoding.UTF8.GetBytes(modifiedHttpRequestHeader));
 
                                     if (bufferLength == 0)
                                     {
@@ -372,7 +381,7 @@ namespace NetProxy.Service.Proxy
 
                     #endregion
 
-                    _peer?.Write(buffer, bufferLength); //Send data to remote peer.
+                    _peer?.WriteBytesToPeer(buffer, bufferLength); //Send data to remote peer.
 
                     #region Buffer resize.
                     if (bufferLength == buffer.Length && buffer.Length < _listener.Proxy.Configuration.MaxBufferSize)

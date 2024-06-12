@@ -12,12 +12,6 @@ namespace NetProxy.Service.Proxy
             return proxyConfigurations;
         }
 
-        public NpProxy? this[Guid proxyId]
-            => this.Where(o => o.Configuration.Id == proxyId).FirstOrDefault();
-
-        //public void Add(NpProxy proxy)
-        //    => this.Add(proxy);
-
         public new void Remove(NpProxy item)
         {
             NpUtility.TryAndIgnore(item.Stop);

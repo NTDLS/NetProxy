@@ -35,7 +35,7 @@ namespace NetProxy.Library.Utilities
             {
                 System.Text.StringBuilder errorMessage = new System.Text.StringBuilder();
 
-                if ((string)NpUtility.IsNull(payload.CustomText, string.Empty) != string.Empty)
+                if ((payload.CustomText ?? string.Empty) != string.Empty)
                 {
                     errorMessage.AppendFormat("{0}\r\n", payload.CustomText);
                 }

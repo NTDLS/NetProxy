@@ -26,10 +26,7 @@ namespace NetProxy.Service
         }
 
         private IRmQueryReply _messageServer_OnQueryReceived(RmContext context, IRmPayload payload)
-
         {
-            NpUtility.EnsureNotNull(_config);
-
             if (_authenticatedConnections.Contains(context.ConnectionId) == false)
             {
                 var reply = new QueryLoginReply();
@@ -38,7 +35,7 @@ namespace NetProxy.Service
                 {
                     try
                     {
-                        lock (_config)
+                        lock (_config.EnsureNotNull())
                         {
                             if (_config.Users.Collection.Where(o =>
                                 o.UserName.ToLower() == userLogin.UserName.ToLower() && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()).Any())
@@ -190,9 +187,7 @@ namespace NetProxy.Service
 
         private void _messageServer_OnDisconnected(RmContext context)
         {
-            NpUtility.EnsureNotNull(_config);
-
-            lock (_config)
+            lock (_config.EnsureNotNull())
             {
                 _authenticatedConnections.Remove(context.ConnectionId);
             }
@@ -201,15 +196,13 @@ namespace NetProxy.Service
 
         private void _messageServer_OnNotificationReceived(RmContext context, IRmNotification payload)
         {
-            NpUtility.EnsureNotNull(_config);
-
             if (_authenticatedConnections.Contains(context.ConnectionId) == false)
             {
                 if (payload is NotificationRegisterLogin registerLogin)
                 {
                     try
                     {
-                        lock (_config)
+                        lock (_config.EnsureNotNull())
                         {
                             if (_config.Users.Collection.Where(o =>
                                 o.UserName.ToLower() == registerLogin.UserName.ToLower() && o.PasswordHash.ToLower() == registerLogin.PasswordHash.ToLower()).Any())
@@ -498,9 +491,8 @@ namespace NetProxy.Service
             try
             {
                 LoadConfiguration();
-                NpUtility.EnsureNotNull(_config);
 
-                Console.WriteLine("Starting management interface on port {0}.", _config.ManagementPort);
+                Console.WriteLine("Starting management interface on port {0}.", _config.EnsureNotNull().ManagementPort);
                 _messageServer.Start(_config.ManagementPort);
 
                 Console.WriteLine("starting proxies...");

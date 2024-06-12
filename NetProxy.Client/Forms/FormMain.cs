@@ -126,9 +126,7 @@ namespace NetProxy.Client.Forms
 
         private void RefreshProxyList()
         {
-            NpUtility.EnsureNotNull(_messageClient);
-
-            _messageClient.Query<QueryProxyConfigurationListReply>(new QueryProxyConfigurationList()).ContinueWith((o) =>
+            _messageClient.EnsureNotNull().Query(new QueryProxyConfigurationList()).ContinueWith((o) =>
             {
                 if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
                 {
@@ -297,8 +295,7 @@ namespace NetProxy.Client.Forms
 
             var proxyId = Guid.Parse(dataGridViewProxys.Rows[e.RowIndex].Cells["ColumnId"]?.Value?.ToString() ?? "");
 
-            NpUtility.EnsureNotNull(_connectionInfo);
-            using (var formProxy = new FormProxy(_connectionInfo, proxyId))
+            using (var formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId))
             {
                 if (formProxy.ShowDialog() == DialogResult.OK)
                 {
@@ -309,11 +306,8 @@ namespace NetProxy.Client.Forms
 
         private void configurationToolStripMenuItem_Click(object? sender, EventArgs e)
         {
-            NpUtility.EnsureNotNull(_connectionInfo);
-            using (var formServerSettings = new FormServerSettings(_connectionInfo))
-            {
-                formServerSettings.ShowDialog();
-            }
+            var form = new FormServerSettings(_connectionInfo.EnsureNotNull());
+            form.ShowDialog();
         }
 
         private void dataGridViewProxys_MouseDown(object? sender, MouseEventArgs e)
@@ -340,26 +334,25 @@ namespace NetProxy.Client.Forms
 
                 if (proxy != null && (proxy.TrafficType == TrafficType.Http || proxy.TrafficType == TrafficType.Https))
                 {
-                    ToolStripMenuItem bindingMenu = new ToolStripMenuItem("Browse");
+                    var bindingMenu = new ToolStripMenuItem("Browse");
                     if (proxy.ListenOnAllAddresses)
                     {
-                        NpUtility.EnsureNotNull(_connectionInfo);
-                        IPHostEntry iphostentry = Dns.GetHostEntry(_connectionInfo.ServerName);
-                        foreach (IPAddress ipaddress in iphostentry.AddressList)
+                        IPHostEntry ipHostEntry = Dns.GetHostEntry(_connectionInfo.EnsureNotNull().ServerName);
+                        foreach (IPAddress ipAddress in ipHostEntry.AddressList)
                         {
                             if (
-                                (proxy.BindingProtocol == BindingProtocol.Pv4 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                                || (proxy.BindingProtocol == BindingProtocol.Pv6 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                                (proxy.BindingProtocol == BindingProtocol.Pv4 && ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                                || (proxy.BindingProtocol == BindingProtocol.Pv6 && ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                                 )
                             {
                                 string? address = null;
                                 if (proxy.BindingProtocol == BindingProtocol.Pv4)
                                 {
-                                    address = ipaddress.ToString();
+                                    address = ipAddress.ToString();
                                 }
                                 else
                                 {
-                                    address = string.Format("[{0}]", ipaddress.ToString());
+                                    address = string.Format("[{0}]", ipAddress.ToString());
                                 }
 
                                 string url = string.Format("{0}://{1}:{2}/", (proxy.TrafficType == TrafficType.Http ? "HTTP" : "HTTPS"), address, proxy.ListenPort);
@@ -432,8 +425,7 @@ namespace NetProxy.Client.Forms
             switch (e.ClickedItem?.Text)
             {
                 case "Add":
-                    NpUtility.EnsureNotNull(_connectionInfo);
-                    using (FormProxy formProxy = new FormProxy(_connectionInfo, null))
+                    using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), null))
                     {
                         if (formProxy.ShowDialog() == DialogResult.OK)
                         {
@@ -445,26 +437,20 @@ namespace NetProxy.Client.Forms
                     RefreshProxyList();
                     break;
                 case "Start":
-                    NpUtility.EnsureNotNull(_messageClient);
-                    NpUtility.EnsureNotNull(proxyId);
-                    _messageClient.Notify(new NotificationStartProxy(proxyId));
+                    _messageClient.EnsureNotNull().Notify(new NotificationStartProxy(proxyId.EnsureNotNull()));
                     RefreshProxyList();
                     break;
                 case "Stop":
-                    NpUtility.EnsureNotNull(_messageClient);
-                    NpUtility.EnsureNotNull(proxyId);
                     if (MessageBox.Show(@"Stop the selected proxy?", Constants.TitleCaption, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.Notify(new NotificationStopProxy(proxyId));
+                        _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId.EnsureNotNullOrEmpty()));
                         RefreshProxyList();
                     }
 
                     break;
                 case "Edit":
-                    NpUtility.EnsureNotNull(_connectionInfo);
-                    NpUtility.EnsureNotNull(proxyId);
-                    using (FormProxy formProxy = new FormProxy(_connectionInfo, (proxyId)))
+                    using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId.EnsureNotNullOrEmpty()))
                     {
                         if (formProxy.ShowDialog() == DialogResult.OK)
                         {
@@ -473,12 +459,10 @@ namespace NetProxy.Client.Forms
                     }
                     break;
                 case "Delete":
-                    NpUtility.EnsureNotNull(proxyId);
-                    NpUtility.EnsureNotNull(_messageClient);
                     if (MessageBox.Show(@"Delete the selected proxy?", Constants.TitleCaption,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.Notify(new NotificationDeleteProxy(proxyId));
+                        _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId.EnsureNotNullOrEmpty()));
                         RefreshProxyList();
                     }
                     break;

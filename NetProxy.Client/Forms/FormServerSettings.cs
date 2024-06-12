@@ -1,4 +1,5 @@
 ﻿using NetProxy.Client.Classes;
+using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
@@ -48,28 +49,22 @@ namespace NetProxy.Client.Forms
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
-            NpUtility.EnsureNotNull(_messageClient);
-            NpUtility.EnsureNotNull(_populateGrid);
-
-            _messageClient.Query<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
+            _messageClient.EnsureNotNull().Query<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
             {
                 if (t.IsCompletedSuccessfully && t.Result?.Collection != null)
                 {
-                    Invoke(_populateGrid, new object[] { t.Result.Collection });
+                    Invoke(_populateGrid.EnsureNotNull(), new object[] { t.Result.Collection });
                 }
             });
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            NpUtility.EnsureNotNull(_messageClient);
-            _messageClient.Disconnect();
+            _messageClient.EnsureNotNull().Disconnect();
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
         {
-            NpUtility.EnsureNotNull(_messageClient);
-
             var users = new List<NpUser>();
 
             foreach (DataGridViewRow row in dataGridViewUsers.Rows)
@@ -92,7 +87,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            _messageClient.Notify(new NotificationPersistUserList(users));
+            _messageClient.EnsureNotNull().Notify(new NotificationPersistUserList(users));
 
             DialogResult = DialogResult.OK;
             Close();

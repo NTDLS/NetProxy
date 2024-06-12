@@ -88,15 +88,11 @@ namespace NetProxy.Client.Forms
         {
             if (_proxyId != null)
             {
-                NpUtility.EnsureNotNull(_messageClient);
-                NpUtility.EnsureNotNull(_proxyId);
-                NpUtility.EnsureNotNull(_populateProxyInformation);
-
-                _messageClient.Query<QueryProxyConfigurationReply>(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
+                _messageClient.EnsureNotNull().Query(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
                 {
                     if (t.IsCompletedSuccessfully && t.Result?.ProxyConfiguration != null)
                     {
-                        Invoke(_populateProxyInformation, t.Result?.ProxyConfiguration);
+                        Invoke(_populateProxyInformation.EnsureNotNull(), t.Result?.ProxyConfiguration);
                     }
                 });
             }
@@ -176,9 +172,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            NpUtility.EnsureNotNull(_proxyId);
-
-            proxy.Id = (Guid)_proxyId;
+            proxy.Id = _proxyId.EnsureNotNullOrEmpty();
             proxy.Name = textBoxProxyName.Text;
             proxy.Description = textBoxDescription.Text;
             proxy.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue?.ToString() ?? "");
@@ -263,8 +257,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            NpUtility.EnsureNotNull(_messageClient);
-            _messageClient.Notify(new NotificationUpsertProxy(proxy));
+            _messageClient.EnsureNotNull().Notify(new NotificationUpsertProxy(proxy));
 
             Thread.Sleep(500);
 
@@ -280,8 +273,7 @@ namespace NetProxy.Client.Forms
 
         private void FormProxy_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            NpUtility.EnsureNotNull(_messageClient);
-            _messageClient.Disconnect();
+            _messageClient.EnsureNotNull().Disconnect();
         }
 
         private void comboBoxTrafficType_SelectedIndexChanged(object? sender, EventArgs e)

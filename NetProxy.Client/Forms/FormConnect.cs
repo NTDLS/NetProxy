@@ -131,7 +131,7 @@ namespace NetProxy.Client.Forms
 
             _messageClient = new RmClient();
 
-            NpUtility.EnsureNotNull(_worker);
+            _worker.EnsureNotNull();
 
             try
             {
@@ -143,11 +143,11 @@ namespace NetProxy.Client.Forms
                     _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
                     _loginConnectionEvent = new AutoResetEvent(false);
 
-                    _messageClient.Query<QueryLoginReply>(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
+                    _messageClient.Query(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
                         {
                             if (o.IsCompletedSuccessfully && o.Result?.Result == true)
                             {
-                                NpUtility.EnsureNotNull(_loginConnectionEvent);
+                                _loginConnectionEvent.EnsureNotNull();
 
                                 _loginResult = o.Result.Result;
                                 _loginConnectionEvent.Set();

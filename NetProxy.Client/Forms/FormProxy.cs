@@ -178,6 +178,7 @@ namespace NetProxy.Client.Forms
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                return;
             }
 
             proxy.Id = _proxyId.EnsureNotNullOrEmpty();

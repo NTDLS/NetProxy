@@ -5,6 +5,7 @@ using NetProxy.Library.Utilities;
 using NTDLS.NullExtensions;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
+using NTDLS.WinFormsHelpers;
 using System.ComponentModel;
 
 namespace NetProxy.Client.Forms
@@ -46,27 +47,37 @@ namespace NetProxy.Client.Forms
 
         private void buttonConnect_Click(object? sender, EventArgs e)
         {
-            string verbatimServerName = textBoxServer.Text;
-            string verbatimUsername = textBoxUsername.Text;
+            string verbatimServerName;
+            string verbatimUsername;
 
-            _connectionInfo.ServerName = verbatimServerName.Trim();
-            _connectionInfo.UserName = verbatimUsername.Trim();
-            _connectionInfo.Password = textBoxPassword.Text.Trim();
-            _connectionInfo.Port = Constants.DefaultManagementPort;
-
-            int portBegin = _connectionInfo.ServerName.IndexOf(':');
-            if (portBegin > 0)
+            try
             {
-                try
+                verbatimServerName = textBoxServer.GetAndValidateText("The server name is required.");
+                verbatimUsername = textBoxUsername.GetAndValidateText("The user name is required.");
+
+                _connectionInfo.ServerName = verbatimServerName.Trim();
+                _connectionInfo.UserName = verbatimUsername.Trim();
+                _connectionInfo.Password = textBoxPassword.Text.Trim();
+                _connectionInfo.Port = Constants.DefaultManagementPort;
+
+                int portBegin = _connectionInfo.ServerName.IndexOf(':');
+                if (portBegin > 0)
                 {
-                    _connectionInfo.Port = int.Parse(_connectionInfo.ServerName.Substring(portBegin + 1));
-                    _connectionInfo.ServerName = _connectionInfo.ServerName.Substring(0, portBegin);
+                    try
+                    {
+                        _connectionInfo.Port = int.Parse(_connectionInfo.ServerName.Substring(portBegin + 1));
+                        _connectionInfo.ServerName = _connectionInfo.ServerName.Substring(0, portBegin);
+                    }
+                    catch
+                    {
+                        throw new Exception("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".");
+                    }
                 }
-                catch
-                {
-                    MessageBox.Show("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                    return;
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                return;
             }
 
             if (TestConnection())

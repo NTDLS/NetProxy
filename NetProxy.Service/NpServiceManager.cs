@@ -5,6 +5,7 @@ using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
+using NTDLS.NullExtensions;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
 
@@ -71,7 +72,7 @@ namespace NetProxy.Service
 
                 try
                 {
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         foreach (var proxy in _proxies)
                         {
@@ -109,7 +110,7 @@ namespace NetProxy.Service
 
                 try
                 {
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         foreach (var proxy in _proxies)
                         {
@@ -145,7 +146,7 @@ namespace NetProxy.Service
 
                 try
                 {
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         var proxy = _proxies[proxyRequest.Id];
                         if (proxy != null)
@@ -168,7 +169,7 @@ namespace NetProxy.Service
 
                 try
                 {
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         reply.Collection = _config.Users.Collection;
                     }
@@ -233,7 +234,7 @@ namespace NetProxy.Service
             {
                 try
                 {
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         _config.Users.Collection.Clear();
 
@@ -254,7 +255,7 @@ namespace NetProxy.Service
                 try
                 {
 
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         var existingProxy = (from o in _proxies
                                              where o.Configuration.Id == persistUpsertProxy.ProxyConfiguration.Id
@@ -288,7 +289,7 @@ namespace NetProxy.Service
                 try
                 {
 
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         var existingProxy = (from o in _proxies
                                              where o.Configuration.Id == persistDeleteProxy.Id
@@ -311,7 +312,7 @@ namespace NetProxy.Service
             {
                 try
                 {
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         var existingProxy = (from o in _proxies
                                              where o.Configuration.Id == persistStopProxy.Id
@@ -330,7 +331,7 @@ namespace NetProxy.Service
                 try
                 {
 
-                    lock (_config)
+                    lock (_config.EnsureNotNull())
                     {
                         var existingProxy = (from o in _proxies
                                              where o.Configuration.Id == persistStartProxy.Id

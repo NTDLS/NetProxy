@@ -4,12 +4,14 @@ using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
+using NTDLS.NullExtensions;
 using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormProxy : Form
     {
+        private bool _isNewProxy = false;
         private RmClient? _messageClient = null;
         private Guid? _proxyId = null;
         private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
@@ -24,9 +26,11 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
 
-            _populateProxyInformation = OnPopulateProxyInformation;
+            _isNewProxy = proxyId == null;
 
+            _populateProxyInformation = OnPopulateProxyInformation;
             _proxyId = proxyId ?? Guid.NewGuid();
+
             _messageClient = MessageClientFactory.Create(connectionInfo);
             if (_messageClient == null)
             {
@@ -75,18 +79,18 @@ namespace NetProxy.Client.Forms
             comboBoxTrafficType.SelectedValue = TrafficType.Http;
             comboBoxBindingProtocol.SelectedValue = BindingProtocol.Pv4;
             checkBoxListenOnAllAddresses.Checked = true;
-            textBoxInitialBufferSize.Text = Constants.DefaultInitialBufferSize.ToString();
-            textBoxMaxBufferSize.Text = Constants.DefaultMaxBufferSize.ToString();
-            textBoxAcceptBacklogSize.Text = Constants.DefaultAcceptBacklogSize.ToString();
+            textBoxInitialBufferSize.Text = $"{Constants.DefaultInitialBufferSize}";
+            textBoxMaxBufferSize.Text = $"{Constants.DefaultMaxBufferSize}";
+            textBoxAcceptBacklogSize.Text = $"{Constants.DefaultAcceptBacklogSize}";
             comboBoxConnectionPattern.SelectedValue = ConnectionPattern.RoundRobbin;
-            textBoxStickySessionCacheExpiration.Text = Constants.DefaultStickySessionExpiration.ToString();
+            textBoxStickySessionCacheExpiration.Text = $"{Constants.DefaultStickySessionExpiration}";
             checkBoxListenAutoStart.Checked = true;
             //----------------------------------------------------------------------------
         }
 
         private void FormProxy_Shown(object? sender, EventArgs e)
         {
-            if (_proxyId != null)
+            if (_isNewProxy == false && _proxyId != null)
             {
                 _messageClient.EnsureNotNull().Query(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
                 {
@@ -104,34 +108,35 @@ namespace NetProxy.Client.Forms
             textBoxProxyName.Text = proxy.Name;
             comboBoxTrafficType.SelectedValue = proxy.TrafficType;
             comboBoxBindingProtocol.SelectedValue = proxy.BindingProtocol;
-            textBoxListenPort.Text = proxy.ListenPort.ToString();
+            textBoxListenPort.Text = $"{proxy.ListenPort}";
             checkBoxListenOnAllAddresses.Checked = proxy.ListenOnAllAddresses;
-            textBoxInitialBufferSize.Text = proxy.InitialBufferSize.ToString();
-            textBoxMaxBufferSize.Text = proxy.MaxBufferSize.ToString();
-            textBoxAcceptBacklogSize.Text = proxy.AcceptBacklogSize.ToString();
+            textBoxInitialBufferSize.Text = $"{proxy.InitialBufferSize}";
+            textBoxMaxBufferSize.Text = $"{proxy.MaxBufferSize}";
+            textBoxAcceptBacklogSize.Text = $"{proxy.AcceptBacklogSize}";
             comboBoxConnectionPattern.SelectedValue = proxy.Endpoints.ConnectionPattern;
             checkBoxListenAutoStart.Checked = proxy.AutoStart;
             checkBoxUseStickySessions.Checked = proxy.UseStickySessions;
-            textBoxStickySessionCacheExpiration.Text = proxy.StickySessionCacheExpiration.ToString();
+            textBoxStickySessionCacheExpiration.Text = $"{proxy.StickySessionCacheExpiration}";
 
             foreach (var endpoint in proxy.Endpoints.Collection)
             {
                 dataGridViewEndpoints.Rows.Add(
-                    new string[] { endpoint.Enabled.ToString(), endpoint.Address, endpoint.Port.ToString(), endpoint.Description }
+                    [$"{endpoint.Enabled}", endpoint.Address, $"{endpoint.Port}", endpoint.Description]
                 );
             }
 
             foreach (var binding in proxy.Bindings)
             {
                 dataGridViewBindings.Rows.Add(
-                    new string[] { binding.Enabled.ToString(), binding.Address, binding.Description }
+                    [$"{binding.Enabled}", binding.Address, binding.Description]
                 );
             }
 
             foreach (var httpHeaderRule in proxy.HttpHeaderRules.Collection)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
-                    new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }
+                    [ $"{httpHeaderRule.Enabled}", $"{httpHeaderRule.HeaderType}",
+                    $"{httpHeaderRule.Verb}", httpHeaderRule.Name, $"{httpHeaderRule.Action}", httpHeaderRule.Value ]
                 );
             }
         }
@@ -142,33 +147,39 @@ namespace NetProxy.Client.Forms
 
             if (textBoxProxyName.Text.Trim().Length == 0)
             {
-                MessageBox.Show("The proxy name is required.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The proxy name is required.",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
             if (NpUtility.ValidateInt32(textBoxListenPort.Text, 1, 65535) == false)
             {
-                MessageBox.Show("The listen port is required (between 1 and 65,535).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The listen port is required (between 1 and 65,535).",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
             if (NpUtility.ValidateInt32(textBoxInitialBufferSize.Text, 1024, 1073741824) == false)
             {
-                MessageBox.Show("The initial buffer size is required (between 1024 and 1,073,741,824).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The initial buffer size is required (between 1024 and 1,073,741,824).",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
             if (NpUtility.ValidateInt32(textBoxMaxBufferSize.Text) == false)
             {
-                MessageBox.Show("The max buffer size is required (between 1024 and 1,073,741,824).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The max buffer size is required (between 1024 and 1,073,741,824).",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
             if (NpUtility.ValidateInt32(textBoxAcceptBacklogSize.Text, 0, 10000) == false)
             {
-                MessageBox.Show("The accept backlog size is required (between 0 and 10,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The accept backlog size is required (between 0 and 10,000).",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
             if (NpUtility.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
             {
-                MessageBox.Show("The sticky session cache expiration (s) is required (between 1 and 2,592,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The sticky session cache expiration (s) is required (between 1 and 2,592,000).",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
@@ -189,7 +200,8 @@ namespace NetProxy.Client.Forms
 
             if (proxy.InitialBufferSize > proxy.MaxBufferSize)
             {
-                MessageBox.Show("The max buffer size must be larger than the initial buffer size.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The max buffer size must be larger than the initial buffer size.",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
@@ -211,8 +223,6 @@ namespace NetProxy.Client.Forms
             {
                 if (((string)(row.Cells[ColumnBindingsIPAddress.Index].Value ?? "")) != string.Empty)
                 {
-
-
                     proxy.Bindings.Add(new NpBinding()
                     {
                         Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value?.ToString()) ?? "True"),
@@ -242,7 +252,8 @@ namespace NetProxy.Client.Forms
             foreach (var httpHeaderRule in proxy.HttpHeaderRules.Collection)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
-                    new string[] { httpHeaderRule.Enabled.ToString(), httpHeaderRule.HeaderType.ToString(), httpHeaderRule.Verb.ToString(), httpHeaderRule.Name, httpHeaderRule.Action.ToString(), httpHeaderRule.Value }
+                    [ $"{httpHeaderRule.Enabled}", $"{httpHeaderRule.HeaderType}",
+                    $"{httpHeaderRule.Verb}", httpHeaderRule.Name, $"{httpHeaderRule.Action}", httpHeaderRule.Value ]
                 );
             }
 
@@ -253,7 +264,8 @@ namespace NetProxy.Client.Forms
             }
             if (proxy.Bindings.Count == 0 && proxy.ListenOnAllAddresses == false)
             {
-                MessageBox.Show("At least one binding is required unless [listen on all addresses] is selected.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("At least one binding is required unless [listen on all addresses] is selected.",
+                    Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
@@ -309,6 +321,11 @@ namespace NetProxy.Client.Forms
             {
                 MessageBox.Show("Bindings cannot be added because [listen on all addresses] is selected.", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
+        }
+
+        private void checkBoxUseStickySessions_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

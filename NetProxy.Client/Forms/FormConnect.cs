@@ -2,6 +2,7 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
+using NTDLS.NullExtensions;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
 using System.ComponentModel;

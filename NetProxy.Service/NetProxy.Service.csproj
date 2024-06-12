@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
+    <PackageReference Include="NTDLS.NullHelpers" Version="1.0.0" />
     <PackageReference Include="NTDLS.Persistence" Version="1.2.0" />
     <PackageReference Include="Topshelf" Version="4.3.0" />
   </ItemGroup>

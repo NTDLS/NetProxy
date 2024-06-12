@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NTDLS.NullHelpers" Version="1.0.0" />
     <PackageReference Include="NTDLS.ReliableMessaging" Version="1.8.2" />
     <PackageReference Include="protobuf-net" Version="3.2.30" />
   </ItemGroup>

@@ -1,5 +1,4 @@
 ﻿using NetProxy.Library.Payloads.ReliableMessages.Notifications;
-using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
 using NTDLS.NullExtensions;
 using NTDLS.ReliableMessaging;
@@ -8,35 +7,6 @@ namespace NetProxy.Service
 {
     internal class NpServiceManagerNotificationHandlers : NpServiceManagerMessageHandlerBase, IRmMessageHandler
     {
-        public void OnNotificationRegisterLogin(RmContext context, NotificationRegisterLogin notification)
-        {
-            var serviceManager = (context.Endpoint.Parameter as NpServiceManager).EnsureNotNull();
-
-            try
-            {
-                lock (serviceManager.Configuration.EnsureNotNull())
-                {
-                    if (serviceManager.Configuration.Users.Collection.Where(o =>
-                        o.UserName.ToLower() == notification.UserName.ToLower() && o.PasswordHash.ToLower() == notification.PasswordHash.ToLower()).Any())
-                    {
-                        serviceManager.AuthenticatedConnections.Add(context.ConnectionId);
-
-                        Singletons.Logging.Write(NpLogging.Severity.Verbose,
-                            $"Registered connection: {context.ConnectionId}, User: {notification.UserName} (Logged in users {serviceManager.AuthenticatedConnections.Count}).");
-                    }
-                    else
-                    {
-                        Singletons.Logging.Write(NpLogging.Severity.Verbose,
-                            $"Failed to register connection: {context.ConnectionId}, User: {notification.UserName} (Logged in users {serviceManager.AuthenticatedConnections.Count}).");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Singletons.Logging.Write("An error occurred while logging in.", ex);
-            }
-        }
-
         public void OnNotificationPersistUserList(RmContext context, NotificationPersistUserList notification)
         {
             var serviceManager = EnforceLoginAndGetServiceManager(context);
@@ -67,7 +37,6 @@ namespace NetProxy.Service
 
             try
             {
-
                 lock (serviceManager.Configuration.EnsureNotNull())
                 {
                     var existingProxy = serviceManager.GetProxyById(notification.ProxyConfiguration.Id);

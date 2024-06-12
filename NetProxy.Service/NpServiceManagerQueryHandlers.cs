@@ -22,14 +22,14 @@ namespace NetProxy.Service
                         o.UserName.Equals(query.UserName, StringComparison.CurrentCultureIgnoreCase)
                         && o.PasswordHash.Equals(query.PasswordHash, StringComparison.CurrentCultureIgnoreCase)).Any())
                     {
-                        serviceManager.AuthenticatedConnections.Add(context.ConnectionId);
+                        serviceManager.AddAuthenticated(context.ConnectionId);
                         Singletons.Logging.Write(NpLogging.Severity.Verbose,
-                            $"Logged in connection: {context.ConnectionId}, User: {query.UserName} (Logged in users {serviceManager.AuthenticatedConnections.Count}).");
+                            $"Logged in connection: {context.ConnectionId}, User: {query.UserName}.");
                     }
                     else
                     {
                         Singletons.Logging.Write(NpLogging.Severity.Verbose,
-                            $"Failed login connection: {context.ConnectionId}, User: {query.UserName} (Logged in users {serviceManager.AuthenticatedConnections.Count}).");
+                            $"Failed login connection: {context.ConnectionId}, User: {query.UserName}.");
                     }
 
                     reply.Result = true;

@@ -8,7 +8,7 @@ namespace NetProxy.Service
         public NpServiceManager EnforceLoginAndGetServiceManager(RmContext context)
         {
             var serviceManager = (context.Endpoint.Parameter as NpServiceManager).EnsureNotNull();
-            if (serviceManager.AuthenticatedConnections.Contains(context.ConnectionId) == false)
+            if (serviceManager.IsAuthenticated(context.ConnectionId) == false)
             {
                 throw new Exception("Login has not been completed.");
             }

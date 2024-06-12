@@ -73,10 +73,10 @@ namespace NetProxy.Service.Proxy
             _stream.Write(buffer, 0, length);
         }
 
-        public bool ReadBytesFromPeer(ref byte[] buffer, out int outBytesRead)
+        public bool ReadBytesFromPeer(ref PumpBuffer buffer)
         {
             LastActivityDateTime = DateTime.UtcNow;
-            int bytesRead = _stream.Read(buffer, 0, buffer.Length);
+            int bytesRead = _stream.Read(buffer.Bytes, 0, buffer.Bytes.Length);
 
             if (_outboundEndpoint != null)
             {
@@ -90,7 +90,7 @@ namespace NetProxy.Service.Proxy
             }
             _listener.Proxy.Statistics.Use((o) => o.BytesRead += (ulong)bytesRead);
 
-            outBytesRead = bytesRead;
+            buffer.Length = bytesRead;
 
             return bytesRead > 0;
         }
@@ -271,131 +271,59 @@ namespace NetProxy.Service.Proxy
 
             try
             {
-                var buffer = new byte[_listener.Proxy.Configuration.InitialBufferSize];
+                var buffer = new PumpBuffer(_listener.Proxy.Configuration.InitialBufferSize);
 
-                StringBuilder? httpRequestHeaderBuilder = null;
+                var httpHeaderBuilder = new StringBuilder();
 
-                while (_keepRunning && ReadBytesFromPeer(ref buffer, out int bufferLength))
+                while (_keepRunning && ReadBytesFromPeer(ref buffer))
                 {
-                    #region HTTP Header augmentation.
+                    #region HTTP Header Augmentation.
 
-                    try
-                    {
-                        if (
-                            //Only parse HTTP headers if the traffic type is HTTP
-                            _listener.Proxy.Configuration.TrafficType == TrafficType.Http
-                            &&
+                    if (
+                        //Only parse HTTP headers if the traffic type is HTTP.
+                        _listener.Proxy.Configuration.TrafficType == TrafficType.Http
+                        &&
+                        (
+                            // and the direction is inbound and we have request rules.
                             (
-                                // and the direction is inbound and we have request rules
-                                (
-                                    Direction == ConnectionDirection.Inbound
-                                    && _listener.Proxy.Configuration.HttpHeaderRules.Collection
-                                        .Where(o => (new[] { HttpHeaderType.Request, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
-                                )
-                                // or the direction is outbound and we have response rules.
-                                || (
-                                    Direction == ConnectionDirection.Outbound
-                                    && _listener.Proxy.Configuration.HttpHeaderRules.Collection
-                                        .Where(o => (new[] { HttpHeaderType.Response, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
-                                )
+                                Direction == ConnectionDirection.Inbound
+                                && _listener.Proxy.Configuration.HttpHeaderRules.Collection
+                                    .Where(o => (new[] { HttpHeaderType.Request, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
+                            )
+                            // or the direction is outbound and we have response rules.
+                            || (
+                                Direction == ConnectionDirection.Outbound
+                                && _listener.Proxy.Configuration.HttpHeaderRules.Collection
+                                    .Where(o => (new[] { HttpHeaderType.Response, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
                             )
                         )
-                        {
-                            if (httpRequestHeaderBuilder != null) //We are reconstructing a fragmented HTTP request header.
-                            {
-                                var stringContent = Encoding.UTF8.GetString(buffer, 0, bufferLength);
-                                httpRequestHeaderBuilder.Append(stringContent);
-                            }
-                            else if (HttpUtility.StartsWithHTTPVerb(buffer))
-                            {
-                                var stringContent = Encoding.UTF8.GetString(buffer, 0, bufferLength);
-                                httpRequestHeaderBuilder = new StringBuilder(stringContent);
-                            }
-
-                            string headerDelimiter = string.Empty;
-
-                            if (httpRequestHeaderBuilder != null)
-                            {
-                                var headerType = HttpUtility.IsHttpHeader(httpRequestHeaderBuilder.ToString(), out string? requestVerb);
-
-                                if (headerType != HttpHeaderType.None && requestVerb != null)
-                                {
-                                    var endOfHeaderIndex = HttpUtility.GetHttpHeaderEnd(httpRequestHeaderBuilder.ToString(), out headerDelimiter);
-                                    if (endOfHeaderIndex < 0)
-                                    {
-                                        continue; //We have a HTTP header but its a fragment. Wait on the remaining header.
-                                    }
-                                    else
-                                    {
-                                        if (bufferLength > headerDelimiter.Length * 2) // "\r\n" or "\r\n\r\n"
-                                        {
-                                            //If we received more bytes than just the delimiter then we
-                                            //  need to determine how many non-header bytes need to be sent to the peer.
-
-                                            int endOfHeaderInBufferIndex = HttpUtility.FindDelimiterIndexInByteArray(buffer, bufferLength, $"{headerDelimiter}{headerDelimiter}");
-                                            if (endOfHeaderInBufferIndex < 0)
-                                            {
-                                                throw new Exception("Could not locate HTTP header in receive buffer.");
-                                            }
-
-                                            int bufferEndOfHeaderOffset = endOfHeaderInBufferIndex + (headerDelimiter.Length * 2);
-
-                                            if (bufferEndOfHeaderOffset > bufferLength)
-                                            {
-                                                //We received extra non-header bytes. We need to remove the header bytes from the buffer
-                                                //  and then send them after we modify and send the header.
-                                                int newBufferLength = bufferLength - bufferEndOfHeaderOffset;
-                                                Array.Copy(buffer, bufferEndOfHeaderOffset, buffer, 0, newBufferLength);
-                                            }
-
-                                            bufferLength -= bufferEndOfHeaderOffset;
-                                        }
-                                        else
-                                        {
-                                            bufferLength = 0;
-                                        }
-                                    }
-
-                                    //apply the header rules:
-                                    string modifiedHttpRequestHeader = HttpUtility.ApplyHttpHeaderRules
-                                        (_listener.Proxy.Configuration, httpRequestHeaderBuilder.ToString(), headerType, requestVerb, headerDelimiter);
-                                    httpRequestHeaderBuilder = null; //We have completed reconstructing the header and performed modifications.
-
-                                    //Send the modified header to the peer.
-                                    _peer?.WriteBytesToPeer(Encoding.UTF8.GetBytes(modifiedHttpRequestHeader));
-
-                                    if (bufferLength == 0)
-                                    {
-                                        //All we received is the header, so that;s all we have to send at this time.
-                                        continue;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
+                    )
                     {
-                        httpRequestHeaderBuilder = null;
-                        Singletons.Logging.Write("An error occurred while parsing the HTTP request header.", ex);
+                        switch (HttpHeaderAugmentation.Process(ref httpHeaderBuilder, _listener.Proxy.Configuration, buffer))
+                        {
+                            case HttpHeaderAugmentation.HTTPHeaderResult.WaitOnData:
+                                //We received a partial HTTP header, wait on more data.
+                                continue;
+                            case HttpHeaderAugmentation.HTTPHeaderResult.Present:
+                                //Found an HTTP header, send it to the peer. There may be bytes remaining
+                                //  in the buffer if buffer.Length > 0 so follow though to WriteBytesToPeer.
+                                _peer?.WriteBytesToPeer(Encoding.UTF8.GetBytes(httpHeaderBuilder.ToString()));
+                                httpHeaderBuilder.Clear();
+                                break;
+                            case HttpHeaderAugmentation.HTTPHeaderResult.NotPresent:
+                                //Didn't find an HTTP header.
+                                break;
+                        }
                     }
 
                     #endregion
 
-                    _peer?.WriteBytesToPeer(buffer, bufferLength); //Send data to remote peer.
-
-                    #region Buffer resize.
-                    if (bufferLength == buffer.Length && buffer.Length < _listener.Proxy.Configuration.MaxBufferSize)
+                    if (buffer.Length > 0)
                     {
-                        //If we read as much data as we could fit in the buffer, resize it a bit up to the maximum.
-                        int newBufferSize = (int)(buffer.Length + (buffer.Length * 0.20));
-                        if (newBufferSize > _listener.Proxy.Configuration.MaxBufferSize)
-                        {
-                            newBufferSize = _listener.Proxy.Configuration.MaxBufferSize;
-                        }
-
-                        buffer = new byte[newBufferSize];
+                        _peer?.WriteBytesToPeer(buffer.Bytes, buffer.Length); //Send data to remote peer.
                     }
-                    #endregion
+
+                    buffer.AutoResize(_listener.Proxy.Configuration.MaxBufferSize);
                 }
             }
             catch

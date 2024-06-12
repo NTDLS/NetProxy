@@ -13,7 +13,7 @@ namespace NetProxy.Service
         public NpConfiguration? Configuration { get; set; }
         private readonly RmServer _messageServer;
         private readonly NpProxyCollection _proxies = new();
-        public HashSet<Guid> AuthenticatedConnections { get; set; } = new();
+        private readonly HashSet<Guid> _authenticatedConnections = new();
 
         public NpServiceManager()
         {
@@ -28,9 +28,17 @@ namespace NetProxy.Service
             _messageServer.OnDisconnected += _messageServer_OnDisconnected;
         }
 
+        public void RemoveAuthenticated(Guid connectionId)
+            => _authenticatedConnections.Remove(connectionId);
+
+        public void AddAuthenticated(Guid connectionId)
+            => _authenticatedConnections.Add(connectionId);
+
+        public bool IsAuthenticated(Guid connectionId)
+            => _authenticatedConnections.Contains(connectionId);
+
         public void Notify(Guid connectionId, IRmNotification notification)
             => _messageServer.Notify(connectionId, notification);
-
 
         public NpProxy? GetProxyById(Guid proxyId)
             => _proxies.Where(o => o.Configuration.Id == proxyId).SingleOrDefault();
@@ -48,9 +56,9 @@ namespace NetProxy.Service
         {
             lock (Configuration.EnsureNotNull())
             {
-                AuthenticatedConnections.Remove(context.ConnectionId);
+                _authenticatedConnections.Remove(context.ConnectionId);
             }
-            Console.WriteLine($"Deregistered connection: {context.ConnectionId} (Logged in users {AuthenticatedConnections.Count}).");
+            Console.WriteLine($"Deregistered connection: {context.ConnectionId} (Logged in users {_authenticatedConnections.Count}).");
         }
 
         public void SaveConfiguration()

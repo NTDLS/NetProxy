@@ -10,12 +10,12 @@ namespace NetProxy.Service.Proxy
         private readonly TcpListener _listener;
         private Thread? _thread;
         private bool _keepRunning;
-        private readonly CriticalResource<Dictionary<Guid, NpProxyConnection>> _activeConnections = new();
+        private readonly PessimisticCriticalResource<Dictionary<Guid, NpProxyConnection>> _activeConnections = new();
 
         internal NpProxy Proxy { get; private set; }
         internal MemoryCache StickySessionCache { get; private set; } = new(new MemoryCacheOptions());
         internal int LastTriedEndpointIndex { get; set; } = 0;
-        internal CriticalResource<Dictionary<Guid, NpProxyEndpointStatistics>> EndpointStatistics { get; private set; } = new();
+        internal PessimisticCriticalResource<Dictionary<Guid, NpProxyEndpointStatistics>> EndpointStatistics { get; private set; } = new();
 
         public NpProxyListener(NpProxy proxy, TcpListener listener)
         {
@@ -75,7 +75,7 @@ namespace NetProxy.Service.Proxy
 
         void InboundListenerThreadProc()
         {
-            Thread.CurrentThread.Name = $"InboundListenerThreadProc:{Thread.CurrentThread.ManagedThreadId}:{Proxy.Configuration.Name}";
+            Thread.CurrentThread.Name = $"InboundListenerThreadProc:{Environment.CurrentManagedThreadId}:{Proxy.Configuration.Name}";
 
             try
             {

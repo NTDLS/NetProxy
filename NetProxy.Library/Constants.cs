@@ -24,12 +24,12 @@
 
     public enum ConnectionDirection
     {
-        Undefiend,
+        Undefined,
         Inbound,
         Outbound
     }
 
-    public enum BindingProtocal
+    public enum BindingProtocol
     {
         Pv4,
         Pv6

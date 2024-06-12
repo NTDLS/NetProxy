@@ -7,7 +7,7 @@ namespace NetProxy.Service.Proxy
 {
     public class NpProxy
     {
-        internal CriticalResource<NpProxyStatistics> Statistics { get; private set; } = new();
+        internal PessimisticCriticalResource<NpProxyStatistics> Statistics { get; private set; } = new();
 
         public NpProxyConfiguration Configuration { get; private set; }
         private readonly List<NpProxyListener> _listeners = new();

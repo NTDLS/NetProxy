@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace NetProxy.Client.Forms
@@ -70,7 +71,17 @@ namespace NetProxy.Client.Forms
 
         private void linkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://www.NetworkDLS.com");
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "http://www.NetworkDLS.com",
+                    UseShellExecute = true
+                });
+            }
+            catch
+            {
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace NetProxy.Client.Forms
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
         private bool _loginResult = false;
-        private MessageClient? _messageClient = null;
+        private RmClient? _messageClient = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -32,24 +32,24 @@ namespace NetProxy.Client.Forms
         {
             AcceptButton = buttonConnect;
 
-            var prefs = CommonApplicationData.LoadFromDisk<LoginFormPreferences>(Constants.TitleCaption,
+            var preferences = CommonApplicationData.LoadFromDisk(Constants.TitleCaption,
                 new LoginFormPreferences
                 {
                     ServerName = "127.0.0.1",
                     Username = "administrator"
                 });
 
-            textBoxServer.Text = prefs.ServerName;
-            textBoxUsername.Text = prefs.Username;
+            textBoxServer.Text = preferences.ServerName;
+            textBoxUsername.Text = preferences.Username;
         }
 
         private void buttonConnect_Click(object? sender, EventArgs e)
         {
-            string verbatiumServername = textBoxServer.Text;
-            string verbatiumUsername = textBoxUsername.Text;
+            string verbatimServerName = textBoxServer.Text;
+            string verbatimUsername = textBoxUsername.Text;
 
-            _connectionInfo.ServerName = verbatiumServername.Trim();
-            _connectionInfo.UserName = verbatiumUsername.Trim();
+            _connectionInfo.ServerName = verbatimServerName.Trim();
+            _connectionInfo.UserName = verbatimUsername.Trim();
             _connectionInfo.Password = textBoxPassword.Text.Trim();
             _connectionInfo.Port = Constants.DefaultManagementPort;
 
@@ -73,8 +73,8 @@ namespace NetProxy.Client.Forms
                 CommonApplicationData.SaveToDisk(Constants.TitleCaption,
                     new LoginFormPreferences
                     {
-                        ServerName = verbatiumServername,
-                        Username = verbatiumUsername
+                        ServerName = verbatimServerName,
+                        Username = verbatimUsername
                     });
 
                 DialogResult = DialogResult.OK;
@@ -129,7 +129,7 @@ namespace NetProxy.Client.Forms
             _loginResult = false;
             _connectMessage = "Failed to connect.";
 
-            _messageClient = new MessageClient();
+            _messageClient = new RmClient();
 
             NpUtility.EnsureNotNull(_worker);
 
@@ -173,7 +173,7 @@ namespace NetProxy.Client.Forms
             }
             catch (Exception ex)
             {
-                _connectMessage = "An error occured while logging in: " + ex.Message;
+                _connectMessage = "An error occurred while logging in: " + ex.Message;
             }
 
             _messageClient.Disconnect();

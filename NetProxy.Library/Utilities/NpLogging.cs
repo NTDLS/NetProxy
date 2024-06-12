@@ -49,20 +49,20 @@ namespace NetProxy.Library.Utilities
                     {
                         if (payload.Exception.HResult != 0)
                         {
-                            Exception? hresultEx = null;
+                            Exception? hResultEx = null;
 
                             try
                             {
-                                hresultEx = Marshal.GetExceptionForHR(payload.Exception.HResult);
+                                hResultEx = Marshal.GetExceptionForHR(payload.Exception.HResult);
                             }
                             catch
                             {
                                 //throw away...
                             }
 
-                            if (hresultEx != null)
+                            if (hResultEx != null)
                             {
-                                exceptionMessage = string.Format("{0}\r\n", NpUtility.GetExceptionText(hresultEx));
+                                exceptionMessage = string.Format("{0}\r\n", NpUtility.GetExceptionText(hResultEx));
                             }
                             else
                             {

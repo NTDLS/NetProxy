@@ -9,7 +9,7 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private readonly MessageClient? _messageClient = null;
+        private readonly RmClient? _messageClient = null;
 
         private delegate void PopulateGrid(List<NpUser> users);
         private readonly PopulateGrid? _populateGrid = null;
@@ -92,7 +92,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            _messageClient.Notify(new NotifificationPersistUserList(users));
+            _messageClient.Notify(new NotificationPersistUserList(users));
 
             DialogResult = DialogResult.OK;
             Close();

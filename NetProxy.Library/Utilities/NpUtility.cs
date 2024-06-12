@@ -12,7 +12,7 @@ namespace NetProxy.Library.Utilities
         public delegate T TryAndIgnoreProc<T>();
 
         /// <summary>
-        /// We didnt need that exception! Did we?... DID WE?!
+        /// We didn't need that exception! Did we?... DID WE?!
         /// </summary>
         public static void TryAndIgnore(TryAndIgnoreProc func)
         {
@@ -20,7 +20,7 @@ namespace NetProxy.Library.Utilities
         }
 
         /// <summary>
-        /// We didnt need that exception! Did we?... DID WE?!
+        /// We didn't need that exception! Did we?... DID WE?!
         /// </summary>
         public static T? TryAndIgnore<T>(TryAndIgnoreProc<T> func)
         {

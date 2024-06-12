@@ -23,7 +23,7 @@ namespace NetProxy.Service
                 });
                 x.RunAsLocalSystem();
 
-                x.SetDescription("Provides TCP/IP v4/v6 routing, proxing, load-balancing, fail-over and shaping services.");
+                x.SetDescription("Provides TCP/IP v4/v6 routing, proxying, load-balancing, fail-over and shaping services.");
                 x.SetDisplayName("NetworkDLS NetProxy");
                 x.SetServiceName("NtNetProxy");
             });

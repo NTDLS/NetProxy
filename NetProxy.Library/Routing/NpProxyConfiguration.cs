@@ -8,7 +8,7 @@ namespace NetProxy.Library.Routing
         public Guid Id { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public BindingProtocal BindingProtocal { get; set; }
+        public BindingProtocol BindingProtocol { get; set; }
         public TrafficType TrafficType { get; set; }
         public bool AutoStart { get; set; }
         public string Name { get; set; } = string.Empty;

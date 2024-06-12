@@ -12,7 +12,7 @@ namespace NetProxy.Service.Proxy
     {
         public ConnectionDirection Direction { get; private set; }
 
-        private readonly TcpClient _tcpclient; //The TCP/IP connection associated with this connection.
+        private readonly TcpClient _tcpClient; //The TCP/IP connection associated with this connection.
         private readonly Thread _dataPumpThread; //The thread that receives data for this connection.
         private readonly NetworkStream _stream; //The stream for the TCP/IP connection (used for reading and writing).
         private readonly NpProxyListener _listener; //The listener which owns this connection.
@@ -27,7 +27,7 @@ namespace NetProxy.Service.Proxy
         public NpProxyConnection(NpProxyListener listener, TcpClient tcpClient)
         {
             Id = Guid.NewGuid();
-            _tcpclient = tcpClient;
+            _tcpClient = tcpClient;
             _dataPumpThread = new Thread(DataPumpThreadProc);
             _keepRunning = true;
             _listener = listener;
@@ -111,7 +111,7 @@ namespace NetProxy.Service.Proxy
                 throw new Exception("The proxy has no defined endpoints.");
             }
 
-            var remoteEndPoint = _tcpclient.Client.RemoteEndPoint as IPEndPoint;
+            var remoteEndPoint = _tcpClient.Client.RemoteEndPoint as IPEndPoint;
             if (remoteEndPoint == null)
             {
                 throw new Exception("Could not determine remote endpoint from the client.");
@@ -160,7 +160,7 @@ namespace NetProxy.Service.Proxy
 
                     if (lastTriedEndpointIndex >= endpoints.Count)
                     {
-                        //We mayhave started trying RoundRobbin connections at a non-zero index, if we reached the end, start back at zero.
+                        //We may have started trying RoundRobbin connections at a non-zero index, if we reached the end, start back at zero.
                         //We use "triedEndpoints" to determine when we have tired them all.
                         lastTriedEndpointIndex = 0;
                     }
@@ -214,14 +214,14 @@ namespace NetProxy.Service.Proxy
 
             if (endpoint == null)
             {
-                throw new Exception($"A connection was estanblished but the endpoint remains undefined.");
+                throw new Exception($"A connection was established but the endpoint remains undefined.");
             }
 
             _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
 
             if (_listener.Proxy.Configuration.UseStickySessions)
             {
-                //Keep track of the successful stucky session.
+                //Keep track of the successful sticky session.
                 _listener.StickySessionCache.Set(sessionKey, new NpStickySession(endpoint.Address, endpoint.Port));
             }
 
@@ -243,7 +243,7 @@ namespace NetProxy.Service.Proxy
 
         internal void DataPumpThreadProc()
         {
-            Thread.CurrentThread.Name = $"DataPumpThreadProc:{Thread.CurrentThread.ManagedThreadId}";
+            Thread.CurrentThread.Name = $"DataPumpThreadProc:{Environment.CurrentManagedThreadId}";
 
             #region Track endpoint statistics.
             if (_outboundEndpoint != null)
@@ -273,7 +273,7 @@ namespace NetProxy.Service.Proxy
                     try
                     {
                         if (
-                            //Only parse HTTP headers if the traffixe type is HTTP
+                            //Only parse HTTP headers if the traffic type is HTTP
                             _listener.Proxy.Configuration.TrafficType == TrafficType.Http
                             &&
                             (
@@ -350,14 +350,14 @@ namespace NetProxy.Service.Proxy
                                     //apply the header rules:
                                     string modifiedHttpRequestHeader = HttpUtility.ApplyHttpHeaderRules
                                         (_listener.Proxy.Configuration, httpRequestHeaderBuilder.ToString(), headerType, requestVerb, headerDelimiter);
-                                    httpRequestHeaderBuilder = null; //We have completed reconstrucing the header and performed modifications.
+                                    httpRequestHeaderBuilder = null; //We have completed reconstructing the header and performed modifications.
 
                                     //Send the modified header to the peer.
                                     _peer?.Write(Encoding.UTF8.GetBytes(modifiedHttpRequestHeader));
 
                                     if (bufferLength == 0)
                                     {
-                                        //All we received is the header, so thats all we have to send at this time.
+                                        //All we received is the header, so that;s all we have to send at this time.
                                         continue;
                                     }
                                 }
@@ -367,7 +367,7 @@ namespace NetProxy.Service.Proxy
                     catch (Exception ex)
                     {
                         httpRequestHeaderBuilder = null;
-                        Singletons.Logging.Write("An error occured while parsing the HTTP request header.", ex);
+                        Singletons.Logging.Write("An error occurred while parsing the HTTP request header.", ex);
                     }
 
                     #endregion
@@ -419,8 +419,8 @@ namespace NetProxy.Service.Proxy
             _keepRunning = false;
             try { _stream.Close(); } catch { }
             try { _stream.Dispose(); } catch { }
-            try { _tcpclient.Close(); } catch { }
-            try { _tcpclient.Dispose(); } catch { }
+            try { _tcpClient.Close(); } catch { }
+            try { _tcpClient.Dispose(); } catch { }
 
             if (waitOnThread)
             {

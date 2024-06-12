@@ -10,7 +10,7 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormProxy : Form
     {
-        private MessageClient? _messageClient = null;
+        private RmClient? _messageClient = null;
         private Guid? _proxyId = null;
         private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
         private PopulateProxyInformation? _populateProxyInformation;
@@ -47,8 +47,8 @@ namespace NetProxy.Client.Forms
 
             var bindingProtocol = new List<ComboItem>
             {
-                new ComboItem("TCP/IP v4", BindingProtocal.Pv4),
-                new ComboItem("TCP/IP v6", BindingProtocal.Pv6)
+                new ComboItem("TCP/IP v4", BindingProtocol.Pv4),
+                new ComboItem("TCP/IP v6", BindingProtocol.Pv6)
             };
 
             comboBoxBindingProtocol.DisplayMember = "Display";
@@ -73,7 +73,7 @@ namespace NetProxy.Client.Forms
             //----------------------------------------------------------------------------
             //Fill in some safe defaults:
             comboBoxTrafficType.SelectedValue = TrafficType.Http;
-            comboBoxBindingProtocol.SelectedValue = BindingProtocal.Pv4;
+            comboBoxBindingProtocol.SelectedValue = BindingProtocol.Pv4;
             checkBoxListenOnAllAddresses.Checked = true;
             textBoxInitialBufferSize.Text = Constants.DefaultInitialBufferSize.ToString();
             textBoxMaxBufferSize.Text = Constants.DefaultMaxBufferSize.ToString();
@@ -107,7 +107,7 @@ namespace NetProxy.Client.Forms
             textBoxDescription.Text = proxy.Description;
             textBoxProxyName.Text = proxy.Name;
             comboBoxTrafficType.SelectedValue = proxy.TrafficType;
-            comboBoxBindingProtocol.SelectedValue = proxy.BindingProtocal;
+            comboBoxBindingProtocol.SelectedValue = proxy.BindingProtocol;
             textBoxListenPort.Text = proxy.ListenPort.ToString();
             checkBoxListenOnAllAddresses.Checked = proxy.ListenOnAllAddresses;
             textBoxInitialBufferSize.Text = proxy.InitialBufferSize.ToString();
@@ -172,7 +172,7 @@ namespace NetProxy.Client.Forms
 
             if (NpUtility.ValidateInt32(textBoxStickySessionCacheExpiration.Text, 1, 2592000) == false)
             {
-                MessageBox.Show("The sticky session cach expiration (s) is required (between 1 and 2,592,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show("The sticky session cache expiration (s) is required (between 1 and 2,592,000).", Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
@@ -182,7 +182,7 @@ namespace NetProxy.Client.Forms
             proxy.Name = textBoxProxyName.Text;
             proxy.Description = textBoxDescription.Text;
             proxy.TrafficType = (TrafficType)Enum.Parse(typeof(TrafficType), comboBoxTrafficType.SelectedValue?.ToString() ?? "");
-            proxy.BindingProtocal = (BindingProtocal)Enum.Parse(typeof(BindingProtocal), comboBoxBindingProtocol.SelectedValue?.ToString() ?? "");
+            proxy.BindingProtocol = (BindingProtocol)Enum.Parse(typeof(BindingProtocol), comboBoxBindingProtocol.SelectedValue?.ToString() ?? "");
             proxy.ListenPort = int.Parse(textBoxListenPort.Text);
             proxy.ListenOnAllAddresses = checkBoxListenOnAllAddresses.Checked;
             proxy.InitialBufferSize = int.Parse(textBoxInitialBufferSize.Text);
@@ -264,7 +264,7 @@ namespace NetProxy.Client.Forms
             }
 
             NpUtility.EnsureNotNull(_messageClient);
-            _messageClient.Notify(new NotifificationUpsertProxy(proxy));
+            _messageClient.Notify(new NotificationUpsertProxy(proxy));
 
             Thread.Sleep(500);
 

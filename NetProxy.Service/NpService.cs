@@ -28,7 +28,7 @@
 
         private void ServiceThreadProc()
         {
-            Thread.CurrentThread.Name = $"ServiceThreadProc:{Thread.CurrentThread.ManagedThreadId}";
+            Thread.CurrentThread.Name = $"ServiceThreadProc:{Environment.CurrentManagedThreadId}";
 
             _management.Start();
 

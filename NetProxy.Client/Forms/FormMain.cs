@@ -6,7 +6,6 @@ using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
-using NTDLS.StreamFraming.Payloads;
 using System.Net;
 
 namespace NetProxy.Client.Forms
@@ -14,7 +13,7 @@ namespace NetProxy.Client.Forms
     public partial class FormMain : Form
     {
         private ConnectionInfo? _connectionInfo = null;
-        private MessageClient? _messageClient = null;
+        private RmClient? _messageClient = null;
         private readonly System.Windows.Forms.Timer? _statsTimer = null;
 
         public FormMain()
@@ -49,7 +48,7 @@ namespace NetProxy.Client.Forms
 
             try
             {
-                _messageClient?.Query<QueryProxyStatsisticsReply>(new QueryProxyStatsistics()).ContinueWith((o) =>
+                _messageClient?.Query<QueryProxyStatisticsReply>(new QueryProxyStatistics()).ContinueWith((o) =>
                 {
                     if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
                     {
@@ -98,7 +97,8 @@ namespace NetProxy.Client.Forms
             return false;
         }
 
-        private void _messageClient_OnDisconnected(MessageClient client, Guid connectionId)
+
+        private void _messageClient_OnDisconnected(RmContext context)
         {
             if (_connectionLost != null)
             {
@@ -106,9 +106,9 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void _messageClient_OnNotificationReceived(MessageClient client, Guid connectionId, IFrameNotification payload)
+        private void _messageClient_OnNotificationReceived(RmContext context, IRmNotification payload)
         {
-            if (payload is NotifificationMessage message)
+            if (payload is NotificationMessage message)
             {
                 Invoke(_sendMessage, message.Text);
             }
@@ -157,10 +157,10 @@ namespace NetProxy.Client.Forms
             MessageBox.Show(message, Constants.TitleCaption, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
         }
 
-        public delegate void PopulateProxyList(List<NpProxyGridItem> proxys);
+        public delegate void PopulateProxyList(List<NpProxyGridItem> proxies);
 
         readonly PopulateProxyList _populateProxyList;
-        public void OnPopulateProxyList(List<NpProxyGridItem> proxys)
+        public void OnPopulateProxyList(List<NpProxyGridItem> proxies)
         {
             string? selectedProxyId = null;
 
@@ -171,7 +171,7 @@ namespace NetProxy.Client.Forms
             }
 
             dataGridViewProxys.AutoGenerateColumns = false;
-            dataGridViewProxys.DataSource = proxys.OrderBy(o => o.Name).ToList();
+            dataGridViewProxys.DataSource = proxies.OrderBy(o => o.Name).ToList();
 
             //Set the status icons and re-select the previously selected row.
             foreach (DataGridViewRow row in dataGridViewProxys.Rows)
@@ -327,12 +327,12 @@ namespace NetProxy.Client.Forms
                         foreach (IPAddress ipaddress in iphostentry.AddressList)
                         {
                             if (
-                                (proxy.BindingProtocal == BindingProtocal.Pv4 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                                || (proxy.BindingProtocal == BindingProtocal.Pv6 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                                (proxy.BindingProtocol == BindingProtocol.Pv4 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                                || (proxy.BindingProtocol == BindingProtocol.Pv6 && ipaddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                                 )
                             {
                                 string? address = null;
-                                if (proxy.BindingProtocal == BindingProtocal.Pv4)
+                                if (proxy.BindingProtocol == BindingProtocol.Pv4)
                                 {
                                     address = ipaddress.ToString();
                                 }
@@ -355,7 +355,7 @@ namespace NetProxy.Client.Forms
                             if (binding.Enabled == true)
                             {
                                 string? address = null;
-                                if (proxy.BindingProtocal == BindingProtocal.Pv4)
+                                if (proxy.BindingProtocol == BindingProtocol.Pv4)
                                 {
                                     address = binding.Address;
                                 }
@@ -426,7 +426,7 @@ namespace NetProxy.Client.Forms
                 case "Start":
                     NpUtility.EnsureNotNull(_messageClient);
                     NpUtility.EnsureNotNull(proxyId);
-                    _messageClient.Notify(new NotifificationStartProxy(proxyId));
+                    _messageClient.Notify(new NotificationStartProxy(proxyId));
                     RefreshProxyList();
                     break;
                 case "Stop":
@@ -435,7 +435,7 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Stop the selected proxy?", Constants.TitleCaption, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.Notify(new NotifificationStopProxy(proxyId));
+                        _messageClient.Notify(new NotificationStopProxy(proxyId));
                         RefreshProxyList();
                     }
 
@@ -457,7 +457,7 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Delete the selected proxy?", Constants.TitleCaption,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.Notify(new NotifificationDeleteProxy(proxyId));
+                        _messageClient.Notify(new NotificationDeleteProxy(proxyId));
                         RefreshProxyList();
                     }
                     break;

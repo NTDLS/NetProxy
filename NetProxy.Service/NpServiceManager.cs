@@ -7,29 +7,30 @@ using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
-using NTDLS.StreamFraming.Payloads;
 
 namespace NetProxy.Service
 {
     public class NpServiceManager
     {
         private NpConfiguration? _config;
-        private readonly MessageServer _messageServer = new();
+        private readonly RmServer _messageServer = new();
         private readonly NpProxyCollection _proxies = new();
         private readonly HashSet<Guid> _authenticatedConnections = new();
 
         public NpServiceManager()
         {
-            _messageServer.OnNotificationReceived += _MessageHubServer_OnNotificationReceived;
+
+            _messageServer.OnNotificationReceived += _messageServer_OnNotificationReceived;
             _messageServer.OnQueryReceived += _messageServer_OnQueryReceived;
-            _messageServer.OnDisconnected += _MessageHubServer_OnDisconnected;
+            _messageServer.OnDisconnected += _messageServer_OnDisconnected;
         }
 
-        private IFrameQueryReply _messageServer_OnQueryReceived(MessageServer server, Guid connectionId, IFrameQuery payload)
+        private IRmQueryReply _messageServer_OnQueryReceived(RmContext context, IRmPayload payload)
+
         {
             NpUtility.EnsureNotNull(_config);
 
-            if (_authenticatedConnections.Contains(connectionId) == false)
+            if (_authenticatedConnections.Contains(context.ConnectionId) == false)
             {
                 var reply = new QueryLoginReply();
 
@@ -42,12 +43,12 @@ namespace NetProxy.Service
                             if (_config.Users.Collection.Where(o =>
                                 o.UserName.ToLower() == userLogin.UserName.ToLower() && o.PasswordHash.ToLower() == userLogin.PasswordHash.ToLower()).Any())
                             {
-                                _authenticatedConnections.Add(connectionId);
-                                Console.WriteLine($"Logged in connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
+                                _authenticatedConnections.Add(context.ConnectionId);
+                                Console.WriteLine($"Logged in connection: {context.ConnectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
                             else
                             {
-                                Console.WriteLine($"Failed login connection: {connectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
+                                Console.WriteLine($"Failed login connection: {context.ConnectionId}, User: {userLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
 
                             reply.Result = true;
@@ -55,7 +56,7 @@ namespace NetProxy.Service
                     }
                     catch (Exception ex)
                     {
-                        Singletons.Logging.Write("An error occured while logging in.", ex);
+                        Singletons.Logging.Write("An error occurred while logging in.", ex);
                         reply.Message = ex.Message;
                     }
 
@@ -82,8 +83,8 @@ namespace NetProxy.Service
                                 Id = proxy.Configuration.Id,
                                 Name = proxy.Configuration.Name,
                                 TrafficType = proxy.Configuration.TrafficType,
-                                ProxyType = proxy.Configuration.TrafficType.ToString() + " / " + proxy.Configuration.BindingProtocal.ToString(),
-                                BindingProtocal = proxy.Configuration.BindingProtocal,
+                                ProxyType = proxy.Configuration.TrafficType.ToString() + " / " + proxy.Configuration.BindingProtocol.ToString(),
+                                BindingProtocol = proxy.Configuration.BindingProtocol,
                                 Description = proxy.Configuration.Description,
                                 IsRunning = proxy.IsRunning,
                                 ListenPort = proxy.Configuration.ListenPort,
@@ -105,9 +106,9 @@ namespace NetProxy.Service
 
                 return reply;
             }
-            else if (payload is QueryProxyStatsistics)
+            else if (payload is QueryProxyStatistics)
             {
-                var reply = new QueryProxyStatsisticsReply();
+                var reply = new QueryProxyStatisticsReply();
 
                 try
                 {
@@ -187,24 +188,24 @@ namespace NetProxy.Service
             throw new Exception("Unhandled query.");
         }
 
-        private void _MessageHubServer_OnDisconnected(MessageServer server, Guid connectionId)
+        private void _messageServer_OnDisconnected(RmContext context)
         {
             NpUtility.EnsureNotNull(_config);
 
             lock (_config)
             {
-                _authenticatedConnections.Remove(connectionId);
+                _authenticatedConnections.Remove(context.ConnectionId);
             }
-            Console.WriteLine($"Deregistered connection: {connectionId} (Logged in users {_authenticatedConnections.Count}).");
+            Console.WriteLine($"Deregistered connection: {context.ConnectionId} (Logged in users {_authenticatedConnections.Count}).");
         }
 
-        private void _MessageHubServer_OnNotificationReceived(MessageServer server, Guid connectionId, IFrameNotification payload)
+        private void _messageServer_OnNotificationReceived(RmContext context, IRmNotification payload)
         {
             NpUtility.EnsureNotNull(_config);
 
-            if (_authenticatedConnections.Contains(connectionId) == false)
+            if (_authenticatedConnections.Contains(context.ConnectionId) == false)
             {
-                if (payload is NotifificationRegisterLogin registerLogin)
+                if (payload is NotificationRegisterLogin registerLogin)
                 {
                     try
                     {
@@ -213,18 +214,18 @@ namespace NetProxy.Service
                             if (_config.Users.Collection.Where(o =>
                                 o.UserName.ToLower() == registerLogin.UserName.ToLower() && o.PasswordHash.ToLower() == registerLogin.PasswordHash.ToLower()).Any())
                             {
-                                _authenticatedConnections.Add(connectionId);
-                                Console.WriteLine($"Registered connection: {connectionId}, User: {registerLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
+                                _authenticatedConnections.Add(context.ConnectionId);
+                                Console.WriteLine($"Registered connection: {context.ConnectionId}, User: {registerLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
                             else
                             {
-                                Console.WriteLine($"Failed to register connection: {connectionId}, User: {registerLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
+                                Console.WriteLine($"Failed to register connection: {context.ConnectionId}, User: {registerLogin.UserName} (Logged in users {_authenticatedConnections.Count}).");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Singletons.Logging.Write("An error occured while logging in.", ex);
+                        Singletons.Logging.Write("An error occurred while logging in.", ex);
                     }
                 }
                 else
@@ -235,7 +236,7 @@ namespace NetProxy.Service
                 return; //If the peer is not logged in, don't go any further.
             }
 
-            if (payload is NotifificationPersistUserList persistUserList)
+            if (payload is NotificationPersistUserList persistUserList)
             {
                 try
                 {
@@ -255,7 +256,7 @@ namespace NetProxy.Service
                     Singletons.Logging.Write("Failed to save user list.", ex);
                 }
             }
-            else if (payload is NotifificationUpsertProxy persistUpsertProxy)
+            else if (payload is NotificationUpsertProxy persistUpsertProxy)
             {
                 try
                 {
@@ -289,7 +290,7 @@ namespace NetProxy.Service
                     Singletons.Logging.Write("Failed to upsert proxy.", ex);
                 }
             }
-            else if (payload is NotifificationDeleteProxy persistDeleteProxy)
+            else if (payload is NotificationDeleteProxy persistDeleteProxy)
             {
                 try
                 {
@@ -313,7 +314,7 @@ namespace NetProxy.Service
                     Singletons.Logging.Write("Failed to delete proxy.", ex);
                 }
             }
-            else if (payload is NotifificationStopProxy persistStopProxy)
+            else if (payload is NotificationStopProxy persistStopProxy)
             {
                 try
                 {
@@ -331,7 +332,7 @@ namespace NetProxy.Service
                     Singletons.Logging.Write("Failed to stop proxy.", ex);
                 }
             }
-            else if (payload is NotifificationStartProxy persistStartProxy)
+            else if (payload is NotificationStartProxy persistStartProxy)
             {
                 try
                 {
@@ -344,7 +345,7 @@ namespace NetProxy.Service
 
                         if (existingProxy?.Start() != true)
                         {
-                            _messageServer.Notify(connectionId, new NotifificationMessage("Failed to start proxy."));
+                            _messageServer.Notify(context.ConnectionId, new NotificationMessage("Failed to start proxy."));
                         }
                     }
                 }
@@ -390,14 +391,18 @@ namespace NetProxy.Service
                 {
                     ManagementPort = 5854
                 };
-                defaultConfiguration.Users.Add(new NpUser() { UserName = "administrator", PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" });
+                defaultConfiguration.Users.Add(new NpUser()
+                {
+                    UserName = "administrator",
+                    PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                });
 
                 Console.WriteLine("Server configuration...");
-                _config = CommonApplicationData.LoadFromDisk<NpConfiguration>(Constants.TitleCaption, defaultConfiguration);
+                _config = CommonApplicationData.LoadFromDisk(Constants.TitleCaption, defaultConfiguration);
 
                 Console.WriteLine("Proxy configuration...");
-                var proxys = CommonApplicationData.LoadFromDisk<List<NpProxyConfiguration>>(Constants.TitleCaption, new List<NpProxyConfiguration>());
-                foreach (var proxy in proxys)
+                var proxies = CommonApplicationData.LoadFromDisk(Constants.TitleCaption, new List<NpProxyConfiguration>());
+                foreach (var proxy in proxies)
                 {
                     Console.WriteLine("Adding proxy {0}.", proxy.Name);
                     _proxies.Add(new NpProxy(proxy));
@@ -498,7 +503,7 @@ namespace NetProxy.Service
                 Console.WriteLine("Starting management interface on port {0}.", _config.ManagementPort);
                 _messageServer.Start(_config.ManagementPort);
 
-                Console.WriteLine("starting proxys...");
+                Console.WriteLine("starting proxies...");
                 _proxies.Start();
             }
             catch (Exception ex)

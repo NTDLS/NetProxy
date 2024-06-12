@@ -1,9 +1,9 @@
 ﻿using NetProxy.Library.Routing;
-using NTDLS.StreamFraming.Payloads;
+using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class QueryProxyConfiguration : IFrameQuery
+    public class QueryProxyConfiguration : IRmQuery<QueryProxyConfigurationReply>
     {
         public Guid Id { get; set; }
 
@@ -13,7 +13,7 @@ namespace NetProxy.Library.MessageHubPayloads.Queries
         }
     }
 
-    public class QueryProxyConfigurationReply : IFrameQueryReply
+    public class QueryProxyConfigurationReply : IRmQueryReply
     {
         public string? Message { get; set; }
 

@@ -1,13 +1,13 @@
 ﻿using NetProxy.Library.Routing;
-using NTDLS.StreamFraming.Payloads;
+using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Library.MessageHubPayloads.Queries
 {
-    public class QueryUserList : IFrameQuery
+    public class QueryUserList : IRmQuery<QueryUserListReply>
     {
     }
 
-    public class QueryUserListReply : IFrameQueryReply
+    public class QueryUserListReply : IRmQueryReply
     {
         public string? Message { get; set; }
         public List<NpUser> Collection { get; set; } = new();

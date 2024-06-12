@@ -224,8 +224,8 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string InsertHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-            var existingMatch = fieldFidner.Match(headerText);
+            var fieldFinder = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFinder.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
@@ -251,14 +251,14 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string UpsertHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-            var existingMatch = fieldFidner.Match(headerText);
+            var fieldFinder = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFinder.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {
-                headerText = fieldFidner.Replace(headerText, newFieldValue);
+                headerText = fieldFinder.Replace(headerText, newFieldValue);
             }
             else
             {
@@ -278,14 +278,14 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string UpdateHttpHostHeaderValue(string headerText, string name, string value, string lineBreak)
         {
-            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-            var existingMatch = fieldFidner.Match(headerText);
+            var fieldFinder = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFinder.Match(headerText);
 
             string newFieldValue = string.Format("{0}: {1}", name, value);
 
             if (existingMatch != null)
             {
-                headerText = fieldFidner.Replace(headerText, newFieldValue);
+                headerText = fieldFinder.Replace(headerText, newFieldValue);
             }
             else
             {
@@ -304,12 +304,12 @@ namespace NetProxy.Service
         /// <returns></returns>
         public static string DeleteHttpHostHeaderValue(string headerText, string name, string lineBreak)
         {
-            var fieldFidner = new Regex(@"(?i:" + name + @")\:.*");
-            var existingMatch = fieldFidner.Match(headerText);
+            var fieldFinder = new Regex(@"(?i:" + name + @")\:.*");
+            var existingMatch = fieldFinder.Match(headerText);
 
             if (existingMatch != null)
             {
-                headerText = fieldFidner.Replace(headerText, string.Empty);
+                headerText = fieldFinder.Replace(headerText, string.Empty);
             }
 
             return headerText;

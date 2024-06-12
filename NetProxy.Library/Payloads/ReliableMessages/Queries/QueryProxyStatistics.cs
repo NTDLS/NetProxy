@@ -1,7 +1,6 @@
-﻿using NetProxy.Library.Payloads;
-using NTDLS.ReliableMessaging;
+﻿using NTDLS.ReliableMessaging;
 
-namespace NetProxy.Library.MessageHubPayloads.Queries
+namespace NetProxy.Library.Payloads.ReliableMessages.Queries
 {
     public class QueryProxyStatistics : IRmQuery<QueryProxyStatisticsReply>
     {

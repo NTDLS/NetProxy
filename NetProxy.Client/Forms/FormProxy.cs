@@ -1,8 +1,8 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Library;
-using NetProxy.Library.MessageHubPayloads.Notifications;
-using NetProxy.Library.MessageHubPayloads.Queries;
-using NetProxy.Library.Routing;
+using NetProxy.Library.Payloads.ReliableMessages.Notifications;
+using NetProxy.Library.Payloads.ReliableMessages.Queries;
+using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
 
@@ -219,7 +219,7 @@ namespace NetProxy.Client.Forms
                 {
 
 
-                    proxy.Bindings.Add(new Library.Routing.NpBinding()
+                    proxy.Bindings.Add(new NpBinding()
                     {
                         Enabled = bool.Parse((row.Cells[ColumnBindingsEnabled.Index].Value?.ToString()) ?? "True"),
                         Address = row.Cells[ColumnBindingsIPAddress.Index].Value?.ToString() ?? "",

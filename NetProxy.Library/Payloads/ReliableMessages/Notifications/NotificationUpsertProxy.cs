@@ -1,7 +1,7 @@
-﻿using NetProxy.Library.Routing;
+﻿using NetProxy.Library.Payloads.Routing;
 using NTDLS.ReliableMessaging;
 
-namespace NetProxy.Library.MessageHubPayloads.Notifications
+namespace NetProxy.Library.Payloads.ReliableMessages.Notifications
 {
     public class NotificationUpsertProxy : IRmNotification
     {

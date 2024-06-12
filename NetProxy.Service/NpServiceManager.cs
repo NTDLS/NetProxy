@@ -1,8 +1,8 @@
 ﻿using NetProxy.Library;
-using NetProxy.Library.MessageHubPayloads.Notifications;
-using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
-using NetProxy.Library.Routing;
+using NetProxy.Library.Payloads.ReliableMessages.Notifications;
+using NetProxy.Library.Payloads.ReliableMessages.Queries;
+using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
 using NTDLS.Persistence;

@@ -1,9 +1,9 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Client.Properties;
 using NetProxy.Library;
-using NetProxy.Library.MessageHubPayloads.Notifications;
-using NetProxy.Library.MessageHubPayloads.Queries;
 using NetProxy.Library.Payloads;
+using NetProxy.Library.Payloads.ReliableMessages.Notifications;
+using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
 using System.Net;

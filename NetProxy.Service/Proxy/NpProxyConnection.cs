@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using NetProxy.Library;
-using NetProxy.Library.Routing;
+using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using System.Net;
 using System.Net.Sockets;

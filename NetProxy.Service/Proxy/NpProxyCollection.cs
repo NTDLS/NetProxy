@@ -1,4 +1,4 @@
-﻿using NetProxy.Library.Routing;
+﻿using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 
 namespace NetProxy.Service.Proxy

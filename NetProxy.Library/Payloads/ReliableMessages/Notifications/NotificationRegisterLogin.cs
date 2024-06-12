@@ -1,6 +1,6 @@
 ﻿using NTDLS.ReliableMessaging;
 
-namespace NetProxy.Library.MessageHubPayloads.Notifications
+namespace NetProxy.Library.Payloads.ReliableMessages.Notifications
 {
     public class NotificationRegisterLogin : IRmNotification
     {

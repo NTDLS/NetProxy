@@ -1,4 +1,4 @@
-﻿using NetProxy.Library.MessageHubPayloads.Notifications;
+﻿using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
 

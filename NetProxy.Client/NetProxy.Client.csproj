@@ -24,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="NTDLS.NullHelpers" Version="1.0.0" />
     <PackageReference Include="NTDLS.Persistence" Version="1.2.0" />
-    <PackageReference Include="NTDLS.WinFormsHelpers" Version="1.0.2" />
+    <PackageReference Include="NTDLS.WinFormsHelpers" Version="1.0.4" />
     <PackageReference Include="WinForms.DataVisualization" Version="1.9.2" />
   </ItemGroup>
 

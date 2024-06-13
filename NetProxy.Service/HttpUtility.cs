@@ -36,12 +36,11 @@ namespace NetProxy.Service
         {
             try
             {
-                var availableRules = (from o in proxyConfig.HttpHeaderRules.Collection
-                                      where
+                var availableRules = proxyConfig.HttpHeaderRules.Collection.Where(o =>
                                       (o.HeaderType == headerType || o.HeaderType == HttpHeaderType.Any)
-                                      && (o.Verb.ToString().ToUpper() == httpRequestVerb.ToUpper() || o.Verb == HttpVerb.Any)
+                                      && (o.Verb.ToString().Equals(httpRequestVerb, StringComparison.CurrentCultureIgnoreCase) || o.Verb == HttpVerb.Any)
                                       && o.Enabled == true
-                                      select o).ToList();
+                                      ).ToList();
 
                 foreach (var rule in availableRules)
                 {

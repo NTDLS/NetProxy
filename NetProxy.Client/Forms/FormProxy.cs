@@ -246,6 +246,7 @@ namespace NetProxy.Client.Forms
                 }
             }
 
+            /*
             foreach (var httpHeaderRule in proxy.HttpHeaderRules.Collection)
             {
                 dataGridViewHTTPHeaders.Rows.Add(
@@ -253,6 +254,7 @@ namespace NetProxy.Client.Forms
                     $"{httpHeaderRule.Verb}", httpHeaderRule.Name, $"{httpHeaderRule.Action}", httpHeaderRule.Value ]
                 );
             }
+            */
 
             if (proxy.Endpoints.Collection.Count == 0)
             {

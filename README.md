@@ -3,7 +3,7 @@ Turn your machine into a TCP/IP load-balancing, tunneling, router and shape traf
 
 NetProxy is the newer .NET rendition of the C++ NetRouter (https://github.com/NTDLS/NetRouter). They provide the same functionality, so let us know if you need changes to one or the other.
 
-👀 If you like NetProxy, you may also be insterested in [NetTunnel](https://github.com/NTDLS/NetTunnel). Alot of the same functionality with some extra flexibility.
+👀 If you like NetProxy, you may also be insterested in [NetTunnel](https://github.com/NTDLS/NetTunnel), it has a lot of the same functionality with some extra flexibility. Just check it out.
 
 This application runs as a Windows Service and allows you to redirect TCP/IP traffic to a host or IP address of your choosing. Unlike some dedicated hardware devices, you’ll find that load-balancing and/or fail-over configurations are easy to setup – but you’ll also find some of the more advanced options such as session persistence, buffering and even in-flight HTTP header manipulation.
 

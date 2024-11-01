@@ -9,7 +9,7 @@
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
 
     <Copyright>Copyright © 2024 NetworkDLS</Copyright>
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     <Company>NetworkDLS</Company>
     <Product>NetProxy</Product>
   </PropertyGroup>

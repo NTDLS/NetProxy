@@ -3,7 +3,7 @@ using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 
@@ -11,9 +11,9 @@ namespace NetProxy.Client.Forms
 {
     public partial class FormProxy : Form
     {
-        private bool _isNewProxy = false;
-        private RmClient? _messageClient = null;
-        private Guid? _proxyId = null;
+        private readonly bool _isNewProxy = false;
+        private readonly RmClient? _messageClient = null;
+        private readonly Guid? _proxyId = null;
         private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
         private PopulateProxyInformation? _populateProxyInformation;
 
@@ -40,9 +40,9 @@ namespace NetProxy.Client.Forms
 
             var trafficTypes = new List<ComboItem>
             {
-                new ComboItem("Raw", TrafficType.Raw),
-                new ComboItem("HTTP", TrafficType.Http),
-                new ComboItem("HTTPS", TrafficType.Https)
+                new ("Raw", TrafficType.Raw),
+                new ("HTTP", TrafficType.Http),
+                new ("HTTPS", TrafficType.Https)
             };
 
             comboBoxTrafficType.DisplayMember = "Display";
@@ -51,8 +51,8 @@ namespace NetProxy.Client.Forms
 
             var bindingProtocol = new List<ComboItem>
             {
-                new ComboItem("TCP/IP v4", BindingProtocol.Pv4),
-                new ComboItem("TCP/IP v6", BindingProtocol.Pv6)
+                new ("TCP/IP v4", BindingProtocol.Pv4),
+                new ("TCP/IP v6", BindingProtocol.Pv6)
             };
 
             comboBoxBindingProtocol.DisplayMember = "Display";
@@ -61,9 +61,9 @@ namespace NetProxy.Client.Forms
 
             var connectionPatterns = new List<ComboItem>
             {
-                new ComboItem("Balanced", ConnectionPattern.Balanced),
-                new ComboItem("Fail-Over", ConnectionPattern.FailOver),
-                new ComboItem("Round-Robbin", ConnectionPattern.RoundRobbin)
+                new ("Balanced", ConnectionPattern.Balanced),
+                new ("Fail-Over", ConnectionPattern.FailOver),
+                new ("Round-Robbin", ConnectionPattern.RoundRobbin)
             };
 
             comboBoxConnectionPattern.DisplayMember = "Display";
@@ -141,23 +141,13 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void buttonSave_Click(object? sender, EventArgs e)
+        private void ButtonSave_Click(object? sender, EventArgs e)
         {
             var proxy = new NpProxyConfiguration();
-
-            if (textBoxProxyName.Text.Trim().Length == 0)
-            {
-                MessageBox.Show("The proxy name is required.",
-                    Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                return;
-            }
 
             try
             {
                 textBoxProxyName.GetAndValidateText("The proxy name is required.");
-
-                textBoxProxyName.GetAndValidateNumeric(1, 65535,
-                    "The listen port is required (between [min] and [max]).");
 
                 textBoxListenPort.GetAndValidateNumeric(1, 65535,
                     "The listen port is required (between [min] and [max]).");
@@ -246,16 +236,6 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            /*
-            foreach (var httpHeaderRule in proxy.HttpHeaderRules.Collection)
-            {
-                dataGridViewHTTPHeaders.Rows.Add(
-                    [ $"{httpHeaderRule.Enabled}", $"{httpHeaderRule.HeaderType}",
-                    $"{httpHeaderRule.Verb}", httpHeaderRule.Name, $"{httpHeaderRule.Action}", httpHeaderRule.Value ]
-                );
-            }
-            */
-
             if (proxy.Endpoints.Collection.Count == 0)
             {
                 MessageBox.Show("At least one end-point is required required.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
@@ -276,7 +256,7 @@ namespace NetProxy.Client.Forms
             Close();
         }
 
-        private void buttonCancel_Click(object? sender, EventArgs e)
+        private void ButtonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
             Close();
@@ -287,11 +267,10 @@ namespace NetProxy.Client.Forms
             _messageClient.EnsureNotNull().Disconnect();
         }
 
-        private void comboBoxTrafficType_SelectedIndexChanged(object? sender, EventArgs e)
+        private void ComboBoxTrafficType_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            TrafficType trafficType;
 
-            if (Enum.TryParse<TrafficType>(comboBoxTrafficType.Text, true, out trafficType))
+            if (Enum.TryParse<TrafficType>(comboBoxTrafficType.Text, true, out TrafficType trafficType))
             {
                 dataGridViewHTTPHeaders.ReadOnly = trafficType != TrafficType.Http;
             }
@@ -301,12 +280,12 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void checkBoxListenOnAllAddresses_CheckedChanged(object? sender, EventArgs e)
+        private void CheckBoxListenOnAllAddresses_CheckedChanged(object? sender, EventArgs e)
         {
             dataGridViewBindings.ReadOnly = checkBoxListenOnAllAddresses.Checked;
         }
 
-        private void dataGridViewHTTPHeaders_Click(object? sender, EventArgs e)
+        private void DataGridViewHTTPHeaders_Click(object? sender, EventArgs e)
         {
             if (dataGridViewHTTPHeaders.ReadOnly)
             {
@@ -314,17 +293,12 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void dataGridViewBindings_Click(object? sender, EventArgs e)
+        private void DataGridViewBindings_Click(object? sender, EventArgs e)
         {
             if (dataGridViewBindings.ReadOnly)
             {
                 MessageBox.Show("Bindings cannot be added because [listen on all addresses] is selected.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
-        }
-
-        private void checkBoxUseStickySessions_CheckedChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

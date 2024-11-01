@@ -1,4 +1,4 @@
-﻿using NTDLS.NullExtensions;
+﻿using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Service
@@ -14,6 +14,5 @@ namespace NetProxy.Service
             }
             return serviceManager;
         }
-
     }
 }

@@ -50,7 +50,7 @@
             buttonConnect.TabIndex = 3;
             buttonConnect.Text = "Connect";
             buttonConnect.UseVisualStyleBackColor = true;
-            buttonConnect.Click += buttonConnect_Click;
+            buttonConnect.Click += ButtonConnect_Click;
             // 
             // label1
             // 
@@ -127,7 +127,7 @@
             buttonAbout.TabIndex = 9;
             buttonAbout.Text = "About";
             buttonAbout.UseVisualStyleBackColor = true;
-            buttonAbout.Click += buttonAbout_Click;
+            buttonAbout.Click += ButtonAbout_Click;
             // 
             // FormConnect
             // 

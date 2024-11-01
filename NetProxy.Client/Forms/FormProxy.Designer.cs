@@ -188,7 +188,7 @@ namespace NetProxy.Client.Forms
             checkBoxListenOnAllAddresses.TabIndex = 8;
             checkBoxListenOnAllAddresses.Text = "Listen on All Addresses?";
             checkBoxListenOnAllAddresses.UseVisualStyleBackColor = true;
-            checkBoxListenOnAllAddresses.CheckedChanged += checkBoxListenOnAllAddresses_CheckedChanged;
+            checkBoxListenOnAllAddresses.CheckedChanged += CheckBoxListenOnAllAddresses_CheckedChanged;
             // 
             // tabControl
             // 
@@ -264,7 +264,7 @@ namespace NetProxy.Client.Forms
             comboBoxTrafficType.Name = "comboBoxTrafficType";
             comboBoxTrafficType.Size = new Size(140, 23);
             comboBoxTrafficType.TabIndex = 2;
-            comboBoxTrafficType.SelectedIndexChanged += comboBoxTrafficType_SelectedIndexChanged;
+            comboBoxTrafficType.SelectedIndexChanged += ComboBoxTrafficType_SelectedIndexChanged;
             // 
             // textBoxProxyName
             // 
@@ -321,7 +321,7 @@ namespace NetProxy.Client.Forms
             dataGridViewBindings.Name = "dataGridViewBindings";
             dataGridViewBindings.Size = new Size(565, 173);
             dataGridViewBindings.TabIndex = 7;
-            dataGridViewBindings.Click += dataGridViewBindings_Click;
+            dataGridViewBindings.Click += DataGridViewBindings_Click;
             // 
             // ColumnBindingsEnabled
             // 
@@ -374,7 +374,7 @@ namespace NetProxy.Client.Forms
             dataGridViewHTTPHeaders.Name = "dataGridViewHTTPHeaders";
             dataGridViewHTTPHeaders.Size = new Size(588, 316);
             dataGridViewHTTPHeaders.TabIndex = 9;
-            dataGridViewHTTPHeaders.Click += dataGridViewHTTPHeaders_Click;
+            dataGridViewHTTPHeaders.Click += DataGridViewHTTPHeaders_Click;
             // 
             // ColumnHTTPHeadersEnabled
             // 
@@ -452,7 +452,6 @@ namespace NetProxy.Client.Forms
             checkBoxUseStickySessions.TabIndex = 19;
             checkBoxUseStickySessions.Text = "Use sticky sessions?";
             checkBoxUseStickySessions.UseVisualStyleBackColor = true;
-            checkBoxUseStickySessions.CheckedChanged += checkBoxUseStickySessions_CheckedChanged;
             // 
             // dataGridViewEndpoints
             // 
@@ -614,7 +613,7 @@ namespace NetProxy.Client.Forms
             buttonCancel.TabIndex = 25;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;
-            buttonCancel.Click += buttonCancel_Click;
+            buttonCancel.Click += ButtonCancel_Click;
             // 
             // buttonSave
             // 
@@ -625,7 +624,7 @@ namespace NetProxy.Client.Forms
             buttonSave.TabIndex = 24;
             buttonSave.Text = "Save";
             buttonSave.UseVisualStyleBackColor = true;
-            buttonSave.Click += buttonSave_Click;
+            buttonSave.Click += ButtonSave_Click;
             // 
             // FormProxy
             // 

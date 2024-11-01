@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using NetProxy.Library.Utilities;
+using NTDLS.Helpers;
 using NTDLS.Semaphore;
 using System.Net.Sockets;
 
@@ -40,7 +41,7 @@ namespace NetProxy.Service.Proxy
 
         public void Stop()
         {
-            NpUtility.TryAndIgnore(_listener.Stop);
+            Exceptions.Ignore(_listener.Stop);
 
             EndpointStatistics.Use(o => o.Clear());
 

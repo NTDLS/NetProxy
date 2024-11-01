@@ -3,13 +3,8 @@ using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Library.Payloads.ReliableMessages.Notifications
 {
-    public class NotificationUpsertProxy : IRmNotification
+    public class NotificationUpsertProxy(NpProxyConfiguration proxyConfiguration) : IRmNotification
     {
-        public NpProxyConfiguration ProxyConfiguration { get; set; }
-
-        public NotificationUpsertProxy(NpProxyConfiguration proxyConfiguration)
-        {
-            ProxyConfiguration = proxyConfiguration;
-        }
+        public NpProxyConfiguration ProxyConfiguration { get; set; } = proxyConfiguration;
     }
 }

@@ -1,5 +1,5 @@
 ﻿using NetProxy.Library.Payloads.Routing;
-using NetProxy.Library.Utilities;
+using NTDLS.Helpers;
 
 namespace NetProxy.Service.Proxy
 {
@@ -14,7 +14,7 @@ namespace NetProxy.Service.Proxy
 
         public new void Remove(NpProxy item)
         {
-            NpUtility.TryAndIgnore(item.Stop);
+            Exceptions.Ignore(item.Stop);
             base.Remove(item);
         }
 

@@ -1,7 +1,7 @@
 ﻿using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Service

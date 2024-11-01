@@ -1,13 +1,8 @@
 ﻿namespace NetProxy.Client.Classes
 {
-    public class ComboItem
+    public class ComboItem(string display, object value)
     {
-        public string Display { get; set; }
-        public object Value { get; set; }
-        public ComboItem(string display, object value)
-        {
-            Display = display;
-            Value = value;
-        }
+        public string Display { get; set; } = display;
+        public object Value { get; set; } = value;
     }
 }

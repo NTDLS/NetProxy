@@ -3,14 +3,9 @@ using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Library.Payloads.ReliableMessages.Queries
 {
-    public class QueryProxyConfiguration : IRmQuery<QueryProxyConfigurationReply>
+    public class QueryProxyConfiguration(Guid id) : IRmQuery<QueryProxyConfigurationReply>
     {
-        public Guid Id { get; set; }
-
-        public QueryProxyConfiguration(Guid id)
-        {
-            Id = id;
-        }
+        public Guid Id { get; set; } = id;
     }
 
     public class QueryProxyConfigurationReply : IRmQueryReply

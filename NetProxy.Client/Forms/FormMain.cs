@@ -4,8 +4,7 @@ using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
-using NetProxy.Library.Utilities;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 using System.Net;
 
@@ -258,9 +257,9 @@ namespace NetProxy.Client.Forms
                 var stat = (from o in stats where o.Id.ToString() == proxyId select o).FirstOrDefault();
                 if (stat != null)
                 {
-                    row.Cells[ColumnBytesTransferred.Index].Value = NpFormatters.FormatFileSize(stat.BytesWritten + stat.BytesRead);
-                    row.Cells[ColumnTotalConnections.Index].Value = NpFormatters.FormatNumeric(stat.TotalConnections);
-                    row.Cells[ColumnCurrentConnections.Index].Value = NpFormatters.FormatNumeric(stat.CurrentConnections);
+                    row.Cells[ColumnBytesTransferred.Index].Value = Formatters.FileSize(stat.BytesWritten + stat.BytesRead);
+                    row.Cells[ColumnTotalConnections.Index].Value = Formatters.FileSize(stat.TotalConnections);
+                    row.Cells[ColumnCurrentConnections.Index].Value = Formatters.FileSize(stat.CurrentConnections);
                     ((NpProxyGridItem)row.DataBoundItem).IsRunning = stat.IsRunning;
                 }
 
@@ -331,7 +330,7 @@ namespace NetProxy.Client.Forms
                 menu.Items.Add("-");
                 menu.Items.Add("Start").Enabled = proxy != null && proxy.IsRunning == false;
                 menu.Items.Add("Stop").Enabled = proxy != null && proxy.IsRunning == true;
-                menu.Items.Add("Edit");
+                menu.Items.Add("Edit").Enabled = proxy != null;
 
                 if (proxy != null && (proxy.TrafficType == TrafficType.Http || proxy.TrafficType == TrafficType.Https))
                 {
@@ -445,13 +444,13 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Stop the selected proxy?", Constants.FriendlyName, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId.EnsureNotNullOrEmpty()));
+                        _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId.EnsureNotNull()));
                         RefreshProxyList();
                     }
 
                     break;
                 case "Edit":
-                    using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId.EnsureNotNullOrEmpty()))
+                    using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId.EnsureNotNull()))
                     {
                         if (formProxy.ShowDialog() == DialogResult.OK)
                         {
@@ -463,7 +462,7 @@ namespace NetProxy.Client.Forms
                     if (MessageBox.Show(@"Delete the selected proxy?", Constants.FriendlyName,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
-                        _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId.EnsureNotNullOrEmpty()));
+                        _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId.EnsureNotNull()));
                         RefreshProxyList();
                     }
                     break;

@@ -2,6 +2,7 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
+using NTDLS.Helpers;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -143,7 +144,7 @@ namespace NetProxy.Service.Proxy
                     }
                     catch
                     {
-                        NpUtility.TryAndIgnore(() => establishedConnection?.Close());
+                        Exceptions.Ignore(() => establishedConnection?.Close());
                         establishedConnection = null;
                     }
                 }
@@ -212,7 +213,7 @@ namespace NetProxy.Service.Proxy
                 }
                 catch
                 {
-                    NpUtility.TryAndIgnore(() => establishedConnection?.Close());
+                    Exceptions.Ignore(() => establishedConnection?.Close());
                     establishedConnection = null;
                 }
             }
@@ -331,7 +332,7 @@ namespace NetProxy.Service.Proxy
             }
             finally
             {
-                NpUtility.TryAndIgnore(() => _peer?.Stop(false)); //Tell the peer connection to disconnect.
+                Exceptions.Ignore(() => _peer?.Stop(false)); //Tell the peer connection to disconnect.
 
                 #region Track endpoint statistics.
                 if (_outboundEndpoint != null)

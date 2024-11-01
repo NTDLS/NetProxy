@@ -2,7 +2,7 @@
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
 

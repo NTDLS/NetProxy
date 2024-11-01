@@ -3,16 +3,16 @@ using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Client.Forms
 {
     public partial class FormServerSettings : Form
     {
-        private readonly RmClient? _messageClient = null;
-
         private delegate void PopulateGrid(List<NpUser> users);
+
+        private readonly RmClient? _messageClient = null;
         private readonly PopulateGrid? _populateGrid = null;
         private void OnPopulateGrid(List<NpUser> users)
         {
@@ -63,7 +63,7 @@ namespace NetProxy.Client.Forms
             _messageClient.EnsureNotNull().Disconnect();
         }
 
-        private void buttonSave_Click(object? sender, EventArgs e)
+        private void ButtonSave_Click(object? sender, EventArgs e)
         {
             var users = new List<NpUser>();
 
@@ -93,25 +93,23 @@ namespace NetProxy.Client.Forms
             Close();
         }
 
-        private void buttonCancel_Click(object? sender, EventArgs e)
+        private void ButtonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
             Close();
         }
 
-        private void dataGridViewUsers_CellClick(object? sender, DataGridViewCellEventArgs e)
+        private void DataGridViewUsers_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == ColumnSetPassword.Index)
             {
                 var row = dataGridViewUsers.Rows[e.RowIndex];
                 if (row != null)
                 {
-                    using (var formSetPassword = new FormSetPassword())
+                    using var formSetPassword = new FormSetPassword();
+                    if (formSetPassword.ShowDialog() == DialogResult.OK)
                     {
-                        if (formSetPassword.ShowDialog() == DialogResult.OK)
-                        {
-                            row.Cells[ColumnPassword.Index].Value = formSetPassword.PasswordHash;
-                        }
+                        row.Cells[ColumnPassword.Index].Value = formSetPassword.PasswordHash;
                     }
                 }
             }

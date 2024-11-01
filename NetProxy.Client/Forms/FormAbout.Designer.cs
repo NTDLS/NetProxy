@@ -94,7 +94,7 @@
             linkLabel.TabIndex = 9;
             linkLabel.TabStop = true;
             linkLabel.Text = "www.NetworkDLS.com";
-            linkLabel.LinkClicked += linkLabel_LinkClicked;
+            linkLabel.LinkClicked += LinkLabel_LinkClicked;
             // 
             // FormAbout
             // 

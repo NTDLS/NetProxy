@@ -2,13 +2,8 @@
 
 namespace NetProxy.Library.Payloads.ReliableMessages.Notifications
 {
-    public class NotificationMessage : IRmNotification
+    public class NotificationMessage(string text) : IRmNotification
     {
-        public string Text { get; set; }
-
-        public NotificationMessage(string text)
-        {
-            Text = text;
-        }
+        public string Text { get; set; } = text;
     }
 }

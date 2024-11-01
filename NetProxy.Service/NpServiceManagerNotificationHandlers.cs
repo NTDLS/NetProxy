@@ -1,6 +1,6 @@
 ﻿using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Service.Proxy;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Service

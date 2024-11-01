@@ -31,6 +31,8 @@ namespace NetProxy.Service.Proxy
 
                 _keepRunning = true;
 
+                _listeners.Clear();
+
                 if (Configuration.ListenOnAllAddresses)
                 {
                     var tcpListener = new TcpListener(IPAddress.Any, Configuration.ListenPort);
@@ -73,6 +75,8 @@ namespace NetProxy.Service.Proxy
             {
                 listener.Stop();
             }
+
+            _listeners.Clear();
         }
     }
 }

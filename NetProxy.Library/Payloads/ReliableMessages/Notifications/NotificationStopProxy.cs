@@ -2,13 +2,8 @@
 
 namespace NetProxy.Library.Payloads.ReliableMessages.Notifications
 {
-    public class NotificationStopProxy : IRmNotification
+    public class NotificationStopProxy(Guid id) : IRmNotification
     {
-        public Guid Id { get; set; }
-
-        public NotificationStopProxy(Guid id)
-        {
-            Id = id;
-        }
+        public Guid Id { get; set; } = id;
     }
 }

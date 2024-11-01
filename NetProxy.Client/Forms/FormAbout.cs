@@ -69,7 +69,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void linkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+        private void LinkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
         {
             try
             {

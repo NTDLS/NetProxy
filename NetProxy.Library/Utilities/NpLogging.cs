@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace NetProxy.Library.Utilities
 {
-    public class NpLogging
+    public class NpLogging(bool writeVerboseLogging)
     {
         public enum Severity
         {
@@ -22,12 +22,7 @@ namespace NetProxy.Library.Utilities
             public object UserData { get; set; } = string.Empty;
         }
 
-        public bool WriteVerboseLogging { get; set; }
-
-        public NpLogging(bool writeVerboseLogging)
-        {
-            WriteVerboseLogging = writeVerboseLogging;
-        }
+        public bool WriteVerboseLogging { get; set; } = writeVerboseLogging;
 
         public void Write(LoggingPayload payload)
         {
@@ -42,7 +37,7 @@ namespace NetProxy.Library.Utilities
 
                 if (payload.Exception != null)
                 {
-                    string exceptionMessage = NpUtility.GetExceptionText(payload.Exception);
+                    string exceptionMessage = payload.Exception.GetBaseException().Message;
 
                     //If we do not have a message, then we have to find something to report on.
                     if (exceptionMessage == null || exceptionMessage == string.Empty)
@@ -62,7 +57,7 @@ namespace NetProxy.Library.Utilities
 
                             if (hResultEx != null)
                             {
-                                exceptionMessage = string.Format("{0}\r\n", NpUtility.GetExceptionText(hResultEx));
+                                exceptionMessage = string.Format("{0}\r\n", hResultEx.GetBaseException().Message);
                             }
                             else
                             {

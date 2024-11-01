@@ -78,7 +78,7 @@
             dataGridViewUsers.Name = "dataGridViewUsers";
             dataGridViewUsers.Size = new Size(450, 380);
             dataGridViewUsers.TabIndex = 0;
-            dataGridViewUsers.CellClick += dataGridViewUsers_CellClick;
+            dataGridViewUsers.CellClick += DataGridViewUsers_CellClick;
             // 
             // ColumnId
             // 
@@ -119,7 +119,7 @@
             buttonSave.TabIndex = 1;
             buttonSave.Text = "Save";
             buttonSave.UseVisualStyleBackColor = true;
-            buttonSave.Click += buttonSave_Click;
+            buttonSave.Click += ButtonSave_Click;
             // 
             // buttonCancel
             // 
@@ -130,7 +130,7 @@
             buttonCancel.TabIndex = 2;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;
-            buttonCancel.Click += buttonCancel_Click;
+            buttonCancel.Click += ButtonCancel_Click;
             // 
             // FormServerSettings
             // 

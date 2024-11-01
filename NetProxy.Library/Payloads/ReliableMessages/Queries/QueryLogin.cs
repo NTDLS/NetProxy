@@ -2,16 +2,10 @@
 
 namespace NetProxy.Library.Payloads.ReliableMessages.Queries
 {
-    public class QueryLogin : IRmQuery<QueryLoginReply>
+    public class QueryLogin(string userName, string passwordHash) : IRmQuery<QueryLoginReply>
     {
-        public string UserName { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
-
-        public QueryLogin(string userName, string passwordHash)
-        {
-            UserName = userName;
-            PasswordHash = passwordHash;
-        }
+        public string UserName { get; set; } = userName;
+        public string PasswordHash { get; set; } = passwordHash;
     }
 
     public class QueryLoginReply : IRmQueryReply

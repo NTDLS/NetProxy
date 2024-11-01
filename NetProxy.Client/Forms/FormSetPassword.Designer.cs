@@ -65,7 +65,7 @@
             buttonCancel.TabIndex = 3;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;
-            buttonCancel.Click += buttonCancel_Click;
+            buttonCancel.Click += ButtonCancel_Click;
             // 
             // textBoxPassword2
             // 
@@ -95,7 +95,7 @@
             buttonSave.TabIndex = 2;
             buttonSave.Text = "Ok";
             buttonSave.UseVisualStyleBackColor = true;
-            buttonSave.Click += buttonSave_Click;
+            buttonSave.Click += ButtonSave_Click;
             // 
             // FormSetPassword
             // 

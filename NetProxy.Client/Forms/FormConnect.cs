@@ -2,7 +2,7 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
-using NTDLS.NullExtensions;
+using NTDLS.Helpers;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
@@ -13,7 +13,7 @@ namespace NetProxy.Client.Forms
     public partial class FormConnect : Form
     {
         private readonly ConnectionInfo _connectionInfo = new();
-        private FormProgress? _formProgress = null;
+        private ProgressForm _formProgress = new();
         private AutoResetEvent? _loginConnectionEvent = null;
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
@@ -45,7 +45,7 @@ namespace NetProxy.Client.Forms
             textBoxUsername.Text = preferences.Username;
         }
 
-        private void buttonConnect_Click(object? sender, EventArgs e)
+        private void ButtonConnect_Click(object? sender, EventArgs e)
         {
             string verbatimServerName;
             string verbatimUsername;
@@ -107,12 +107,9 @@ namespace NetProxy.Client.Forms
             _worker.ProgressChanged += Worker_ProgressChanged;
             _worker.RunWorkerAsync();
 
-            using (_formProgress = new FormProgress())
+            if (_formProgress.ShowDialog() == DialogResult.OK)
             {
-                if (_formProgress.ShowDialog() == DialogResult.OK)
-                {
-                    return true;
-                }
+                return true;
             }
 
             return false;
@@ -120,7 +117,7 @@ namespace NetProxy.Client.Forms
 
         private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
-            _formProgress?.UpdateStatus(e.UserState as ProgressFormStatus);
+            _formProgress.SetHeaderText(e.UserState as string ?? "Please wait...");
         }
 
         private void Worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
@@ -147,12 +144,12 @@ namespace NetProxy.Client.Forms
 
             try
             {
-                _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Connecting..." });
+                _worker.ReportProgress(0, "Connecting...");
 
                 try
                 {
                     _messageClient.Connect(_connectionInfo.ServerName, _connectionInfo.Port);
-                    _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
+                    _worker.ReportProgress(0, "Logging in...");
                     _loginConnectionEvent = new AutoResetEvent(false);
 
                     _messageClient.Query(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
@@ -168,7 +165,7 @@ namespace NetProxy.Client.Forms
 
                     if (_loginConnectionEvent.WaitOne(5000))
                     {
-                        _worker.ReportProgress(0, new ProgressFormStatus() { Header = "Logging in..." });
+                        _worker.ReportProgress(0, "Logging in...");
 
                         e.Result = _loginResult;
 
@@ -191,7 +188,7 @@ namespace NetProxy.Client.Forms
             _messageClient.Disconnect();
         }
 
-        private void buttonCancel_Click(object? sender, EventArgs e)
+        private void ButtonCancel_Click(object? sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
             Close();
@@ -205,7 +202,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void buttonAbout_Click(object sender, EventArgs e)
+        private void ButtonAbout_Click(object sender, EventArgs e)
         {
             using var form = new FormAbout();
             form.ShowDialog();

@@ -20,27 +20,27 @@
  AppPublisherURL                 = http://www.NetworkDLS.com/
  AppUpdatesURL                   = http://www.NetworkDLS.com/
 
- [Components]
+[Components]
  Name: Base;            Description: "Base Install";       Types: full compact custom;  Flags: Fixed;
  Name: Base\Management; Description: "Management Console"; Types: full compact custom;
  Name: Service;         Description: "Proxy Service";      Types: full compact custom;
 
 [Files]
- Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.exe";        DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.json";       DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.dll";        DestDir: "{app}";            Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\*.json";                 DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\*.exe";                  DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\*.dll";                  DestDir: "{app}";            Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\runtimes\*.*";           DestDir: "{app}\runtimes";   Components: Service;         Flags: IgnoreVersion recursesubdirs;
+ Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.exe";  DestDir: "{app}";          Components: Base\Management; Flags: IgnoreVersion;
+ Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.json"; DestDir: "{app}";          Components: Base\Management; Flags: IgnoreVersion;
+ Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.dll";  DestDir: "{app}";          Components: Base\Management; Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\*.json";           DestDir: "{app}";          Components: Service;         Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\*.exe";            DestDir: "{app}";          Components: Service;         Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\*.dll";            DestDir: "{app}";          Components: Service;         Flags: IgnoreVersion;
+ Source: "..\NetProxy.Service\bin\Release\net8.0\runtimes\*.*";     DestDir: "{app}\runtimes"; Components: Service;         Flags: IgnoreVersion recursesubdirs;
  
 [Icons]
  Name: "{group}\Manage NetProxy"; Filename: "{app}\NetProxy.Client.Exe"; WorkingDir: "{app}"; Components: Base\Management;
 
 [Registry]
  Root: HKLM; Subkey: "Software\NetworkDLS\NetProxy"; Flags: uninsdeletekey noerror;
- Root: HKLM; Subkey: "Software\NetworkDLS\NetProxy"; ValueName: "ConfigPath";      ValueType: String; ValueData: "{app}\Config";  Flags: CreateValueIfDoesntExist; Components: Service;
- Root: HKLM; Subkey: "Software\NetworkDLS\NetProxy"; ValueName: "AppPath";         ValueType: String; ValueData: "{app}";         Flags: CreateValueIfDoesntExist;
+ Root: HKLM; Subkey: "Software\NetworkDLS\NetProxy"; ValueName: "ConfigPath"; ValueType: String; ValueData: "{app}\Config"; Flags: CreateValueIfDoesntExist; Components: Service;
+ Root: HKLM; Subkey: "Software\NetworkDLS\NetProxy"; ValueName: "AppPath";    ValueType: String; ValueData: "{app}";        Flags: CreateValueIfDoesntExist;
 
 [Run]
  Filename: "{app}\NetProxy.Service"; Parameters: "install"; Flags: runhidden; StatusMsg: "Installing service..."
@@ -49,4 +49,3 @@
 
 [UninstallRun]
  Filename: "{app}\NetProxy.Service"; Parameters: "uninstall"; Flags: runhidden; StatusMsg: "Installing service..."; RunOnceId: "ServiceRemoval"
- 

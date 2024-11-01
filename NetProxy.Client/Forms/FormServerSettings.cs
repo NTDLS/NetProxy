@@ -104,7 +104,7 @@ namespace NetProxy.Client.Forms
             if (e.ColumnIndex == ColumnSetPassword.Index)
             {
                 var row = dataGridViewUsers.Rows[e.RowIndex];
-                if (row != null)
+                if (row != null && !string.IsNullOrEmpty(row.Cells[ColumnUsername.Index].Value?.ToString()))
                 {
                     using var formSetPassword = new FormSetPassword();
                     if (formSetPassword.ShowDialog() == DialogResult.OK)

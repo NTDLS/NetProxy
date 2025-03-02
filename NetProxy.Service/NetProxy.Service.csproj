@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NTDLS.Persistence" Version="1.2.1" />
+    <PackageReference Include="NTDLS.Persistence" Version="1.2.3" />
     <PackageReference Include="Topshelf" Version="4.3.0" />
   </ItemGroup>
 

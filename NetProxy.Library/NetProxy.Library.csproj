@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NTDLS.ReliableMessaging" Version="1.10.18" />
-    <PackageReference Include="protobuf-net" Version="3.2.45" />
+    <PackageReference Include="NTDLS.ReliableMessaging" Version="2.1.4" />
+    <PackageReference Include="protobuf-net" Version="3.2.46" />
   </ItemGroup>
 
 </Project>

@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NTDLS.Persistence" Version="1.2.1" />
-    <PackageReference Include="NTDLS.WinFormsHelpers" Version="1.3.3" />
-    <PackageReference Include="WinForms.DataVisualization" Version="1.9.2" />
+    <PackageReference Include="NTDLS.Persistence" Version="1.2.3" />
+    <PackageReference Include="NTDLS.WinFormsHelpers" Version="1.3.8" />
+    <PackageReference Include="WinForms.DataVisualization" Version="1.10.0" />
   </ItemGroup>
 
   <ItemGroup>

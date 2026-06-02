@@ -48,13 +48,8 @@ namespace NetProxy.Client.Forms
 
             try
             {
-                _messageClient?.Query<QueryProxyStatisticsReply>(new QueryProxyStatistics()).ContinueWith((o) =>
-                {
-                    if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
-                    {
-                        Invoke(_populateProxyListStats, o.Result.Collection);
-                    }
-                });
+                var result = _messageClient?.Query<QueryProxyStatisticsReply>(new QueryProxyStatistics());
+                Invoke(_populateProxyListStats, result?.Collection);
             }
             finally
             {
@@ -82,8 +77,8 @@ namespace NetProxy.Client.Forms
                     if (_messageClient != null)
                     {
                         _connectionLost = OnConnectionLost;
-                        _messageClient.OnNotificationReceived += _messageClient_OnNotificationReceived;
-                        _messageClient.OnDisconnected += _messageClient_OnDisconnected;
+                        _messageClient.OnNotificationReceived += MessageClient_OnNotificationReceived;
+                        _messageClient.OnDisconnected += MessageClient_OnDisconnected;
 
                         RefreshProxyList();
 
@@ -98,7 +93,7 @@ namespace NetProxy.Client.Forms
         }
 
 
-        private void _messageClient_OnDisconnected(RmContext context)
+        private void MessageClient_OnDisconnected(RmContext context)
         {
             if (_connectionLost != null)
             {
@@ -116,7 +111,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void _messageClient_OnNotificationReceived(RmContext context, IRmNotification payload)
+        private void MessageClient_OnNotificationReceived(RmContext context, IRmNotification payload)
         {
             if (payload is NotificationMessage message)
             {
@@ -126,14 +121,8 @@ namespace NetProxy.Client.Forms
 
         private void RefreshProxyList()
         {
-            _messageClient.EnsureNotNull().Query(new QueryProxyConfigurationList()).ContinueWith((o) =>
-            {
-                if (o.IsCompletedSuccessfully && o.Result?.Collection != null)
-                {
-                    Invoke(_populateProxyList, o.Result.Collection);
-                }
-            });
-
+            var result = _messageClient.EnsureNotNull().Query(new QueryProxyConfigurationList());
+            Invoke(_populateProxyList, result?.Collection);
         }
 
         #region Delegates.
@@ -194,7 +183,7 @@ namespace NetProxy.Client.Forms
                     dataGridViewProxys.CurrentCell = row.Cells[ColumnStatus.Index];
                 }
 
-                if (((NpProxyGridItem)row.DataBoundItem).IsRunning)
+                if (((NpProxyGridItem?)row.DataBoundItem)?.IsRunning == true)
                 {
                     row.Cells[ColumnStatus.Index].Value = Resources.StateRunning;
                 }
@@ -252,6 +241,11 @@ namespace NetProxy.Client.Forms
 
             foreach (DataGridViewRow row in dataGridViewProxys.Rows)
             {
+                if (row.DataBoundItem == null)
+                {
+                    continue;
+                }
+
                 string proxyId = row.Cells[ColumnId.Index].Value?.ToString() ?? "";
 
                 var stat = (from o in stats where o.Id.ToString() == proxyId select o).FirstOrDefault();
@@ -286,7 +280,7 @@ namespace NetProxy.Client.Forms
             _messageClient?.Disconnect();
         }
 
-        private void dataGridViewProxys_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        private void DataGridViewProxys_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
             {
@@ -295,22 +289,20 @@ namespace NetProxy.Client.Forms
 
             var proxyId = Guid.Parse(dataGridViewProxys.Rows[e.RowIndex].Cells["ColumnId"]?.Value?.ToString() ?? "");
 
-            using (var formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId))
+            using var formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId);
+            if (formProxy.ShowDialog() == DialogResult.OK)
             {
-                if (formProxy.ShowDialog() == DialogResult.OK)
-                {
-                    RefreshProxyList();
-                }
+                RefreshProxyList();
             }
         }
 
-        private void configurationToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void ConfigurationToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             var form = new FormServerSettings(_connectionInfo.EnsureNotNull());
             form.ShowDialog();
         }
 
-        private void dataGridViewProxys_MouseDown(object? sender, MouseEventArgs e)
+        private void DataGridViewProxys_MouseDown(object? sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
@@ -472,18 +464,18 @@ namespace NetProxy.Client.Forms
         #endregion
 
         #region Menu.
-        private void changeConnectionToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void ChangeConnectionToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             ChangeConnection();
         }
 
-        private void aboutToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void AboutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             using var form = new FormAbout();
             form.ShowDialog();
         }
 
-        private void exitToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void ExitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             Close();
         }

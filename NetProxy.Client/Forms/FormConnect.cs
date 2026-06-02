@@ -152,16 +152,14 @@ namespace NetProxy.Client.Forms
                     _worker.ReportProgress(0, "Logging in...");
                     _loginConnectionEvent = new AutoResetEvent(false);
 
-                    _messageClient.Query(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password))).ContinueWith((o) =>
-                        {
-                            if (o.IsCompletedSuccessfully && o.Result?.Result == true)
-                            {
-                                _loginConnectionEvent.EnsureNotNull();
+                    var loginResult = _messageClient.Query(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password)));
+                    if (loginResult.Result == true)
+                    {
+                        _loginConnectionEvent.EnsureNotNull();
 
-                                _loginResult = o.Result.Result;
-                                _loginConnectionEvent.Set();
-                            }
-                        });
+                        _loginResult = loginResult.Result;
+                        _loginConnectionEvent.Set();
+                    }
 
                     if (_loginConnectionEvent.WaitOne(5000))
                     {

@@ -10,7 +10,7 @@ namespace NetProxy.Service
     {
         public QueryLoginReply OnQueryLogin(RmContext context, QueryLogin query)
         {
-            var serviceManager = (context.Endpoint.Parameter as NpServiceManager).EnsureNotNull();
+            var serviceManager = (context.Messenger.Parameter as NpServiceManager).EnsureNotNull();
 
             var reply = new QueryLoginReply();
 

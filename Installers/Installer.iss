@@ -5,7 +5,7 @@
  AppName                         = NetProxy
  AppVersion                      = {#AppVersion}
  AppVerName                      = NetTunnel {#AppVersion}
- AppCopyright                    = Copyright © 1995-2024 NetworkDLS.
+ AppCopyright                    = Copyright © 1995-2026 NetworkDLS.
  DefaultDirName                  = {commonpf}\NetworkDLS\NetProxy
  DefaultGroupName                = NetworkDLS\NetProxy
  SetupIconFile                   = "..\Images\AppIcon.ico"

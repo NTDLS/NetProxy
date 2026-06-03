@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <Copyright>Copyright © 2024 NetworkDLS</Copyright>
-    <Version>2.3.1</Version>
+    <Copyright>Copyright © 2026 NetworkDLS</Copyright>
+    <Version>2.4.0</Version>
     <Company>NetworkDLS</Company>
     <Product>NetProxy</Product>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
@@ -17,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NTDLS.ReliableMessaging" Version="2.1.4" />
-    <PackageReference Include="protobuf-net" Version="3.2.46" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NTDLS.ReliableMessaging" Version="3.4.5" />
+    <PackageReference Include="protobuf-net" Version="3.2.56" />
   </ItemGroup>
 
 </Project>

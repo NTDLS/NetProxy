@@ -13,7 +13,7 @@ namespace NetProxy.Client.Classes
                 var client = new RmClient();
                 client.Connect(connectionInfo.ServerName, connectionInfo.Port);
 
-                var loginResult = client.Query(new QueryLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password))).Result;
+                var loginResult = client.Query(new QueryLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
                 if (loginResult.Result != true)
                 {
                     throw new Exception("Login failed.");

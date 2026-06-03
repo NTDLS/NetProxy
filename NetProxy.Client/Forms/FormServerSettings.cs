@@ -21,7 +21,7 @@ namespace NetProxy.Client.Forms
                 object[] values = new object[5];
                 values[ColumnId.Index] = user.Id;
                 values[ColumnUsername.Index] = user.UserName;
-                values[ColumnPassword.Index] = user.PasswordHash;
+                //values[ColumnPassword.Index] = user.PasswordHash;
                 values[ColumnDescription.Index] = user.Description;
 
                 dataGridViewUsers.Rows.Add(values);
@@ -49,13 +49,8 @@ namespace NetProxy.Client.Forms
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
-            _messageClient.EnsureNotNull().Query<QueryUserListReply>(new QueryUserList()).ContinueWith(t =>
-            {
-                if (t.IsCompletedSuccessfully && t.Result?.Collection != null)
-                {
-                    Invoke(_populateGrid.EnsureNotNull(), new object[] { t.Result.Collection });
-                }
-            });
+            var result = _messageClient.EnsureNotNull().Query<QueryUserListReply>(new QueryUserList());
+            Invoke(_populateGrid.EnsureNotNull(), [result.Collection]);
         }
 
         private void FormServerSettings_FormClosed(object? sender, FormClosedEventArgs e)
@@ -69,20 +64,20 @@ namespace NetProxy.Client.Forms
 
             foreach (DataGridViewRow row in dataGridViewUsers.Rows)
             {
-                if ((((string)row.Cells[ColumnUsername.Index].Value) ?? string.Empty) != string.Empty)
+                if ((((string?)row.Cells[ColumnUsername.Index].Value) ?? string.Empty) != string.Empty)
                 {
-                    string passwordHash = (string)row.Cells[ColumnPassword.Index].Value;
-                    if (string.IsNullOrEmpty(passwordHash) == false)
+                    var passwordHash = (string?)row.Cells[ColumnPassword.Index].Value;
+                    if (string.IsNullOrEmpty(passwordHash))
                     {
                         passwordHash = NpUtility.Sha256(string.Empty);
                     }
 
                     users.Add(new NpUser
                     {
-                        Id = (string)row.Cells[ColumnId.Index].Value,
-                        UserName = (string)row.Cells[ColumnUsername.Index].Value,
-                        PasswordHash = passwordHash,
-                        Description = (string)row.Cells[ColumnDescription.Index].Value
+                        Id = (string?)row.Cells[ColumnId.Index].Value ?? string.Empty,
+                        UserName = (string?)row.Cells[ColumnUsername.Index].Value ?? string.Empty,
+                        PasswordHash = passwordHash ?? string.Empty,
+                        Description = (string?)row.Cells[ColumnDescription.Index].Value ?? string.Empty
                     });
                 }
             }

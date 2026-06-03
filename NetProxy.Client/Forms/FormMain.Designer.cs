@@ -77,8 +77,8 @@
             dataGridViewProxys.ReadOnly = true;
             dataGridViewProxys.Size = new Size(758, 291);
             dataGridViewProxys.TabIndex = 0;
-            dataGridViewProxys.CellDoubleClick += dataGridViewProxys_CellDoubleClick;
-            dataGridViewProxys.MouseDown += dataGridViewProxys_MouseDown;
+            dataGridViewProxys.CellDoubleClick += DataGridViewProxys_CellDoubleClick;
+            dataGridViewProxys.MouseDown += DataGridViewProxys_MouseDown;
             // 
             // ColumnStatus
             // 
@@ -163,14 +163,14 @@
             changeConnectionToolStripMenuItem.Name = "changeConnectionToolStripMenuItem";
             changeConnectionToolStripMenuItem.Size = new Size(180, 22);
             changeConnectionToolStripMenuItem.Text = "Change Connection";
-            changeConnectionToolStripMenuItem.Click += changeConnectionToolStripMenuItem_Click;
+            changeConnectionToolStripMenuItem.Click += ChangeConnectionToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             exitToolStripMenuItem.Size = new Size(180, 22);
             exitToolStripMenuItem.Text = "Exit";
-            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
+            exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
             // 
             // settingsToolStripMenuItem
             // 
@@ -184,7 +184,7 @@
             configurationToolStripMenuItem.Name = "configurationToolStripMenuItem";
             configurationToolStripMenuItem.Size = new Size(148, 22);
             configurationToolStripMenuItem.Text = "Configuration";
-            configurationToolStripMenuItem.Click += configurationToolStripMenuItem_Click;
+            configurationToolStripMenuItem.Click += ConfigurationToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
@@ -198,7 +198,7 @@
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             aboutToolStripMenuItem.Size = new Size(107, 22);
             aboutToolStripMenuItem.Text = "About";
-            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
+            aboutToolStripMenuItem.Click += AboutToolStripMenuItem_Click;
             // 
             // statusStripMain
             // 

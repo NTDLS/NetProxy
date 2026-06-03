@@ -92,13 +92,8 @@ namespace NetProxy.Client.Forms
         {
             if (_isNewProxy == false && _proxyId != null)
             {
-                _messageClient.EnsureNotNull().Query(new QueryProxyConfiguration((Guid)_proxyId)).ContinueWith(t =>
-                {
-                    if (t.IsCompletedSuccessfully && t.Result?.ProxyConfiguration != null)
-                    {
-                        Invoke(_populateProxyInformation.EnsureNotNull(), t.Result?.ProxyConfiguration);
-                    }
-                });
+                var result = _messageClient.EnsureNotNull().Query(new QueryProxyConfiguration((Guid)_proxyId));
+                Invoke(_populateProxyInformation.EnsureNotNull(), result?.ProxyConfiguration);
             }
         }
 

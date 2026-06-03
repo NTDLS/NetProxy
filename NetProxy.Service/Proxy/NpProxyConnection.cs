@@ -121,7 +121,7 @@ namespace NetProxy.Service.Proxy
                 throw new Exception("Could not determine remote endpoint from the client.");
             }
 
-            var sessionKey = $"{_listener.Proxy.Configuration.Name}:{_listener.Proxy.Configuration.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}";
+            var sessionKey = $"{_listener.Proxy.Configuration.Name}:{_listener.Proxy.Configuration.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}:{remoteEndPoint.Port}";
 
             TcpClient? establishedConnection = null;
 

@@ -1,4 +1,4 @@
-#define AppVersion "2.3.1"
+#define AppVersion "2.4.0"
 
 [Setup]
 ;-- Main Setup Information
@@ -26,14 +26,13 @@
  Name: Service;         Description: "Proxy Service";      Types: full compact custom;
 
 [Files]
- Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.exe";  DestDir: "{app}";          Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.json"; DestDir: "{app}";          Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Client\bin\Release\net8.0-windows7.0\*.dll";  DestDir: "{app}";          Components: Base\Management; Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\*.json";           DestDir: "{app}";          Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\*.exe";            DestDir: "{app}";          Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\*.dll";            DestDir: "{app}";          Components: Service;         Flags: IgnoreVersion;
- Source: "..\NetProxy.Service\bin\Release\net8.0\runtimes\*.*";     DestDir: "{app}\runtimes"; Components: Service;         Flags: IgnoreVersion recursesubdirs;
- 
+ Source: "publish\win-x64\Client\*.exe";   DestDir: "{app}"; Components: Base\Management; Flags: IgnoreVersion;
+ Source: "publish\win-x64\Client\*.json";  DestDir: "{app}"; Components: Base\Management; Flags: IgnoreVersion;
+ Source: "publish\win-x64\Client\*.dll";   DestDir: "{app}"; Components: Base\Management; Flags: IgnoreVersion;
+ Source: "publish\win-x64\Service\*.json"; DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
+ Source: "publish\win-x64\Service\*.exe";  DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
+ Source: "publish\win-x64\Service\*.dll";  DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
+  
 [Icons]
  Name: "{group}\Manage NetProxy"; Filename: "{app}\NetProxy.Client.Exe"; WorkingDir: "{app}"; Components: Base\Management;
 

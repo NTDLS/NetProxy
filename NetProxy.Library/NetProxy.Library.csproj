@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 
     <Copyright>Copyright © 2026 NetworkDLS</Copyright>
-    <Version>2.3.1</Version>
+    <Version>2.4.0</Version>
     <Company>NetworkDLS</Company>
     <Product>NetProxy</Product>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>

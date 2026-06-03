@@ -25,14 +25,14 @@ namespace NetProxy.Service
                         serviceManager.AddAuthenticated(context.ConnectionId);
                         Singletons.Logging.Write(NpLogging.Severity.Verbose,
                             $"Logged in connection: {context.ConnectionId}, User: {query.UserName}.");
+                        reply.Result = true;
                     }
                     else
                     {
                         Singletons.Logging.Write(NpLogging.Severity.Verbose,
                             $"Failed login connection: {context.ConnectionId}, User: {query.UserName}.");
+                        reply.Result = false;
                     }
-
-                    reply.Result = true;
                 }
             }
             catch (Exception ex)

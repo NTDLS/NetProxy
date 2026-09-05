@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 
     <Copyright>Copyright © 2026 NetworkDLS</Copyright>
-    <Version>2.4.0</Version>
+    <Version>2.4.1</Version>
     <Company>NetworkDLS</Company>
     <Product>NetProxy</Product>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NTDLS.ReliableMessaging" Version="3.4.5" />
-    <PackageReference Include="protobuf-net" Version="3.2.56" />
+    <PackageReference Include="NTDLS.ReliableMessaging" Version="3.4.6" />
+    <PackageReference Include="protobuf-net" Version="3.4.21" />
   </ItemGroup>
 
 </Project>

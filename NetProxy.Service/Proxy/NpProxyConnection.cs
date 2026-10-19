@@ -1,369 +1,408 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using NetProxy.Library;
+﻿using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
-using NTDLS.Helpers;
+using NetProxy.Service.Http;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
-using System.Text;
+using System.Security.Authentication;
 
 namespace NetProxy.Service.Proxy
 {
     /// <summary>
-    /// This is an endpoint, it contains all of the logic to serve both an inbound and an outbound connection.
+    /// One client connection, and the connection to the endpoint that it is proxied to. Data is pumped both ways until both sides
+    /// are finished. When the client connected over TLS (the listener terminates it) the connection to the endpoint can be
+    /// plain or its own TLS session, depending on the endpoint.
     /// </summary>
-    internal class NpProxyConnection
+    internal sealed class NpProxyConnection
     {
-        public ConnectionDirection Direction { get; private set; }
+        /// <summary>
+        /// A TLS handshake must complete within this time, so that a client that connects and goes quiet does not hold the connection.
+        /// </summary>
+        private static readonly TimeSpan _handshakeTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly TcpClient _tcpClient; //The TCP/IP connection associated with this connection.
-        private readonly Thread _dataPumpThread; //The thread that receives data for this connection.
-        private readonly NetworkStream _stream; //The stream for the TCP/IP connection (used for reading and writing).
-        private readonly NpProxyListener _listener; //The listener which owns this connection.
-        private NpProxyConnection? _peer; //The associated endpoint connection for this connection.
-        private bool _keepRunning;
-        private NpEndpoint? _outboundEndpoint; //For outbound connections, this is the endpoint that was used to make this connection.
+        /// <summary>
+        /// How long to wait on one endpoint to accept a connection before trying the next.
+        /// </summary>
+        private static readonly TimeSpan _endpointConnectTimeout = TimeSpan.FromSeconds(10);
 
-        public Guid Id { get; private set; }
-        public DateTime StartDateTime { get; private set; } = DateTime.UtcNow;
-        public DateTime LastActivityDateTime { get; private set; } = DateTime.UtcNow;
+        private readonly NpProxy _proxy;
+        private readonly TcpClient _client;
+        private readonly CancellationTokenSource _abort;
+        private readonly TaskCompletionSource _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly string _clientKey;
+        private readonly string _clientDisplay;
+        private long _lastActivityTicks = DateTime.UtcNow.Ticks;
 
-        public NpProxyConnection(NpProxyListener listener, TcpClient tcpClient)
+        private Stream? _clientStream;
+        private TcpClient? _endpointClient;
+        private Stream? _endpointStream;
+        private NpProxyEndpointStatistics? _endpointStatistics;
+
+        public Guid Id { get; } = Guid.NewGuid();
+        public DateTime StartDateTime { get; } = DateTime.UtcNow;
+        public DateTime LastActivityDateTime => new(Interlocked.Read(ref _lastActivityTicks), DateTimeKind.Utc);
+
+        /// <summary>
+        /// Completes when the connection is over and its sockets are closed.
+        /// </summary>
+        public Task Completion => _completion.Task;
+
+        public NpProxyConnection(NpProxy proxy, TcpClient client)
         {
-            Id = Guid.NewGuid();
-            _tcpClient = tcpClient;
-            _dataPumpThread = new Thread(DataPumpThreadProc);
-            _keepRunning = true;
-            _listener = listener;
-            _stream = tcpClient.GetStream();
-        }
+            _proxy = proxy;
+            _client = client;
+            _abort = CancellationTokenSource.CreateLinkedTokenSource(proxy.StopToken);
 
-        public void WriteBytesToPeer(byte[] buffer)
-        {
-            if (_outboundEndpoint != null)
+            if (client.Client.RemoteEndPoint is IPEndPoint remote)
             {
-                _listener.EndpointStatistics.Use((o) =>
-                {
-                    if (o.TryGetValue(_outboundEndpoint.Id, out NpProxyEndpointStatistics? value))
-                    {
-                        value.BytesWritten += (ulong)buffer.Length;
-                    }
-                });
+                //Clients that connected over IPv4 to a dual-stack listener are shown (and remembered) by their IPv4 address.
+                _clientKey = NpNetwork.Unmap(remote.Address).ToString();
+                _clientDisplay = NpNetwork.FormatHostPort(_clientKey, remote.Port);
             }
-            _listener.Proxy.Statistics.Use((o) => o.BytesWritten += (ulong)buffer.Length);
-
-            LastActivityDateTime = DateTime.UtcNow;
-            _stream.Write(buffer);
-        }
-
-        public void WriteBytesToPeer(byte[] buffer, int length)
-        {
-            if (_outboundEndpoint != null)
+            else
             {
-                _listener.EndpointStatistics.Use((o) =>
-                {
-                    if (o.TryGetValue(_outboundEndpoint.Id, out NpProxyEndpointStatistics? value))
-                    {
-                        value.BytesWritten += (ulong)length;
-                    }
-                });
+                _clientKey = $"{client.Client.RemoteEndPoint}";
+                _clientDisplay = _clientKey;
             }
-            _listener.Proxy.Statistics.Use((o) => o.BytesWritten += (ulong)length);
-
-            LastActivityDateTime = DateTime.UtcNow;
-            _stream.Write(buffer, 0, length);
-        }
-
-        public bool ReadBytesFromPeer(ref PumpBuffer buffer)
-        {
-            LastActivityDateTime = DateTime.UtcNow;
-            int bytesRead = _stream.Read(buffer.Bytes, 0, buffer.Bytes.Length);
-
-            if (_outboundEndpoint != null)
-            {
-                _listener.EndpointStatistics.Use((o) =>
-                {
-                    if (o.ContainsKey(_outboundEndpoint.Id))
-                    {
-                        o[_outboundEndpoint.Id].BytesRead += (ulong)bytesRead;
-                    }
-                });
-            }
-            _listener.Proxy.Statistics.Use((o) => o.BytesRead += (ulong)bytesRead);
-
-            buffer.Length = bytesRead;
-
-            return bytesRead > 0;
         }
 
         /// <summary>
-        /// We received an inbound connection which is now open and ready.
-        /// This is where we establish the connection to the associated outbound endpoint.
+        /// Ends the connection. Whatever is waiting on one of its sockets is released.
         /// </summary>
-        public void RunInboundAsync()
+        public void Abort()
         {
-            Direction = ConnectionDirection.Inbound;
-
-            HashSet<Guid> triedEndpoints = new();
-
-            int lastTriedEndpointIndex = _listener.LastTriedEndpointIndex;
-
-            NpEndpoint? endpoint = null;
-            var endpoints = _listener.Proxy.Configuration.Endpoints.Collection;
-            if (endpoints.Count == 0)
-            {
-                throw new Exception("The proxy has no defined endpoints.");
-            }
-
-            var remoteEndPoint = _tcpClient.Client.RemoteEndPoint as IPEndPoint;
-            if (remoteEndPoint == null)
-            {
-                throw new Exception("Could not determine remote endpoint from the client.");
-            }
-
-            var sessionKey = $"{_listener.Proxy.Configuration.Name}:{_listener.Proxy.Configuration.Endpoints.ConnectionPattern}:{remoteEndPoint.Address}:{remoteEndPoint.Port}";
-
-            TcpClient? establishedConnection = null;
-
-            #region First try sticky sessions....
-
-            if (_listener.Proxy.Configuration.UseStickySessions)
-            {
-                if (_listener.StickySessionCache.TryGetValue(sessionKey, out NpStickySession? cacheItem) && cacheItem != null)
-                {
-                    endpoint = endpoints.Where(o => o.Address == cacheItem.Address && o.Port == cacheItem.Port).FirstOrDefault();
-                }
-
-                if (endpoint != null)
-                {
-                    triedEndpoints.Add(endpoint.Id);
-                    try
-                    {
-                        //Make the outbound connection to the endpoint specified for this proxy (and sticky session).
-                        establishedConnection = new TcpClient(endpoint.Address, endpoint.Port);
-                    }
-                    catch
-                    {
-                        Exceptions.Ignore(() => establishedConnection?.Close());
-                        establishedConnection = null;
-                    }
-                }
-            }
-
-            #endregion
-
-            //If and while we do not have a connection, lets determine what endpoint we should use.
-            while (establishedConnection == null)
-            {
-                if (endpoints.Where(o => triedEndpoints.Contains(o.Id) == false).Any() == false)
-                {
-                    throw new Exception("All endpoints were exhausted while trying to connect to the remote peer.");
-                }
-
-                if (_listener.Proxy.Configuration.Endpoints.ConnectionPattern == ConnectionPattern.RoundRobbin)
-                {
-                    lastTriedEndpointIndex++;
-
-                    if (lastTriedEndpointIndex >= endpoints.Count)
-                    {
-                        //We may have started trying RoundRobbin connections at a non-zero index, if we reached the end, start back at zero.
-                        //We use "triedEndpoints" to determine when we have tired them all.
-                        lastTriedEndpointIndex = 0;
-                    }
-
-                    endpoint = endpoints[lastTriedEndpointIndex];
-                }
-                else if (_listener.Proxy.Configuration.Endpoints.ConnectionPattern == ConnectionPattern.Balanced)
-                {
-                    //Get the id of the endpoint with the least connections.
-                    var endpointId = _listener.EndpointStatistics.Use((o) =>
-                    {
-                        return o.OrderBy(e => e.Value.CurrentConnections).First().Key;
-                    });
-
-                    endpoint = endpoints.Where(o => o.Id == endpointId).First();
-                }
-                else if (_listener.Proxy.Configuration.Endpoints.ConnectionPattern == ConnectionPattern.FailOver)
-                {
-                    //Starting at the last tried endpoint index, look for endpoints that we have not tired.
-                    while (triedEndpoints.Contains(endpoints[lastTriedEndpointIndex].Id))
-                    {
-                        if (lastTriedEndpointIndex >= endpoints.Count)
-                        {
-                            lastTriedEndpointIndex = 0;
-                        }
-                        else
-                        {
-                            lastTriedEndpointIndex++;
-                        }
-                    }
-
-                    endpoint = endpoints[lastTriedEndpointIndex];
-                }
-                else
-                {
-                    throw new Exception($"The connection pattern {_listener.Proxy.Configuration.Endpoints.ConnectionPattern} is not implemented.");
-                }
-
-                try
-                {
-                    //Make the outbound connection to the endpoint specified for this proxy.
-                    triedEndpoints.Add(endpoint.Id);
-                    establishedConnection = new TcpClient(endpoint.Address, endpoint.Port);
-                }
-                catch
-                {
-                    Exceptions.Ignore(() => establishedConnection?.Close());
-                    establishedConnection = null;
-                }
-            }
-
-            if (endpoint == null)
-            {
-                throw new Exception($"A connection was established but the endpoint remains undefined.");
-            }
-
-            _listener.LastTriedEndpointIndex = lastTriedEndpointIndex; //Make sure other connections can start looking for endpoints where we left off.
-
-            if (_listener.Proxy.Configuration.UseStickySessions)
-            {
-                //Keep track of the successful sticky session.
-                _listener.StickySessionCache.Set(sessionKey, new NpStickySession(endpoint.Address, endpoint.Port));
-            }
-
-            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Outbound endpoint connection was established: {endpoint.Id}");
-
-            _peer = new NpProxyConnection(_listener, establishedConnection);
-            _peer.RunOutboundAsync(this, endpoint);
-
-            //If we were successful making the outbound connection, then start the inbound connection thread.
-            _dataPumpThread.Start();
+            try { _abort.Cancel(); } catch (ObjectDisposedException) { }
+            try { _client.Client?.Close(0); } catch { }
+            try { _endpointClient?.Client?.Close(0); } catch { }
         }
+
+        private void Touch() => Interlocked.Exchange(ref _lastActivityTicks, DateTime.UtcNow.Ticks);
 
         /// <summary>
-        /// Pump data for the outbound endpoint.
+        /// Runs the connection from start to finish. It does not throw: whatever goes wrong is logged and ends the connection.
         /// </summary>
-        public void RunOutboundAsync(NpProxyConnection peer, NpEndpoint endpoint)
+        public async Task RunAsync()
         {
-            Direction = ConnectionDirection.Outbound;
+            _proxy.Statistics.ConnectionOpened();
 
-            _outboundEndpoint = endpoint;
-            _peer = peer; //Each active connection needs a reference to the opposite endpoint connection.
-            _dataPumpThread.Start();
-        }
-
-        internal void DataPumpThreadProc()
-        {
-            Thread.CurrentThread.Name = $"DataPumpThreadProc:{Environment.CurrentManagedThreadId}";
-
-            #region Track endpoint statistics.
-            if (_outboundEndpoint != null)
-            {
-                _listener.EndpointStatistics.Use((o) =>
-                {
-                    if (o.TryGetValue(_outboundEndpoint.Id, out NpProxyEndpointStatistics? stat))
-                    {
-                        stat.CurrentConnections++;
-                        stat.TotalConnections++;
-                    }
-                });
-            }
-            #endregion
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Proxy '{_proxy.Configuration.Name}' accepted {_clientDisplay} ({Id}).");
 
             try
             {
-                var buffer = new PumpBuffer(_listener.Proxy.Configuration.InitialBufferSize);
-
-                var httpHeaderBuilder = new StringBuilder();
-
-                while (_keepRunning && ReadBytesFromPeer(ref buffer))
+                if (await TerminateClientTlsAsync() == false)
                 {
-                    #region HTTP Header Augmentation.
-
-                    if (
-                        //Only parse HTTP headers if the traffic type is HTTP.
-                        _listener.Proxy.Configuration.TrafficType == TrafficType.Http
-                        &&
-                        (
-                            // and the direction is inbound and we have request rules.
-                            (
-                                Direction == ConnectionDirection.Inbound
-                                && _listener.Proxy.Configuration.HttpHeaderRules.Collection
-                                    .Where(o => (new[] { HttpHeaderType.Request, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
-                            )
-                            // or the direction is outbound and we have response rules.
-                            || (
-                                Direction == ConnectionDirection.Outbound
-                                && _listener.Proxy.Configuration.HttpHeaderRules.Collection
-                                    .Where(o => (new[] { HttpHeaderType.Response, HttpHeaderType.Any }).Contains(o.HeaderType)).Any()
-                            )
-                        )
-                    )
-                    {
-                        switch (HttpHeaderAugmentation.Process(ref httpHeaderBuilder, _listener.Proxy.Configuration, buffer))
-                        {
-                            case HttpHeaderAugmentation.HTTPHeaderResult.WaitOnData:
-                                //We received a partial HTTP header, wait on more data.
-                                continue;
-                            case HttpHeaderAugmentation.HTTPHeaderResult.Present:
-                                //Found an HTTP header, send it to the peer. There may be bytes remaining
-                                //  in the buffer if buffer.Length > 0 so follow though to WriteBytesToPeer.
-                                _peer?.WriteBytesToPeer(Encoding.UTF8.GetBytes(httpHeaderBuilder.ToString()));
-                                httpHeaderBuilder.Clear();
-                                break;
-                            case HttpHeaderAugmentation.HTTPHeaderResult.NotPresent:
-                                //Didn't find an HTTP header.
-                                break;
-                        }
-                    }
-
-                    #endregion
-
-                    if (buffer.Length > 0)
-                    {
-                        _peer?.WriteBytesToPeer(buffer.Bytes, buffer.Length); //Send data to remote peer.
-                    }
-
-                    buffer.AutoResize(_listener.Proxy.Configuration.MaxBufferSize);
+                    return;
                 }
+
+                if (await ConnectToEndpointAsync() == false)
+                {
+                    return;
+                }
+
+                await Task.WhenAll(
+                    PumpAsync(_clientStream!, _endpointStream!, fromClient: true),
+                    PumpAsync(_endpointStream!, _clientStream!, fromClient: false));
             }
-            catch
+            catch (OperationCanceledException)
             {
+                //The proxy is stopping, or the connection was aborted.
+            }
+            catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or AuthenticationException)
+            {
+                Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} ended: {ex.GetBaseException().Message}");
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write($"Connection {Id} from {_clientDisplay} failed", ex);
             }
             finally
             {
-                Exceptions.Ignore(() => _peer?.Stop(false)); //Tell the peer connection to disconnect.
-
-                #region Track endpoint statistics.
-                if (_outboundEndpoint != null)
-                {
-                    _listener.EndpointStatistics.Use((o) =>
-                    {
-                        if (o.ContainsKey(_outboundEndpoint.Id))
-                        {
-                            var stat = o[_outboundEndpoint.Id];
-                            stat.CurrentConnections--;
-                        }
-                    });
-                }
-                #endregion
+                Close();
             }
-
-            _listener.RemoveActiveConnection(this);
         }
 
-        public void Stop(bool waitOnThread)
+        /// <summary>
+        /// When the listener terminates TLS, completes the handshake with the client. Returns false (after logging why) if it fails.
+        /// </summary>
+        private async Task<bool> TerminateClientTlsAsync()
         {
-            _keepRunning = false;
-            try { _stream.Close(); } catch { }
-            try { _stream.Dispose(); } catch { }
-            try { _tcpClient.Close(); } catch { }
-            try { _tcpClient.Dispose(); } catch { }
+            Stream stream = _client.GetStream();
 
-            if (waitOnThread)
+            if (_proxy.TerminatesTls == false)
             {
-                _dataPumpThread.Join();
+                _clientStream = stream;
+                return true;
             }
+
+            var ssl = new SslStream(stream, false);
+            _clientStream = ssl;
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_abort.Token);
+            timeout.CancelAfter(_handshakeTimeout);
+
+            try
+            {
+                await ssl.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
+                {
+                    ServerCertificate = _proxy.Certificate,
+                    ApplicationProtocols = [SslApplicationProtocol.Http11],
+                    ClientCertificateRequired = false,
+                    EnabledSslProtocols = SslProtocols.None, //Let the operating system choose.
+                    CertificateRevocationCheckMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck
+                }, timeout.Token);
+
+                return true;
+            }
+            catch (AuthenticationException ex)
+            {
+                //Usually a client that does not trust the certificate and hung up.
+                Singletons.Logging.Write(NpLogging.Severity.Warning,
+                    $"TLS handshake with {_clientDisplay} failed on proxy '{_proxy.Configuration.Name}': {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+            catch (Exception ex) when (ex is IOException or OperationCanceledException)
+            {
+                if (_abort.IsCancellationRequested == false)
+                {
+                    //Browsers routinely open connections that they drop before the handshake is done.
+                    Singletons.Logging.Write(NpLogging.Severity.Verbose,
+                        $"TLS handshake with {_clientDisplay} on proxy '{_proxy.Configuration.Name}' did not complete: {ex.GetBaseException().Message}");
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Chooses the endpoint (see <see cref="NpProxy.GetEndpointAttemptOrder"/>) and connects to it, going on to the next endpoint
+        /// for as long as they fail. Returns false (after logging why) when none of them can be connected to.
+        /// </summary>
+        private async Task<bool> ConnectToEndpointAsync()
+        {
+            var candidates = _proxy.GetEndpointAttemptOrder(_clientKey);
+            var failures = new List<string>();
+
+            foreach (var endpoint in candidates)
+            {
+                _abort.Token.ThrowIfCancellationRequested();
+
+                var statistics = _proxy.EndpointStatistics.GetOrAdd(endpoint.Id, _ => new NpProxyEndpointStatistics());
+                statistics.Reserve();
+
+                TcpClient? tcpClient = null;
+
+                try
+                {
+                    tcpClient = await NpNetwork.ConnectAsync(endpoint.Address, endpoint.Port, _endpointConnectTimeout, _abort.Token);
+                    Stream stream = tcpClient.GetStream();
+
+                    if (endpoint.TrafficType == TrafficType.Https)
+                    {
+                        stream = await StartEndpointTlsAsync(endpoint, stream);
+                    }
+
+                    _endpointClient = tcpClient;
+                    _endpointStream = stream;
+                    _endpointStatistics = statistics;
+
+                    statistics.Established();
+                    _proxy.RememberStickySession(_clientKey, endpoint);
+
+                    Singletons.Logging.Write(NpLogging.Severity.Verbose,
+                        $"Connection {Id} from {_clientDisplay} is connected to endpoint {NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}.");
+
+                    return true;
+                }
+                catch (OperationCanceledException) when (_abort.IsCancellationRequested)
+                {
+                    statistics.ReleaseFailed();
+                    try { tcpClient?.Dispose(); } catch { }
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    var wasFailing = statistics.LastFailure != null;
+                    statistics.ReleaseFailed();
+                    try { tcpClient?.Dispose(); } catch { }
+
+                    var description = $"{NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}: {ex.GetBaseException().Message}";
+                    failures.Add(description);
+
+                    //Say so once when an endpoint goes down, not for every connection that finds it down.
+                    Singletons.Logging.Write(wasFailing ? NpLogging.Severity.Verbose : NpLogging.Severity.Warning,
+                        $"Proxy '{_proxy.Configuration.Name}' could not connect to endpoint {description}");
+                }
+            }
+
+            Singletons.Logging.Write(NpLogging.Severity.Warning,
+                $"Proxy '{_proxy.Configuration.Name}' could not connect {_clientDisplay} to any endpoint"
+                + (failures.Count > 0 ? $" ({string.Join("; ", failures)})." : " (there are none enabled)."));
+
+            return false;
+        }
+
+        /// <summary>
+        /// Starts TLS with an endpoint, validating its certificate against the address of the endpoint.
+        /// </summary>
+        private async Task<Stream> StartEndpointTlsAsync(NpEndpoint endpoint, Stream stream)
+        {
+            var ssl = new SslStream(stream, false);
+
+            var options = new SslClientAuthenticationOptions
+            {
+                TargetHost = NpNetwork.NormalizeHost(endpoint.Address)
+            };
+
+            if (endpoint.TlsIgnoreCertificateErrors)
+            {
+                options.RemoteCertificateValidationCallback = (_, _, _, _) => true;
+            }
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_abort.Token);
+            timeout.CancelAfter(_handshakeTimeout);
+
+            try
+            {
+                await ssl.AuthenticateAsClientAsync(options, timeout.Token);
+                return ssl;
+            }
+            catch
+            {
+                ssl.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Copies data one way until the sender is finished (or the connection is aborted), applying the HTTP header rules on the way.
+        /// </summary>
+        private async Task PumpAsync(Stream from, Stream to, bool fromClient)
+        {
+            var configuration = _proxy.Configuration;
+            var buffer = new PumpBuffer(configuration.InitialBufferSize);
+            var parser = CreateHttpParser(fromClient);
+
+            try
+            {
+                while (true)
+                {
+                    int read = await from.ReadAsync(buffer.Bytes.AsMemory(), _abort.Token);
+                    if (read <= 0)
+                    {
+                        FinishSending(to, fromClient);
+                        return;
+                    }
+
+                    buffer.Length = read;
+                    Touch();
+
+                    var (bytes, length) = parser != null ? parser.Process(buffer.Bytes, read) : (buffer.Bytes, read);
+
+                    if (fromClient)
+                    {
+                        _proxy.Statistics.AddBytesRead(read);
+                    }
+                    else
+                    {
+                        _endpointStatistics?.AddBytesRead(read);
+                    }
+
+                    if (length > 0) //Nothing to send while a partial HTTP header is held.
+                    {
+                        await to.WriteAsync(bytes.AsMemory(0, length), _abort.Token);
+                        Touch();
+
+                        if (fromClient)
+                        {
+                            _endpointStatistics?.AddBytesWritten(length);
+                        }
+                        else
+                        {
+                            _proxy.Statistics.AddBytesWritten(length);
+                        }
+                    }
+
+                    buffer.AutoResize(configuration.MaxBufferSize);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                //Aborted.
+            }
+            catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
+            {
+                Singletons.Logging.Write(NpLogging.Severity.Verbose,
+                    $"Connection {Id} from {_clientDisplay} ({(fromClient ? "client to endpoint" : "endpoint to client")}) ended: {ex.GetBaseException().Message}");
+                Abort();
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write($"Connection {Id} from {_clientDisplay} failed", ex);
+                Abort();
+            }
+        }
+
+        /// <summary>
+        /// One side has finished sending. Tell the other side, so that (for example) a client that is done with its request still
+        /// receives the whole response. A TLS session cannot be half closed, so the connection ends instead.
+        /// </summary>
+        private void FinishSending(Stream to, bool fromClient)
+        {
+            try
+            {
+                if (to is NetworkStream)
+                {
+                    var socket = fromClient ? _endpointClient?.Client : _client.Client;
+                    socket?.Shutdown(SocketShutdown.Send);
+                }
+                else
+                {
+                    Abort();
+                }
+            }
+            catch (Exception ex) when (ex is SocketException or ObjectDisposedException or InvalidOperationException)
+            {
+                Abort();
+            }
+        }
+
+        /// <summary>
+        /// Follows the HTTP stream in one direction when there are header rules for it: requests (from the client) with request rules,
+        /// responses (from the endpoint) with response rules. This applies to HTTP, and to HTTPS where the listener terminates TLS.
+        /// </summary>
+        private IHttpStreamProcessor? CreateHttpParser(bool fromClient)
+        {
+            if (_proxy.EffectiveTrafficType != TrafficType.Http && _proxy.EffectiveTrafficType != TrafficType.Https)
+            {
+                return null;
+            }
+
+            var wanted = fromClient ? HttpHeaderType.Request : HttpHeaderType.Response;
+
+            var hasRules = _proxy.Configuration.HttpHeaderRules.Collection
+                .Any(o => o.Enabled && (o.HeaderType == wanted || o.HeaderType == HttpHeaderType.Any));
+
+            return hasRules ? new HttpStreamParser(_proxy.Configuration, isInbound: fromClient) : null;
+        }
+
+        private void Close()
+        {
+            try { _abort.Cancel(); } catch (ObjectDisposedException) { }
+
+            try { _clientStream?.Dispose(); } catch { }
+            try { _client.Dispose(); } catch { }
+            try { _endpointStream?.Dispose(); } catch { }
+            try { _endpointClient?.Dispose(); } catch { }
+
+            _endpointStatistics?.ConnectionClosed();
+            _proxy.Statistics.ConnectionClosed();
+            _proxy.RemoveConnection(this);
+
+            try { _abort.Dispose(); } catch { }
+
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} is closed.");
+
+            _completion.TrySetResult();
         }
     }
 }

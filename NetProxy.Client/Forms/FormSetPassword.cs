@@ -1,5 +1,6 @@
 ﻿using NetProxy.Library;
 using NetProxy.Library.Utilities;
+using NTDLS.WinFormsHelpers;
 
 namespace NetProxy.Client.Forms
 {
@@ -13,6 +14,7 @@ namespace NetProxy.Client.Forms
         public FormSetPassword()
         {
             InitializeComponent();
+            Theming.InitializeForm(this);
         }
 
         private void ButtonCancel_Click(object? sender, EventArgs e)
@@ -26,6 +28,12 @@ namespace NetProxy.Client.Forms
             if (textBoxPassword1.Text != textBoxPassword2.Text)
             {
                 MessageBox.Show("The passwords do not match.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                return;
+            }
+
+            if (textBoxPassword1.Text.Length == 0 && MessageBox.Show("An empty password lets anyone log in as this user. Use it anyway?", Constants.FriendlyName,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            {
                 return;
             }
 

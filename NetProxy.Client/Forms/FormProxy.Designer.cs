@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic.ApplicationServices;
+using Microsoft.VisualBasic.ApplicationServices;
 using NetProxy.Client.Properties;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -40,6 +40,7 @@ namespace NetProxy.Client.Forms
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProxy));
             label1 = new Label();
             label2 = new Label();
@@ -57,6 +58,13 @@ namespace NetProxy.Client.Forms
             comboBoxTrafficType = new ComboBox();
             textBoxProxyName = new TextBox();
             tabPageBindings = new TabPage();
+            tabPageTls = new TabPage();
+            labelTlsInfo = new Label();
+            labelCertificatePath = new Label();
+            textBoxCertificatePath = new TextBox();
+            buttonBrowseCertificate = new Button();
+            labelCertificatePassword = new Label();
+            textBoxCertificatePassword = new TextBox();
             comboBoxBindingProtocol = new ComboBox();
             label10 = new Label();
             dataGridViewBindings = new DataGridView();
@@ -79,6 +87,8 @@ namespace NetProxy.Client.Forms
             ColumnEndpointsEnabled = new DataGridViewCheckBoxColumn();
             ColumnEndpointsAddress = new DataGridViewTextBoxColumn();
             ColumnEndpointsPort = new DataGridViewTextBoxColumn();
+            ColumnEndpointsTrafficType = new DataGridViewComboBoxColumn();
+            ColumnEndpointsIgnoreCertificateErrors = new DataGridViewCheckBoxColumn();
             ColumnEndpointsDescription = new DataGridViewTextBoxColumn();
             label8 = new Label();
             label9 = new Label();
@@ -96,6 +106,7 @@ namespace NetProxy.Client.Forms
             tabControl.SuspendLayout();
             tabPageGeneral.SuspendLayout();
             tabPageBindings.SuspendLayout();
+            tabPageTls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewBindings).BeginInit();
             tabPageHTTPHeaders.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewHTTPHeaders).BeginInit();
@@ -194,6 +205,7 @@ namespace NetProxy.Client.Forms
             // 
             tabControl.Controls.Add(tabPageGeneral);
             tabControl.Controls.Add(tabPageBindings);
+            tabControl.Controls.Add(tabPageTls);
             tabControl.Controls.Add(tabPageHTTPHeaders);
             tabControl.Controls.Add(tabPageEndpoints);
             tabControl.Controls.Add(tabPageAdvanced);
@@ -351,6 +363,73 @@ namespace NetProxy.Client.Forms
             textBoxListenPort.Name = "textBoxListenPort";
             textBoxListenPort.Size = new Size(140, 23);
             textBoxListenPort.TabIndex = 5;
+            //
+            // tabPageTls
+            //
+            tabPageTls.BackColor = SystemColors.Control;
+            tabPageTls.Controls.Add(labelTlsInfo);
+            tabPageTls.Controls.Add(labelCertificatePath);
+            tabPageTls.Controls.Add(textBoxCertificatePath);
+            tabPageTls.Controls.Add(buttonBrowseCertificate);
+            tabPageTls.Controls.Add(labelCertificatePassword);
+            tabPageTls.Controls.Add(textBoxCertificatePassword);
+            tabPageTls.Location = new Point(4, 24);
+            tabPageTls.Margin = new Padding(0);
+            tabPageTls.Name = "tabPageTls";
+            tabPageTls.Size = new Size(588, 316);
+            tabPageTls.TabIndex = 5;
+            tabPageTls.Text = "TLS";
+            //
+            // labelTlsInfo
+            //
+            labelTlsInfo.Location = new Point(14, 14);
+            labelTlsInfo.Name = "labelTlsInfo";
+            labelTlsInfo.Size = new Size(555, 62);
+            labelTlsInfo.TabIndex = 0;
+            labelTlsInfo.Text = "When the traffic type is HTTPS, the proxy terminates TLS using this certificate, so that HTTP header rules can be applied. Whether the proxy uses TLS to talk to an endpoint is chosen for each endpoint (see the Endpoints tab).";
+            //
+            // labelCertificatePath
+            //
+            labelCertificatePath.AutoSize = true;
+            labelCertificatePath.Location = new Point(14, 92);
+            labelCertificatePath.Name = "labelCertificatePath";
+            labelCertificatePath.Size = new Size(250, 15);
+            labelCertificatePath.TabIndex = 1;
+            labelCertificatePath.Text = "Certificate (PFX) path on the service machine";
+            //
+            // textBoxCertificatePath
+            //
+            textBoxCertificatePath.Location = new Point(14, 112);
+            textBoxCertificatePath.Name = "textBoxCertificatePath";
+            textBoxCertificatePath.Size = new Size(470, 23);
+            textBoxCertificatePath.TabIndex = 2;
+            //
+            // buttonBrowseCertificate
+            //
+            buttonBrowseCertificate.Location = new Point(490, 111);
+            buttonBrowseCertificate.Name = "buttonBrowseCertificate";
+            buttonBrowseCertificate.Size = new Size(79, 25);
+            buttonBrowseCertificate.TabIndex = 3;
+            buttonBrowseCertificate.Text = "Browse";
+            buttonBrowseCertificate.UseVisualStyleBackColor = true;
+            buttonBrowseCertificate.Click += ButtonBrowseCertificate_Click;
+            //
+            // labelCertificatePassword
+            //
+            labelCertificatePassword.AutoSize = true;
+            labelCertificatePassword.Location = new Point(14, 150);
+            labelCertificatePassword.Name = "labelCertificatePassword";
+            labelCertificatePassword.Size = new Size(114, 15);
+            labelCertificatePassword.TabIndex = 4;
+            labelCertificatePassword.Text = "Certificate password";
+            //
+            // textBoxCertificatePassword
+            //
+            textBoxCertificatePassword.Location = new Point(14, 170);
+            textBoxCertificatePassword.Name = "textBoxCertificatePassword";
+            textBoxCertificatePassword.Size = new Size(250, 23);
+            textBoxCertificatePassword.TabIndex = 5;
+            textBoxCertificatePassword.UseSystemPasswordChar = true;
             // 
             // tabPageHTTPHeaders
             // 
@@ -457,7 +536,7 @@ namespace NetProxy.Client.Forms
             // 
             dataGridViewEndpoints.BackgroundColor = SystemColors.ButtonFace;
             dataGridViewEndpoints.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewEndpoints.Columns.AddRange(new DataGridViewColumn[] { ColumnEndpointsEnabled, ColumnEndpointsAddress, ColumnEndpointsPort, ColumnEndpointsDescription });
+            dataGridViewEndpoints.Columns.AddRange(new DataGridViewColumn[] { ColumnEndpointsEnabled, ColumnEndpointsAddress, ColumnEndpointsPort, ColumnEndpointsTrafficType, ColumnEndpointsIgnoreCertificateErrors, ColumnEndpointsDescription });
             dataGridViewEndpoints.Location = new Point(16, 71);
             dataGridViewEndpoints.Margin = new Padding(4, 3, 4, 3);
             dataGridViewEndpoints.Name = "dataGridViewEndpoints";
@@ -476,19 +555,36 @@ namespace NetProxy.Client.Forms
             // 
             ColumnEndpointsAddress.HeaderText = "Address";
             ColumnEndpointsAddress.Name = "ColumnEndpointsAddress";
-            ColumnEndpointsAddress.Width = 150;
+            ColumnEndpointsAddress.Width = 130;
             // 
             // ColumnEndpointsPort
             // 
             ColumnEndpointsPort.HeaderText = "Port";
             ColumnEndpointsPort.Name = "ColumnEndpointsPort";
             ColumnEndpointsPort.Width = 50;
+            //
+            // ColumnEndpointsTrafficType
+            //
+            ColumnEndpointsTrafficType.HeaderText = "Traffic";
+            ColumnEndpointsTrafficType.Items.AddRange(new object[] { "Raw", "Http", "Https" });
+            ColumnEndpointsTrafficType.Name = "ColumnEndpointsTrafficType";
+            ColumnEndpointsTrafficType.Resizable = DataGridViewTriState.True;
+            ColumnEndpointsTrafficType.SortMode = DataGridViewColumnSortMode.Automatic;
+            ColumnEndpointsTrafficType.Width = 65;
+            //
+            // ColumnEndpointsIgnoreCertificateErrors
+            //
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnEndpointsIgnoreCertificateErrors.DefaultCellStyle = dataGridViewCellStyle4;
+            ColumnEndpointsIgnoreCertificateErrors.HeaderText = "Ignore cert errors";
+            ColumnEndpointsIgnoreCertificateErrors.Name = "ColumnEndpointsIgnoreCertificateErrors";
+            ColumnEndpointsIgnoreCertificateErrors.Width = 70;
             // 
             // ColumnEndpointsDescription
             // 
             ColumnEndpointsDescription.HeaderText = "Description";
             ColumnEndpointsDescription.Name = "ColumnEndpointsDescription";
-            ColumnEndpointsDescription.Width = 250;
+            ColumnEndpointsDescription.Width = 150;
             // 
             // label8
             // 
@@ -649,6 +745,8 @@ namespace NetProxy.Client.Forms
             tabPageGeneral.ResumeLayout(false);
             tabPageGeneral.PerformLayout();
             tabPageBindings.ResumeLayout(false);
+            tabPageTls.ResumeLayout(false);
+            tabPageTls.PerformLayout();
             tabPageBindings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewBindings).EndInit();
             tabPageHTTPHeaders.ResumeLayout(false);
@@ -714,6 +812,15 @@ namespace NetProxy.Client.Forms
         private DataGridViewCheckBoxColumn ColumnEndpointsEnabled;
         private DataGridViewTextBoxColumn ColumnEndpointsAddress;
         private DataGridViewTextBoxColumn ColumnEndpointsPort;
+        private DataGridViewComboBoxColumn ColumnEndpointsTrafficType;
+        private DataGridViewCheckBoxColumn ColumnEndpointsIgnoreCertificateErrors;
+        private TabPage tabPageTls;
+        private Label labelTlsInfo;
+        private Label labelCertificatePath;
+        private TextBox textBoxCertificatePath;
+        private Button buttonBrowseCertificate;
+        private Label labelCertificatePassword;
+        private TextBox textBoxCertificatePassword;
         private DataGridViewTextBoxColumn ColumnEndpointsDescription;
         private DataGridViewCheckBoxColumn ColumnBindingsEnabled;
         private DataGridViewTextBoxColumn ColumnBindingsIPAddress;

@@ -24,6 +24,9 @@
             _management.Stop();
             _semaphoreToRequestStop.Release();
             _thread.Join();
+
+            //Write out whatever the logger still has queued.
+            Singletons.ShutdownLogging();
         }
 
         private void ServiceThreadProc()

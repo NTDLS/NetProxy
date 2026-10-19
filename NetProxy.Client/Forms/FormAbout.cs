@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using NTDLS.WinFormsHelpers;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -11,11 +12,13 @@ namespace NetProxy.Client.Forms
         public FormAbout()
         {
             InitializeComponent();
+            Theming.InitializeForm(this);
         }
 
         public FormAbout(bool showInTaskbar)
         {
             InitializeComponent();
+            Theming.InitializeForm(this);
 
             if (showInTaskbar)
             {

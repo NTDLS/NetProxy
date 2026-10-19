@@ -1,10 +1,7 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Library;
-using NetProxy.Library.Payloads.ReliableMessages.Queries;
-using NetProxy.Library.Utilities;
 using NTDLS.Helpers;
 using NTDLS.Persistence;
-using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 using System.ComponentModel;
 
@@ -13,12 +10,9 @@ namespace NetProxy.Client.Forms
     public partial class FormConnect : Form
     {
         private readonly ConnectionInfo _connectionInfo = new();
-        private ProgressForm _formProgress = new();
-        private AutoResetEvent? _loginConnectionEvent = null;
+        private readonly ProgressForm _formProgress = new();
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
-        private bool _loginResult = false;
-        private RmClient? _messageClient = null;
 
         public ConnectionInfo GetConnectionInfo()
         {
@@ -28,6 +22,7 @@ namespace NetProxy.Client.Forms
         public FormConnect()
         {
             InitializeComponent();
+            Theming.InitializeForm(this);
         }
 
         private void FormConnect_Load(object? sender, EventArgs e)
@@ -45,6 +40,55 @@ namespace NetProxy.Client.Forms
             textBoxUsername.Text = preferences.Username;
         }
 
+        /// <summary>
+        /// Reads "name", "name:port", an IPv4 address (with or without a port), or an IPv6 address ("::1", or "[::1]:5854" with a port).
+        /// An IPv6 address has colons of its own, so a port can only be given after it in square brackets.
+        /// </summary>
+        public static void ParseServer(string text, out string serverName, out int port)
+        {
+            text = text.Trim();
+            port = Constants.DefaultManagementPort;
+
+            if (text.StartsWith('['))
+            {
+                var end = text.IndexOf(']');
+                if (end < 0)
+                {
+                    throw new Exception("The server address is missing its closing bracket. Expected format \"[IPv6 address]\" or \"[IPv6 address]:Port\".");
+                }
+
+                serverName = text[1..end];
+
+                var rest = text[(end + 1)..];
+                if (rest.Length > 0)
+                {
+                    if (rest[0] != ':' || int.TryParse(rest[1..], out port) == false)
+                    {
+                        throw new Exception("The port number could not be parsed. Expected format \"[IPv6 address]:Port\".");
+                    }
+                }
+            }
+            else if (text.Count(c => c == ':') == 1)
+            {
+                var colon = text.IndexOf(':');
+                serverName = text[..colon];
+
+                if (int.TryParse(text[(colon + 1)..], out port) == false)
+                {
+                    throw new Exception("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".");
+                }
+            }
+            else
+            {
+                serverName = text; //A name, an IPv4 address, or an IPv6 address.
+            }
+
+            if (port < 1 || port > 65535)
+            {
+                throw new Exception("The port number must be between 1 and 65535.");
+            }
+        }
+
         private void ButtonConnect_Click(object? sender, EventArgs e)
         {
             string verbatimServerName;
@@ -55,24 +99,12 @@ namespace NetProxy.Client.Forms
                 verbatimServerName = textBoxServer.GetAndValidateText("The server name is required.");
                 verbatimUsername = textBoxUsername.GetAndValidateText("The user name is required.");
 
-                _connectionInfo.ServerName = verbatimServerName.Trim();
-                _connectionInfo.UserName = verbatimUsername.Trim();
-                _connectionInfo.Password = textBoxPassword.Text.Trim();
-                _connectionInfo.Port = Constants.DefaultManagementPort;
+                ParseServer(verbatimServerName, out var serverName, out var port);
 
-                int portBegin = _connectionInfo.ServerName.IndexOf(':');
-                if (portBegin > 0)
-                {
-                    try
-                    {
-                        _connectionInfo.Port = int.Parse(_connectionInfo.ServerName.Substring(portBegin + 1));
-                        _connectionInfo.ServerName = _connectionInfo.ServerName.Substring(0, portBegin);
-                    }
-                    catch
-                    {
-                        throw new Exception("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".");
-                    }
-                }
+                _connectionInfo.ServerName = serverName;
+                _connectionInfo.Port = port;
+                _connectionInfo.UserName = verbatimUsername.Trim();
+                _connectionInfo.Password = textBoxPassword.Text; //Not trimmed: spaces are part of a password.
             }
             catch (Exception ex)
             {
@@ -107,12 +139,7 @@ namespace NetProxy.Client.Forms
             _worker.ProgressChanged += Worker_ProgressChanged;
             _worker.RunWorkerAsync();
 
-            if (_formProgress.ShowDialog() == DialogResult.OK)
-            {
-                return true;
-            }
-
-            return false;
+            return _formProgress.ShowDialog() == DialogResult.OK;
         }
 
         private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
@@ -122,68 +149,33 @@ namespace NetProxy.Client.Forms
 
         private void Worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
-            if ((e.Result as bool?) == true)
-            {
-                _formProgress?.Close(DialogResult.OK);
-            }
-            else
-            {
-                _formProgress?.Close(DialogResult.Cancel);
-            }
+            _formProgress.Close((e.Result as bool?) == true ? DialogResult.OK : DialogResult.Cancel);
         }
 
         private void Worker_DoWork(object? sender, DoWorkEventArgs e)
         {
             e.Result = false;
-            _loginResult = false;
-            _connectMessage = "Failed to connect.";
 
-            _messageClient = new RmClient();
+            _worker.EnsureNotNull().ReportProgress(0, "Connecting...");
 
-            _worker.EnsureNotNull();
+            //Connects and logs in, which is what every other window of the console does too.
+            var client = MessageClientFactory.Create(_connectionInfo, out var error);
+
+            if (client == null)
+            {
+                _connectMessage = error ?? "Failed to connect.";
+                return;
+            }
 
             try
             {
-                _worker.ReportProgress(0, "Connecting...");
-
-                try
-                {
-                    _messageClient.Connect(_connectionInfo.ServerName, _connectionInfo.Port);
-                    _worker.ReportProgress(0, "Logging in...");
-                    _loginConnectionEvent = new AutoResetEvent(false);
-
-                    var loginResult = _messageClient.Query(new QueryLogin(_connectionInfo.UserName, NpUtility.Sha256(_connectionInfo.Password)));
-                    if (loginResult.Result == true)
-                    {
-                        _loginConnectionEvent.EnsureNotNull();
-
-                        _loginResult = loginResult.Result;
-                        _loginConnectionEvent.Set();
-                    }
-
-                    if (_loginConnectionEvent.WaitOne(5000))
-                    {
-                        _worker.ReportProgress(0, "Logging in...");
-
-                        e.Result = _loginResult;
-
-                        if (_loginResult == false)
-                        {
-                            _connectMessage = "Unknown user or bad password.";
-                        }
-                    }
-                }
-                catch
-                {
-                    _connectMessage = "Could not connect to remote server.";
-                }
+                client.Disconnect();
             }
-            catch (Exception ex)
+            catch
             {
-                _connectMessage = "An error occurred while logging in: " + ex.Message;
             }
 
-            _messageClient.Disconnect();
+            e.Result = true;
         }
 
         private void ButtonCancel_Click(object? sender, EventArgs e)

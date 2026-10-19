@@ -2,7 +2,7 @@
 {
     public class NpHTTPHeaderRules
     {
-        public List<NpHttpHeaderRule> Collection = new();
+        public List<NpHttpHeaderRule> Collection { get; set; } = new();
 
         public void Add(NpHttpHeaderRule rule)
         {

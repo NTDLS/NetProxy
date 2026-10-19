@@ -1,4 +1,4 @@
-﻿namespace NetProxy.Client.Forms
+namespace NetProxy.Client.Forms
 {
     partial class FormMain
     {
@@ -28,11 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             dataGridViewProxys = new DataGridView();
             ColumnStatus = new DataGridViewImageColumn();
@@ -70,12 +65,13 @@
             dataGridViewProxys.Columns.AddRange(new DataGridViewColumn[] { ColumnStatus, ColumnId, ColumnName, ColumnProxyType, ColummListenPort, ColumnBytesTransferred, ColumnTotalConnections, ColumnCurrentConnections });
             dataGridViewProxys.Dock = DockStyle.Fill;
             dataGridViewProxys.EditMode = DataGridViewEditMode.EditProgrammatically;
-            dataGridViewProxys.Location = new Point(0, 139);
+            dataGridViewProxys.Location = new Point(0, 204);
             dataGridViewProxys.Margin = new Padding(4, 3, 4, 3);
             dataGridViewProxys.MultiSelect = false;
             dataGridViewProxys.Name = "dataGridViewProxys";
             dataGridViewProxys.ReadOnly = true;
-            dataGridViewProxys.Size = new Size(758, 291);
+            dataGridViewProxys.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridViewProxys.Size = new Size(758, 226);
             dataGridViewProxys.TabIndex = 0;
             dataGridViewProxys.CellDoubleClick += DataGridViewProxys_CellDoubleClick;
             dataGridViewProxys.MouseDown += DataGridViewProxys_MouseDown;
@@ -102,7 +98,8 @@
             ColumnName.HeaderText = "Name";
             ColumnName.Name = "ColumnName";
             ColumnName.ReadOnly = true;
-            ColumnName.Width = 200;
+            ColumnName.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            ColumnName.MinimumWidth = 150;
             // 
             // ColumnProxyType
             // 
@@ -110,7 +107,7 @@
             ColumnProxyType.HeaderText = "Type";
             ColumnProxyType.Name = "ColumnProxyType";
             ColumnProxyType.ReadOnly = true;
-            ColumnProxyType.Width = 80;
+            ColumnProxyType.Width = 115;
             // 
             // ColummListenPort
             // 
@@ -202,7 +199,7 @@
             // 
             // statusStripMain
             // 
-            statusStripMain.Location = new Point(0, 430);
+            statusStripMain.Location = new Point(0, 495);
             statusStripMain.Name = "statusStripMain";
             statusStripMain.Padding = new Padding(1, 0, 16, 0);
             statusStripMain.Size = new Size(758, 22);
@@ -216,52 +213,24 @@
             panelPerformance.Location = new Point(0, 24);
             panelPerformance.Margin = new Padding(4, 3, 4, 3);
             panelPerformance.Name = "panelPerformance";
-            panelPerformance.Size = new Size(758, 115);
+            panelPerformance.Size = new Size(758, 180);
             panelPerformance.TabIndex = 3;
             // 
             // chartPerformance
             // 
-            chartPerformance.BackColor = Color.WhiteSmoke;
-            chartPerformance.BackSecondaryColor = Color.White;
-            chartArea1.AxisX.LabelStyle.Enabled = false;
-            chartArea1.AxisX.MajorGrid.Enabled = false;
-            chartArea1.BackColor = Color.WhiteSmoke;
-            chartArea1.Name = "ChartArea1";
-            chartPerformance.ChartAreas.Add(chartArea1);
             chartPerformance.Dock = DockStyle.Fill;
-            legend1.BackColor = Color.WhiteSmoke;
-            legend1.Name = "Legend1";
-            chartPerformance.Legends.Add(legend1);
             chartPerformance.Location = new Point(0, 0);
             chartPerformance.Margin = new Padding(4, 3, 4, 3);
             chartPerformance.Name = "chartPerformance";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series1.Color = Color.Red;
-            series1.Legend = "Legend1";
-            series1.Name = "KB/s Sent";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series2.Color = Color.FromArgb(0, 192, 0);
-            series2.Legend = "Legend1";
-            series2.Name = "KB/s Recv";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series3.Color = Color.Blue;
-            series3.Legend = "Legend1";
-            series3.Name = "Connections";
-            chartPerformance.Series.Add(series1);
-            chartPerformance.Series.Add(series2);
-            chartPerformance.Series.Add(series3);
-            chartPerformance.Size = new Size(758, 115);
+            chartPerformance.Size = new Size(758, 180);
             chartPerformance.TabIndex = 0;
-            chartPerformance.Text = "chart1";
+            chartPerformance.Text = "chartPerformance";
             // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(758, 452);
+            ClientSize = new Size(758, 517);
             Controls.Add(dataGridViewProxys);
             Controls.Add(statusStripMain);
             Controls.Add(panelPerformance);
@@ -306,4 +275,4 @@
         private DataGridViewTextBoxColumn ColumnTotalConnections;
         private DataGridViewTextBoxColumn ColumnCurrentConnections;
     }
-}
+}

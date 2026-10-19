@@ -1,6 +1,8 @@
-Add overall stats to the status bar.
-Test and fix chart.
 Move NetProxy.Hub "packeteer" and "framing" to nuget package.
-Fix all statistics, they are currently not being tracked.
 Add content caching?
-Look into HTTPS termination.
+Encrypt the management connection (the console and the service exchange proxy settings, including certificate passwords, unencrypted).
+Limit failed management logins (lock out or slow down by address).
+HTTP/2 (and gRPC) with header rules, as NetTunnel has.
+Active health checks for endpoints (the proxy only learns that one is down when a connection to it fails).
+Limit concurrent connections per proxy and per client address.
+Idle timeouts for connections.

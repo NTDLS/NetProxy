@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace NetProxy.Library.Utilities
@@ -18,6 +18,30 @@ namespace NetProxy.Library.Utilities
             }
 
             return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Trims a host name or address as typed by a person and removes the square brackets that IPv6 addresses are often written with.
+        /// </summary>
+        public static string NormalizeHost(string host)
+        {
+            host = host.Trim();
+
+            if (host.Length > 1 && host[0] == '[' && host[^1] == ']')
+            {
+                host = host[1..^1];
+            }
+
+            return host;
+        }
+
+        /// <summary>
+        /// Formats a host name or address and port for display ("example.com:80", "[::1]:80").
+        /// </summary>
+        public static string FormatHostPort(string host, int port)
+        {
+            host = NormalizeHost(host);
+            return host.Contains(':') ? $"[{host}]:{port}" : $"{host}:{port}";
         }
     }
 }

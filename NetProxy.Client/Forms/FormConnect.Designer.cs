@@ -38,12 +38,13 @@
             label3 = new Label();
             pictureBox1 = new PictureBox();
             buttonAbout = new Button();
+            buttonLanguage = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
             // buttonConnect
             // 
-            buttonConnect.Location = new Point(284, 115);
+            buttonConnect.Location = new Point(284, 170);
             buttonConnect.Margin = new Padding(4, 3, 4, 3);
             buttonConnect.Name = "buttonConnect";
             buttonConnect.Size = new Size(83, 27);
@@ -55,7 +56,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(127, 29);
+            label1.Location = new Point(101, 15);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(39, 15);
@@ -64,7 +65,7 @@
             // 
             // textBoxServer
             // 
-            textBoxServer.Location = new Point(178, 25);
+            textBoxServer.Location = new Point(103, 33);
             textBoxServer.Margin = new Padding(4, 3, 4, 3);
             textBoxServer.Name = "textBoxServer";
             textBoxServer.Size = new Size(187, 23);
@@ -72,7 +73,7 @@
             // 
             // textBoxUsername
             // 
-            textBoxUsername.Location = new Point(178, 55);
+            textBoxUsername.Location = new Point(103, 88);
             textBoxUsername.Margin = new Padding(4, 3, 4, 3);
             textBoxUsername.Name = "textBoxUsername";
             textBoxUsername.Size = new Size(187, 23);
@@ -81,7 +82,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(107, 59);
+            label2.Location = new Point(101, 70);
             label2.Margin = new Padding(4, 0, 4, 0);
             label2.Name = "label2";
             label2.Size = new Size(60, 15);
@@ -90,7 +91,7 @@
             // 
             // textBoxPassword
             // 
-            textBoxPassword.Location = new Point(178, 85);
+            textBoxPassword.Location = new Point(103, 134);
             textBoxPassword.Margin = new Padding(4, 3, 4, 3);
             textBoxPassword.Name = "textBoxPassword";
             textBoxPassword.PasswordChar = '*';
@@ -100,7 +101,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(110, 89);
+            label3.Location = new Point(101, 116);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(57, 15);
@@ -110,7 +111,7 @@
             // pictureBox1
             // 
             pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
-            pictureBox1.Location = new Point(16, 33);
+            pictureBox1.Location = new Point(13, 33);
             pictureBox1.Margin = new Padding(4, 3, 4, 3);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(75, 74);
@@ -120,7 +121,7 @@
             // 
             // buttonAbout
             // 
-            buttonAbout.Location = new Point(16, 115);
+            buttonAbout.Location = new Point(13, 170);
             buttonAbout.Margin = new Padding(4, 3, 4, 3);
             buttonAbout.Name = "buttonAbout";
             buttonAbout.Size = new Size(83, 27);
@@ -129,12 +130,25 @@
             buttonAbout.UseVisualStyleBackColor = true;
             buttonAbout.Click += ButtonAbout_Click;
             // 
+            // buttonLanguage
+            // 
+            buttonLanguage.Location = new Point(104, 170);
+            buttonLanguage.Margin = new Padding(4, 3, 4, 3);
+            buttonLanguage.Name = "buttonLanguage";
+            buttonLanguage.Size = new Size(83, 27);
+            buttonLanguage.TabIndex = 10;
+            buttonLanguage.TabStop = false;
+            buttonLanguage.Text = "Language";
+            buttonLanguage.UseVisualStyleBackColor = true;
+            buttonLanguage.Click += ButtonLanguage_Click;
+            // 
             // FormConnect
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(380, 152);
+            ClientSize = new Size(380, 203);
             Controls.Add(buttonAbout);
+            Controls.Add(buttonLanguage);
             Controls.Add(pictureBox1);
             Controls.Add(textBoxPassword);
             Controls.Add(label3);
@@ -169,5 +183,6 @@
         private Label label3;
         private PictureBox pictureBox1;
         private Button buttonAbout;
+        private Button buttonLanguage;
     }
 }

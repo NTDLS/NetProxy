@@ -1,6 +1,3 @@
-Add overall stats to the status bar.
-Test and fix chart.
-Move NetProxy.Hub "packeteer" and "framing" to nuget package.
-Fix all statistics, they are currently not being tracked.
 Add content caching?
-Look into HTTPS termination.
+Limit failed management logins (lock out or slow down by address).
+Active health checks for endpoints (the proxy only learns that one is down when a connection to it fails).

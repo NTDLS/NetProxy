@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic.ApplicationServices;
+using Microsoft.VisualBasic.ApplicationServices;
 using NetProxy.Client.Properties;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -38,9 +38,10 @@ namespace NetProxy.Client.Forms
         private void InitializeComponent()
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProxy));
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProxy));
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
@@ -64,6 +65,13 @@ namespace NetProxy.Client.Forms
             ColumnBindingsIPAddress = new DataGridViewTextBoxColumn();
             ColumnBindingsDescription = new DataGridViewTextBoxColumn();
             textBoxListenPort = new TextBox();
+            tabPageTls = new TabPage();
+            labelTlsInfo = new Label();
+            labelCertificatePath = new Label();
+            textBoxCertificatePath = new TextBox();
+            buttonBrowseCertificate = new Button();
+            labelCertificatePassword = new Label();
+            textBoxCertificatePassword = new TextBox();
             tabPageHTTPHeaders = new TabPage();
             dataGridViewHTTPHeaders = new DataGridView();
             ColumnHTTPHeadersEnabled = new DataGridViewCheckBoxColumn();
@@ -79,6 +87,8 @@ namespace NetProxy.Client.Forms
             ColumnEndpointsEnabled = new DataGridViewCheckBoxColumn();
             ColumnEndpointsAddress = new DataGridViewTextBoxColumn();
             ColumnEndpointsPort = new DataGridViewTextBoxColumn();
+            ColumnEndpointsTrafficType = new DataGridViewComboBoxColumn();
+            ColumnEndpointsValidateSSLCertificate = new DataGridViewCheckBoxColumn();
             ColumnEndpointsDescription = new DataGridViewTextBoxColumn();
             label8 = new Label();
             label9 = new Label();
@@ -89,6 +99,14 @@ namespace NetProxy.Client.Forms
             textBoxAcceptBacklogSize = new TextBox();
             label15 = new Label();
             groupBox1 = new GroupBox();
+            groupBoxLimits = new GroupBox();
+            labelMaxConnections = new Label();
+            textBoxMaxConnections = new TextBox();
+            labelMaxConnectionsPerClient = new Label();
+            textBoxMaxConnectionsPerClient = new TextBox();
+            labelIdleTimeout = new Label();
+            textBoxIdleTimeout = new TextBox();
+            checkBoxAllowHttp2 = new CheckBox();
             textBoxMaxBufferSize = new TextBox();
             textBoxInitialBufferSize = new TextBox();
             buttonCancel = new Button();
@@ -97,6 +115,7 @@ namespace NetProxy.Client.Forms
             tabPageGeneral.SuspendLayout();
             tabPageBindings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewBindings).BeginInit();
+            tabPageTls.SuspendLayout();
             tabPageHTTPHeaders.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewHTTPHeaders).BeginInit();
             tabPageEndpoints.SuspendLayout();
@@ -104,12 +123,13 @@ namespace NetProxy.Client.Forms
             tabPageAdvanced.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBox1.SuspendLayout();
+            groupBoxLimits.SuspendLayout();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(34, 16);
+            label1.Location = new Point(7, 3);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(39, 15);
@@ -119,17 +139,17 @@ namespace NetProxy.Client.Forms
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(7, 48);
+            label2.Location = new Point(7, 49);
             label2.Margin = new Padding(4, 0, 4, 0);
             label2.Name = "label2";
-            label2.Size = new Size(65, 15);
+            label2.Size = new Size(66, 15);
             label2.TabIndex = 1;
             label2.Text = "Traffic type";
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(18, 29);
+            label3.Location = new Point(8, 19);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(58, 15);
@@ -139,7 +159,7 @@ namespace NetProxy.Client.Forms
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(4, 18);
+            label4.Location = new Point(7, 3);
             label4.Margin = new Padding(4, 0, 4, 0);
             label4.Name = "label4";
             label4.Size = new Size(63, 15);
@@ -149,17 +169,17 @@ namespace NetProxy.Client.Forms
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(24, 58);
+            label5.Location = new Point(8, 65);
             label5.Margin = new Padding(4, 0, 4, 0);
             label5.Name = "label5";
-            label5.Size = new Size(55, 15);
+            label5.Size = new Size(54, 15);
             label5.TabIndex = 4;
             label5.Text = "Max. size";
             // 
             // labelAcceptBacklogSize
             // 
             labelAcceptBacklogSize.AutoSize = true;
-            labelAcceptBacklogSize.Location = new Point(49, 30);
+            labelAcceptBacklogSize.Location = new Point(8, 19);
             labelAcceptBacklogSize.Margin = new Padding(4, 0, 4, 0);
             labelAcceptBacklogSize.Name = "labelAcceptBacklogSize";
             labelAcceptBacklogSize.Size = new Size(111, 15);
@@ -169,7 +189,7 @@ namespace NetProxy.Client.Forms
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new Point(10, 87);
+            label7.Location = new Point(7, 95);
             label7.Margin = new Padding(4, 0, 4, 0);
             label7.Name = "label7";
             label7.Size = new Size(92, 15);
@@ -181,7 +201,7 @@ namespace NetProxy.Client.Forms
             checkBoxListenOnAllAddresses.AutoSize = true;
             checkBoxListenOnAllAddresses.Checked = true;
             checkBoxListenOnAllAddresses.CheckState = CheckState.Checked;
-            checkBoxListenOnAllAddresses.Location = new Point(14, 285);
+            checkBoxListenOnAllAddresses.Location = new Point(9, 292);
             checkBoxListenOnAllAddresses.Margin = new Padding(4, 3, 4, 3);
             checkBoxListenOnAllAddresses.Name = "checkBoxListenOnAllAddresses";
             checkBoxListenOnAllAddresses.Size = new Size(152, 19);
@@ -194,6 +214,7 @@ namespace NetProxy.Client.Forms
             // 
             tabControl.Controls.Add(tabPageGeneral);
             tabControl.Controls.Add(tabPageBindings);
+            tabControl.Controls.Add(tabPageTls);
             tabControl.Controls.Add(tabPageHTTPHeaders);
             tabControl.Controls.Add(tabPageEndpoints);
             tabControl.Controls.Add(tabPageAdvanced);
@@ -201,7 +222,7 @@ namespace NetProxy.Client.Forms
             tabControl.Margin = new Padding(0);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new Size(596, 344);
+            tabControl.Size = new Size(603, 356);
             tabControl.TabIndex = 10;
             // 
             // tabPageGeneral
@@ -209,33 +230,34 @@ namespace NetProxy.Client.Forms
             tabPageGeneral.BackColor = SystemColors.Control;
             tabPageGeneral.Controls.Add(textBoxDescription);
             tabPageGeneral.Controls.Add(label6);
+            tabPageGeneral.Controls.Add(checkBoxAllowHttp2);
             tabPageGeneral.Controls.Add(checkBoxListenAutoStart);
             tabPageGeneral.Controls.Add(comboBoxTrafficType);
             tabPageGeneral.Controls.Add(textBoxProxyName);
             tabPageGeneral.Controls.Add(label1);
             tabPageGeneral.Controls.Add(label2);
             tabPageGeneral.Location = new Point(4, 24);
-            tabPageGeneral.Margin = new Padding(0);
             tabPageGeneral.Name = "tabPageGeneral";
-            tabPageGeneral.Size = new Size(588, 316);
+            tabPageGeneral.Padding = new Padding(3);
+            tabPageGeneral.Size = new Size(595, 328);
             tabPageGeneral.TabIndex = 0;
             tabPageGeneral.Text = "General";
             // 
             // textBoxDescription
             // 
             textBoxDescription.AcceptsReturn = true;
-            textBoxDescription.Location = new Point(85, 114);
+            textBoxDescription.Location = new Point(9, 113);
             textBoxDescription.Margin = new Padding(4, 3, 4, 3);
             textBoxDescription.Multiline = true;
             textBoxDescription.Name = "textBoxDescription";
             textBoxDescription.ScrollBars = ScrollBars.Both;
-            textBoxDescription.Size = new Size(484, 175);
+            textBoxDescription.Size = new Size(579, 175);
             textBoxDescription.TabIndex = 4;
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(6, 114);
+            label6.Location = new Point(9, 95);
             label6.Margin = new Padding(4, 0, 4, 0);
             label6.Name = "label6";
             label6.Size = new Size(67, 15);
@@ -247,7 +269,7 @@ namespace NetProxy.Client.Forms
             checkBoxListenAutoStart.AutoSize = true;
             checkBoxListenAutoStart.Checked = true;
             checkBoxListenAutoStart.CheckState = CheckState.Checked;
-            checkBoxListenAutoStart.Location = new Point(85, 79);
+            checkBoxListenAutoStart.Location = new Point(9, 294);
             checkBoxListenAutoStart.Margin = new Padding(4, 3, 4, 3);
             checkBoxListenAutoStart.Name = "checkBoxListenAutoStart";
             checkBoxListenAutoStart.Size = new Size(83, 19);
@@ -259,7 +281,7 @@ namespace NetProxy.Client.Forms
             // 
             comboBoxTrafficType.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxTrafficType.FormattingEnabled = true;
-            comboBoxTrafficType.Location = new Point(85, 45);
+            comboBoxTrafficType.Location = new Point(9, 67);
             comboBoxTrafficType.Margin = new Padding(4, 3, 4, 3);
             comboBoxTrafficType.Name = "comboBoxTrafficType";
             comboBoxTrafficType.Size = new Size(140, 23);
@@ -268,10 +290,10 @@ namespace NetProxy.Client.Forms
             // 
             // textBoxProxyName
             // 
-            textBoxProxyName.Location = new Point(85, 13);
+            textBoxProxyName.Location = new Point(9, 21);
             textBoxProxyName.Margin = new Padding(4, 3, 4, 3);
             textBoxProxyName.Name = "textBoxProxyName";
-            textBoxProxyName.Size = new Size(484, 23);
+            textBoxProxyName.Size = new Size(579, 23);
             textBoxProxyName.TabIndex = 1;
             // 
             // tabPageBindings
@@ -285,9 +307,9 @@ namespace NetProxy.Client.Forms
             tabPageBindings.Controls.Add(checkBoxListenOnAllAddresses);
             tabPageBindings.Controls.Add(label7);
             tabPageBindings.Location = new Point(4, 24);
-            tabPageBindings.Margin = new Padding(0);
             tabPageBindings.Name = "tabPageBindings";
-            tabPageBindings.Size = new Size(588, 316);
+            tabPageBindings.Padding = new Padding(3);
+            tabPageBindings.Size = new Size(595, 328);
             tabPageBindings.TabIndex = 1;
             tabPageBindings.Text = "Bindings";
             // 
@@ -295,7 +317,7 @@ namespace NetProxy.Client.Forms
             // 
             comboBoxBindingProtocol.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxBindingProtocol.FormattingEnabled = true;
-            comboBoxBindingProtocol.Location = new Point(75, 45);
+            comboBoxBindingProtocol.Location = new Point(9, 67);
             comboBoxBindingProtocol.Margin = new Padding(4, 3, 4, 3);
             comboBoxBindingProtocol.Name = "comboBoxBindingProtocol";
             comboBoxBindingProtocol.Size = new Size(140, 23);
@@ -304,7 +326,7 @@ namespace NetProxy.Client.Forms
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new Point(15, 48);
+            label10.Location = new Point(7, 49);
             label10.Margin = new Padding(4, 0, 4, 0);
             label10.Name = "label10";
             label10.Size = new Size(52, 15);
@@ -316,10 +338,10 @@ namespace NetProxy.Client.Forms
             dataGridViewBindings.BackgroundColor = SystemColors.ButtonFace;
             dataGridViewBindings.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewBindings.Columns.AddRange(new DataGridViewColumn[] { ColumnBindingsEnabled, ColumnBindingsIPAddress, ColumnBindingsDescription });
-            dataGridViewBindings.Location = new Point(10, 105);
+            dataGridViewBindings.Location = new Point(9, 113);
             dataGridViewBindings.Margin = new Padding(4, 3, 4, 3);
             dataGridViewBindings.Name = "dataGridViewBindings";
-            dataGridViewBindings.Size = new Size(565, 173);
+            dataGridViewBindings.Size = new Size(579, 173);
             dataGridViewBindings.TabIndex = 7;
             dataGridViewBindings.Click += DataGridViewBindings_Click;
             // 
@@ -346,20 +368,87 @@ namespace NetProxy.Client.Forms
             // 
             // textBoxListenPort
             // 
-            textBoxListenPort.Location = new Point(75, 15);
+            textBoxListenPort.Location = new Point(9, 21);
             textBoxListenPort.Margin = new Padding(4, 3, 4, 3);
             textBoxListenPort.Name = "textBoxListenPort";
             textBoxListenPort.Size = new Size(140, 23);
             textBoxListenPort.TabIndex = 5;
+            // 
+            // tabPageTls
+            // 
+            tabPageTls.BackColor = SystemColors.Control;
+            tabPageTls.Controls.Add(labelTlsInfo);
+            tabPageTls.Controls.Add(labelCertificatePath);
+            tabPageTls.Controls.Add(textBoxCertificatePath);
+            tabPageTls.Controls.Add(buttonBrowseCertificate);
+            tabPageTls.Controls.Add(labelCertificatePassword);
+            tabPageTls.Controls.Add(textBoxCertificatePassword);
+            tabPageTls.Location = new Point(4, 24);
+            tabPageTls.Name = "tabPageTls";
+            tabPageTls.Padding = new Padding(3);
+            tabPageTls.Size = new Size(595, 328);
+            tabPageTls.TabIndex = 5;
+            tabPageTls.Text = "TLS";
+            // 
+            // labelTlsInfo
+            // 
+            labelTlsInfo.Location = new Point(14, 14);
+            labelTlsInfo.Name = "labelTlsInfo";
+            labelTlsInfo.Size = new Size(555, 62);
+            labelTlsInfo.TabIndex = 0;
+            labelTlsInfo.Text = resources.GetString("labelTlsInfo.Text");
+            // 
+            // labelCertificatePath
+            // 
+            labelCertificatePath.AutoSize = true;
+            labelCertificatePath.Location = new Point(6, 94);
+            labelCertificatePath.Name = "labelCertificatePath";
+            labelCertificatePath.Size = new Size(244, 15);
+            labelCertificatePath.TabIndex = 1;
+            labelCertificatePath.Text = "Certificate (PFX) path on the service machine";
+            // 
+            // textBoxCertificatePath
+            // 
+            textBoxCertificatePath.Location = new Point(8, 111);
+            textBoxCertificatePath.Name = "textBoxCertificatePath";
+            textBoxCertificatePath.Size = new Size(470, 23);
+            textBoxCertificatePath.TabIndex = 2;
+            // 
+            // buttonBrowseCertificate
+            // 
+            buttonBrowseCertificate.Location = new Point(484, 109);
+            buttonBrowseCertificate.Name = "buttonBrowseCertificate";
+            buttonBrowseCertificate.Size = new Size(87, 25);
+            buttonBrowseCertificate.TabIndex = 3;
+            buttonBrowseCertificate.Text = "Browse";
+            buttonBrowseCertificate.UseVisualStyleBackColor = true;
+            buttonBrowseCertificate.Click += ButtonBrowseCertificate_Click;
+            // 
+            // labelCertificatePassword
+            // 
+            labelCertificatePassword.AutoSize = true;
+            labelCertificatePassword.Location = new Point(6, 139);
+            labelCertificatePassword.Name = "labelCertificatePassword";
+            labelCertificatePassword.Size = new Size(114, 15);
+            labelCertificatePassword.TabIndex = 4;
+            labelCertificatePassword.Text = "Certificate password";
+            // 
+            // textBoxCertificatePassword
+            // 
+            textBoxCertificatePassword.Location = new Point(8, 157);
+            textBoxCertificatePassword.Name = "textBoxCertificatePassword";
+            textBoxCertificatePassword.Size = new Size(250, 23);
+            textBoxCertificatePassword.TabIndex = 5;
+            textBoxCertificatePassword.UseSystemPasswordChar = true;
             // 
             // tabPageHTTPHeaders
             // 
             tabPageHTTPHeaders.BackColor = SystemColors.Control;
             tabPageHTTPHeaders.Controls.Add(dataGridViewHTTPHeaders);
             tabPageHTTPHeaders.Location = new Point(4, 24);
-            tabPageHTTPHeaders.Margin = new Padding(0);
             tabPageHTTPHeaders.Name = "tabPageHTTPHeaders";
-            tabPageHTTPHeaders.Size = new Size(588, 316);
+            tabPageHTTPHeaders.Padding = new Padding(3);
+            tabPageHTTPHeaders.Size = new Size(595, 328);
             tabPageHTTPHeaders.TabIndex = 2;
             tabPageHTTPHeaders.Text = "HTTP Headers";
             // 
@@ -369,10 +458,10 @@ namespace NetProxy.Client.Forms
             dataGridViewHTTPHeaders.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewHTTPHeaders.Columns.AddRange(new DataGridViewColumn[] { ColumnHTTPHeadersEnabled, ColumnHTTPHeadersType, ColumnHTTPHeadersVerb, ColumnHTTPHeadersHeader, ColumnHTTPHeadersAction, ColumnHTTPHeadersValue, ColumnHTTPHeadersDescription });
             dataGridViewHTTPHeaders.Dock = DockStyle.Fill;
-            dataGridViewHTTPHeaders.Location = new Point(0, 0);
+            dataGridViewHTTPHeaders.Location = new Point(3, 3);
             dataGridViewHTTPHeaders.Margin = new Padding(4, 3, 4, 3);
             dataGridViewHTTPHeaders.Name = "dataGridViewHTTPHeaders";
-            dataGridViewHTTPHeaders.Size = new Size(588, 316);
+            dataGridViewHTTPHeaders.Size = new Size(589, 322);
             dataGridViewHTTPHeaders.TabIndex = 9;
             dataGridViewHTTPHeaders.Click += DataGridViewHTTPHeaders_Click;
             // 
@@ -436,16 +525,16 @@ namespace NetProxy.Client.Forms
             tabPageEndpoints.Controls.Add(label9);
             tabPageEndpoints.Controls.Add(comboBoxConnectionPattern);
             tabPageEndpoints.Location = new Point(4, 24);
-            tabPageEndpoints.Margin = new Padding(0);
             tabPageEndpoints.Name = "tabPageEndpoints";
-            tabPageEndpoints.Size = new Size(588, 316);
+            tabPageEndpoints.Padding = new Padding(3);
+            tabPageEndpoints.Size = new Size(595, 328);
             tabPageEndpoints.TabIndex = 4;
             tabPageEndpoints.Text = "Endpoints";
             // 
             // checkBoxUseStickySessions
             // 
             checkBoxUseStickySessions.AutoSize = true;
-            checkBoxUseStickySessions.Location = new Point(282, 13);
+            checkBoxUseStickySessions.Location = new Point(224, 23);
             checkBoxUseStickySessions.Margin = new Padding(4, 3, 4, 3);
             checkBoxUseStickySessions.Name = "checkBoxUseStickySessions";
             checkBoxUseStickySessions.Size = new Size(129, 19);
@@ -457,11 +546,11 @@ namespace NetProxy.Client.Forms
             // 
             dataGridViewEndpoints.BackgroundColor = SystemColors.ButtonFace;
             dataGridViewEndpoints.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewEndpoints.Columns.AddRange(new DataGridViewColumn[] { ColumnEndpointsEnabled, ColumnEndpointsAddress, ColumnEndpointsPort, ColumnEndpointsDescription });
-            dataGridViewEndpoints.Location = new Point(16, 71);
+            dataGridViewEndpoints.Columns.AddRange(new DataGridViewColumn[] { ColumnEndpointsEnabled, ColumnEndpointsAddress, ColumnEndpointsPort, ColumnEndpointsTrafficType, ColumnEndpointsValidateSSLCertificate, ColumnEndpointsDescription });
+            dataGridViewEndpoints.Location = new Point(9, 67);
             dataGridViewEndpoints.Margin = new Padding(4, 3, 4, 3);
             dataGridViewEndpoints.Name = "dataGridViewEndpoints";
-            dataGridViewEndpoints.Size = new Size(559, 229);
+            dataGridViewEndpoints.Size = new Size(579, 229);
             dataGridViewEndpoints.TabIndex = 14;
             // 
             // ColumnEndpointsEnabled
@@ -476,7 +565,7 @@ namespace NetProxy.Client.Forms
             // 
             ColumnEndpointsAddress.HeaderText = "Address";
             ColumnEndpointsAddress.Name = "ColumnEndpointsAddress";
-            ColumnEndpointsAddress.Width = 150;
+            ColumnEndpointsAddress.Width = 130;
             // 
             // ColumnEndpointsPort
             // 
@@ -484,16 +573,34 @@ namespace NetProxy.Client.Forms
             ColumnEndpointsPort.Name = "ColumnEndpointsPort";
             ColumnEndpointsPort.Width = 50;
             // 
+            // ColumnEndpointsTrafficType
+            // 
+            ColumnEndpointsTrafficType.HeaderText = "Traffic";
+            ColumnEndpointsTrafficType.Items.AddRange(new object[] { "Raw", "Http", "Https" });
+            ColumnEndpointsTrafficType.Name = "ColumnEndpointsTrafficType";
+            ColumnEndpointsTrafficType.Resizable = DataGridViewTriState.True;
+            ColumnEndpointsTrafficType.SortMode = DataGridViewColumnSortMode.Automatic;
+            ColumnEndpointsTrafficType.Width = 65;
+            // 
+            // ColumnEndpointsValidateSSLCertificate
+            // 
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnEndpointsValidateSSLCertificate.DefaultCellStyle = dataGridViewCellStyle4;
+            ColumnEndpointsValidateSSLCertificate.HeaderText = "Validate Certificate";
+            ColumnEndpointsValidateSSLCertificate.Name = "ColumnEndpointsValidateSSLCertificate";
+            ColumnEndpointsValidateSSLCertificate.ToolTipText = "Ignore errors when validating the SSL certificate.";
+            ColumnEndpointsValidateSSLCertificate.Width = 120;
+            // 
             // ColumnEndpointsDescription
             // 
             ColumnEndpointsDescription.HeaderText = "Description";
             ColumnEndpointsDescription.Name = "ColumnEndpointsDescription";
-            ColumnEndpointsDescription.Width = 250;
+            ColumnEndpointsDescription.Width = 150;
             // 
             // label8
             // 
             label8.AutoSize = true;
-            label8.Location = new Point(16, 53);
+            label8.Location = new Point(7, 49);
             label8.Margin = new Padding(4, 0, 4, 0);
             label8.Name = "label8";
             label8.Size = new Size(104, 15);
@@ -503,7 +610,7 @@ namespace NetProxy.Client.Forms
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(13, 14);
+            label9.Location = new Point(7, 3);
             label9.Margin = new Padding(4, 0, 4, 0);
             label9.Name = "label9";
             label9.Size = new Size(110, 15);
@@ -514,21 +621,22 @@ namespace NetProxy.Client.Forms
             // 
             comboBoxConnectionPattern.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBoxConnectionPattern.FormattingEnabled = true;
-            comboBoxConnectionPattern.Location = new Point(134, 10);
+            comboBoxConnectionPattern.Location = new Point(9, 21);
             comboBoxConnectionPattern.Margin = new Padding(4, 3, 4, 3);
             comboBoxConnectionPattern.Name = "comboBoxConnectionPattern";
-            comboBoxConnectionPattern.Size = new Size(140, 23);
+            comboBoxConnectionPattern.Size = new Size(207, 23);
             comboBoxConnectionPattern.TabIndex = 13;
             // 
             // tabPageAdvanced
             // 
             tabPageAdvanced.BackColor = SystemColors.Control;
             tabPageAdvanced.Controls.Add(groupBox4);
+            tabPageAdvanced.Controls.Add(groupBoxLimits);
             tabPageAdvanced.Controls.Add(groupBox1);
             tabPageAdvanced.Location = new Point(4, 24);
-            tabPageAdvanced.Margin = new Padding(0);
             tabPageAdvanced.Name = "tabPageAdvanced";
-            tabPageAdvanced.Size = new Size(588, 316);
+            tabPageAdvanced.Padding = new Padding(3);
+            tabPageAdvanced.Size = new Size(595, 328);
             tabPageAdvanced.TabIndex = 3;
             tabPageAdvanced.Text = "Advanced";
             // 
@@ -538,18 +646,18 @@ namespace NetProxy.Client.Forms
             groupBox4.Controls.Add(textBoxAcceptBacklogSize);
             groupBox4.Controls.Add(label15);
             groupBox4.Controls.Add(labelAcceptBacklogSize);
-            groupBox4.Location = new Point(14, 131);
+            groupBox4.Location = new Point(7, 130);
             groupBox4.Margin = new Padding(4, 3, 4, 3);
             groupBox4.Name = "groupBox4";
             groupBox4.Padding = new Padding(4, 3, 4, 3);
-            groupBox4.Size = new Size(309, 113);
+            groupBox4.Size = new Size(252, 123);
             groupBox4.TabIndex = 18;
             groupBox4.TabStop = false;
             groupBox4.Text = "Misc. (super advanced)";
             // 
             // textBoxStickySessionCacheExpiration
             // 
-            textBoxStickySessionCacheExpiration.Location = new Point(169, 56);
+            textBoxStickySessionCacheExpiration.Location = new Point(10, 83);
             textBoxStickySessionCacheExpiration.Margin = new Padding(4, 3, 4, 3);
             textBoxStickySessionCacheExpiration.Name = "textBoxStickySessionCacheExpiration";
             textBoxStickySessionCacheExpiration.Size = new Size(116, 23);
@@ -557,7 +665,7 @@ namespace NetProxy.Client.Forms
             // 
             // textBoxAcceptBacklogSize
             // 
-            textBoxAcceptBacklogSize.Location = new Point(169, 27);
+            textBoxAcceptBacklogSize.Location = new Point(10, 37);
             textBoxAcceptBacklogSize.Margin = new Padding(4, 3, 4, 3);
             textBoxAcceptBacklogSize.Name = "textBoxAcceptBacklogSize";
             textBoxAcceptBacklogSize.Size = new Size(116, 23);
@@ -566,10 +674,10 @@ namespace NetProxy.Client.Forms
             // label15
             // 
             label15.AutoSize = true;
-            label15.Location = new Point(9, 59);
+            label15.Location = new Point(8, 65);
             label15.Margin = new Padding(4, 0, 4, 0);
             label15.Name = "label15";
-            label15.Size = new Size(151, 15);
+            label15.Size = new Size(150, 15);
             label15.TabIndex = 16;
             label15.Text = "Sticky session expiration (s)";
             // 
@@ -579,18 +687,18 @@ namespace NetProxy.Client.Forms
             groupBox1.Controls.Add(label5);
             groupBox1.Controls.Add(label3);
             groupBox1.Controls.Add(textBoxInitialBufferSize);
-            groupBox1.Location = new Point(14, 17);
+            groupBox1.Location = new Point(7, 6);
             groupBox1.Margin = new Padding(4, 3, 4, 3);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(4, 3, 4, 3);
-            groupBox1.Size = new Size(309, 99);
+            groupBox1.Size = new Size(252, 118);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Buffers";
             // 
             // textBoxMaxBufferSize
             // 
-            textBoxMaxBufferSize.Location = new Point(85, 55);
+            textBoxMaxBufferSize.Location = new Point(10, 83);
             textBoxMaxBufferSize.Margin = new Padding(4, 3, 4, 3);
             textBoxMaxBufferSize.Name = "textBoxMaxBufferSize";
             textBoxMaxBufferSize.Size = new Size(116, 23);
@@ -598,18 +706,100 @@ namespace NetProxy.Client.Forms
             // 
             // textBoxInitialBufferSize
             // 
-            textBoxInitialBufferSize.Location = new Point(85, 26);
+            textBoxInitialBufferSize.Location = new Point(10, 37);
             textBoxInitialBufferSize.Margin = new Padding(4, 3, 4, 3);
             textBoxInitialBufferSize.Name = "textBoxInitialBufferSize";
             textBoxInitialBufferSize.Size = new Size(116, 23);
             textBoxInitialBufferSize.TabIndex = 10;
+            //
+            // groupBoxLimits
+            //
+            groupBoxLimits.Controls.Add(textBoxIdleTimeout);
+            groupBoxLimits.Controls.Add(labelIdleTimeout);
+            groupBoxLimits.Controls.Add(textBoxMaxConnectionsPerClient);
+            groupBoxLimits.Controls.Add(labelMaxConnectionsPerClient);
+            groupBoxLimits.Controls.Add(textBoxMaxConnections);
+            groupBoxLimits.Controls.Add(labelMaxConnections);
+            groupBoxLimits.Location = new Point(268, 6);
+            groupBoxLimits.Margin = new Padding(4, 3, 4, 3);
+            groupBoxLimits.Name = "groupBoxLimits";
+            groupBoxLimits.Padding = new Padding(4, 3, 4, 3);
+            groupBoxLimits.Size = new Size(252, 170);
+            groupBoxLimits.TabIndex = 1;
+            groupBoxLimits.TabStop = false;
+            groupBoxLimits.Text = "Limits (0 is no limit)";
+            //
+            // labelMaxConnections
+            //
+            labelMaxConnections.AutoSize = true;
+            labelMaxConnections.Location = new Point(8, 19);
+            labelMaxConnections.Margin = new Padding(4, 0, 4, 0);
+            labelMaxConnections.Name = "labelMaxConnections";
+            labelMaxConnections.Size = new Size(100, 15);
+            labelMaxConnections.TabIndex = 20;
+            labelMaxConnections.Text = "Max. connections";
+            //
+            // textBoxMaxConnections
+            //
+            textBoxMaxConnections.Location = new Point(10, 37);
+            textBoxMaxConnections.Margin = new Padding(4, 3, 4, 3);
+            textBoxMaxConnections.Name = "textBoxMaxConnections";
+            textBoxMaxConnections.Size = new Size(116, 23);
+            textBoxMaxConnections.TabIndex = 21;
+            //
+            // labelMaxConnectionsPerClient
+            //
+            labelMaxConnectionsPerClient.AutoSize = true;
+            labelMaxConnectionsPerClient.Location = new Point(8, 65);
+            labelMaxConnectionsPerClient.Margin = new Padding(4, 0, 4, 0);
+            labelMaxConnectionsPerClient.Name = "labelMaxConnectionsPerClient";
+            labelMaxConnectionsPerClient.Size = new Size(100, 15);
+            labelMaxConnectionsPerClient.TabIndex = 22;
+            labelMaxConnectionsPerClient.Text = "Max. connections per client";
+            //
+            // textBoxMaxConnectionsPerClient
+            //
+            textBoxMaxConnectionsPerClient.Location = new Point(10, 83);
+            textBoxMaxConnectionsPerClient.Margin = new Padding(4, 3, 4, 3);
+            textBoxMaxConnectionsPerClient.Name = "textBoxMaxConnectionsPerClient";
+            textBoxMaxConnectionsPerClient.Size = new Size(116, 23);
+            textBoxMaxConnectionsPerClient.TabIndex = 23;
+            //
+            // labelIdleTimeout
+            //
+            labelIdleTimeout.AutoSize = true;
+            labelIdleTimeout.Location = new Point(8, 111);
+            labelIdleTimeout.Margin = new Padding(4, 0, 4, 0);
+            labelIdleTimeout.Name = "labelIdleTimeout";
+            labelIdleTimeout.Size = new Size(100, 15);
+            labelIdleTimeout.TabIndex = 24;
+            labelIdleTimeout.Text = "Idle timeout (s)";
+            //
+            // textBoxIdleTimeout
+            //
+            textBoxIdleTimeout.Location = new Point(10, 129);
+            textBoxIdleTimeout.Margin = new Padding(4, 3, 4, 3);
+            textBoxIdleTimeout.Name = "textBoxIdleTimeout";
+            textBoxIdleTimeout.Size = new Size(116, 23);
+            textBoxIdleTimeout.TabIndex = 25;
+            //
+            // checkBoxAllowHttp2
+            //
+            checkBoxAllowHttp2.AutoSize = true;
+            checkBoxAllowHttp2.Location = new Point(120, 294);
+            checkBoxAllowHttp2.Margin = new Padding(4, 3, 4, 3);
+            checkBoxAllowHttp2.Name = "checkBoxAllowHttp2";
+            checkBoxAllowHttp2.Size = new Size(100, 19);
+            checkBoxAllowHttp2.TabIndex = 4;
+            checkBoxAllowHttp2.Text = "Allow HTTP/2";
+            checkBoxAllowHttp2.UseVisualStyleBackColor = true;
             // 
             // buttonCancel
             // 
-            buttonCancel.Location = new Point(522, 368);
+            buttonCancel.Location = new Point(506, 373);
             buttonCancel.Margin = new Padding(4, 3, 4, 3);
             buttonCancel.Name = "buttonCancel";
-            buttonCancel.Size = new Size(88, 27);
+            buttonCancel.Size = new Size(104, 27);
             buttonCancel.TabIndex = 25;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;
@@ -617,10 +807,10 @@ namespace NetProxy.Client.Forms
             // 
             // buttonSave
             // 
-            buttonSave.Location = new Point(426, 368);
+            buttonSave.Location = new Point(394, 373);
             buttonSave.Margin = new Padding(4, 3, 4, 3);
             buttonSave.Name = "buttonSave";
-            buttonSave.Size = new Size(88, 27);
+            buttonSave.Size = new Size(104, 27);
             buttonSave.TabIndex = 24;
             buttonSave.Text = "Save";
             buttonSave.UseVisualStyleBackColor = true;
@@ -630,7 +820,7 @@ namespace NetProxy.Client.Forms
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(622, 407);
+            ClientSize = new Size(623, 410);
             Controls.Add(buttonSave);
             Controls.Add(buttonCancel);
             Controls.Add(tabControl);
@@ -651,6 +841,8 @@ namespace NetProxy.Client.Forms
             tabPageBindings.ResumeLayout(false);
             tabPageBindings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewBindings).EndInit();
+            tabPageTls.ResumeLayout(false);
+            tabPageTls.PerformLayout();
             tabPageHTTPHeaders.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridViewHTTPHeaders).EndInit();
             tabPageEndpoints.ResumeLayout(false);
@@ -661,6 +853,8 @@ namespace NetProxy.Client.Forms
             groupBox4.PerformLayout();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
+            groupBoxLimits.ResumeLayout(false);
+            groupBoxLimits.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -704,6 +898,14 @@ namespace NetProxy.Client.Forms
         private TextBox textBoxStickySessionCacheExpiration;
         private Label label15;
         private GroupBox groupBox4;
+        private GroupBox groupBoxLimits;
+        private Label labelMaxConnections;
+        private TextBox textBoxMaxConnections;
+        private Label labelMaxConnectionsPerClient;
+        private TextBox textBoxMaxConnectionsPerClient;
+        private Label labelIdleTimeout;
+        private TextBox textBoxIdleTimeout;
+        private CheckBox checkBoxAllowHttp2;
         private DataGridViewCheckBoxColumn ColumnHTTPHeadersEnabled;
         private DataGridViewComboBoxColumn ColumnHTTPHeadersType;
         private DataGridViewComboBoxColumn ColumnHTTPHeadersVerb;
@@ -711,12 +913,21 @@ namespace NetProxy.Client.Forms
         private DataGridViewComboBoxColumn ColumnHTTPHeadersAction;
         private DataGridViewTextBoxColumn ColumnHTTPHeadersValue;
         private DataGridViewTextBoxColumn ColumnHTTPHeadersDescription;
-        private DataGridViewCheckBoxColumn ColumnEndpointsEnabled;
-        private DataGridViewTextBoxColumn ColumnEndpointsAddress;
-        private DataGridViewTextBoxColumn ColumnEndpointsPort;
-        private DataGridViewTextBoxColumn ColumnEndpointsDescription;
+        private TabPage tabPageTls;
+        private Label labelTlsInfo;
+        private Label labelCertificatePath;
+        private TextBox textBoxCertificatePath;
+        private Button buttonBrowseCertificate;
+        private Label labelCertificatePassword;
+        private TextBox textBoxCertificatePassword;
         private DataGridViewCheckBoxColumn ColumnBindingsEnabled;
         private DataGridViewTextBoxColumn ColumnBindingsIPAddress;
         private DataGridViewTextBoxColumn ColumnBindingsDescription;
+        private DataGridViewCheckBoxColumn ColumnEndpointsEnabled;
+        private DataGridViewTextBoxColumn ColumnEndpointsAddress;
+        private DataGridViewTextBoxColumn ColumnEndpointsPort;
+        private DataGridViewComboBoxColumn ColumnEndpointsTrafficType;
+        private DataGridViewCheckBoxColumn ColumnEndpointsValidateSSLCertificate;
+        private DataGridViewTextBoxColumn ColumnEndpointsDescription;
     }
 }

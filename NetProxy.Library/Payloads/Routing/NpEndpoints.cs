@@ -8,7 +8,7 @@ namespace NetProxy.Library.Payloads.Routing
         [JsonConverter(typeof(StringEnumConverter))]
         public ConnectionPattern ConnectionPattern { get; set; }
 
-        public List<NpEndpoint> Collection = new();
+        public List<NpEndpoint> Collection { get; set; } = new();
 
         public void Add(NpEndpoint peer)
         {

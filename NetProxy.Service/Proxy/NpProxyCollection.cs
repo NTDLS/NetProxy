@@ -1,36 +1,35 @@
-﻿using NetProxy.Library.Payloads.Routing;
-using NTDLS.Helpers;
+﻿using NetProxy.Library.Utilities;
 
 namespace NetProxy.Service.Proxy
 {
     public class NpProxyCollection : List<NpProxy>
     {
-        public List<NpProxyConfiguration> CloneConfigurations()
-        {
-            var proxyConfigurations = new List<NpProxyConfiguration>();
-            ForEach(o => proxyConfigurations.Add(o.Configuration));
-            return proxyConfigurations;
-        }
-
         public new void Remove(NpProxy item)
         {
-            Exceptions.Ignore(item.Stop);
+            try
+            {
+                item.Stop();
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to stop proxy", ex);
+            }
+
             base.Remove(item);
         }
 
+        /// <summary>
+        /// Starts the proxies that are set to start automatically. One that fails to start does not stop the others.
+        /// </summary>
         public void Start()
         {
-            foreach (var proxy in this)
+            foreach (var proxy in this.ToList())
             {
                 if (proxy.Configuration.AutoStart)
                 {
-                    try
+                    if (proxy.Start(out var error) == false)
                     {
-                        proxy.Start();
-                    }
-                    catch (Exception ex)
-                    {
-                        Singletons.Logging.Write("Failed to start proxy.", ex);
+                        Singletons.Logging.Write(NpLogging.Severity.Warning, $"Proxy '{proxy.Configuration.Name}' was not started: {error}");
                     }
                 }
             }
@@ -38,7 +37,7 @@ namespace NetProxy.Service.Proxy
 
         public void Stop()
         {
-            foreach (var proxy in this)
+            foreach (var proxy in this.ToList())
             {
                 try
                 {
@@ -46,7 +45,7 @@ namespace NetProxy.Service.Proxy
                 }
                 catch (Exception ex)
                 {
-                    Singletons.Logging.Write("Failed to stop proxy.", ex);
+                    Singletons.Logging.Write($"Failed to stop proxy '{proxy.Configuration.Name}'", ex);
                 }
             }
         }

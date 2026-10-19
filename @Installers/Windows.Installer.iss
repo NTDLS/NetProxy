@@ -4,7 +4,7 @@
 ;-- Main Setup Information
  AppName                         = NetProxy
  AppVersion                      = {#AppVersion}
- AppVerName                      = NetTunnel {#AppVersion}
+ AppVerName                      = NetProxy {#AppVersion}
  AppCopyright                    = Copyright © 1995-2026 NetworkDLS.
  DefaultDirName                  = {commonpf}\NetworkDLS\NetProxy
  DefaultGroupName                = NetworkDLS\NetProxy

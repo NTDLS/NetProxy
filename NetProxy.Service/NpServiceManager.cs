@@ -1,81 +1,177 @@
 ﻿using NetProxy.Library;
+using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Proxy;
-using NTDLS.Helpers;
 using NTDLS.Persistence;
 using NTDLS.ReliableMessaging;
+using System.Collections.Concurrent;
 
 namespace NetProxy.Service
 {
     public class NpServiceManager
     {
-        public NpConfiguration? Configuration { get; set; }
-        private readonly RmServer _messageServer;
+        private readonly object _proxiesLock = new();
+        private readonly object _saveLock = new();
         private readonly NpProxyCollection _proxies = new();
-        private readonly HashSet<Guid> _authenticatedConnections = new();
+        private readonly ConcurrentDictionary<Guid, bool> _authenticatedConnections = new();
+        private readonly ConcurrentDictionary<Guid, ConnectionCryptography> _connectionCryptography = new();
+        private RmServer? _messageServer;
 
-        public NpServiceManager()
+        /// <summary>
+        /// The service configuration. Handlers lock it while they read or change the users or the settings.
+        /// </summary>
+        public NpConfiguration Configuration { get; private set; } = new() { ManagementPort = Constants.DefaultManagementPort };
+
+        private sealed class ConnectionCryptography(ManagementCryptographyProvider provider)
         {
-            _messageServer = new RmServer(new RmConfiguration
+            public ManagementCryptographyProvider Provider { get; } = provider;
+            public volatile bool IsApplied;
+        }
+
+        /// <summary>
+        /// Keeps the key for a connection. It is not used until the console asks for it to be applied, because the reply to the
+        /// key exchange (and the request to apply) have to be readable by the console before it has the key.
+        /// </summary>
+        public void InitializeCryptography(Guid connectionId, byte[] sharedSecret)
+            => _connectionCryptography[connectionId] = new ConnectionCryptography(new ManagementCryptographyProvider(sharedSecret));
+
+        public void ApplyCryptography(Guid connectionId)
+        {
+            if (_connectionCryptography.TryGetValue(connectionId, out var cryptography) == false)
             {
-                Parameter = this
-            });
+                throw new Exception("The key exchange has not been done.");
+            }
 
-            _messageServer.AddHandler(new NpServiceManagerNotificationHandlers());
-            _messageServer.AddHandler(new NpServiceManagerQueryHandlers());
+            cryptography.IsApplied = true;
+        }
 
-            _messageServer.OnDisconnected += _messageServer_OnDisconnected;
+        public bool IsEncrypted(Guid connectionId)
+            => _connectionCryptography.TryGetValue(connectionId, out var cryptography) && cryptography.IsApplied;
+
+        public bool TryGetAppliedCryptography(Guid connectionId, out ManagementCryptographyProvider provider)
+        {
+            if (_connectionCryptography.TryGetValue(connectionId, out var cryptography) && cryptography.IsApplied)
+            {
+                provider = cryptography.Provider;
+                return true;
+            }
+
+            provider = null!;
+            return false;
         }
 
         public void RemoveAuthenticated(Guid connectionId)
-            => _authenticatedConnections.Remove(connectionId);
+        {
+            _authenticatedConnections.TryRemove(connectionId, out _);
+            _connectionCryptography.TryRemove(connectionId, out _);
+        }
 
         public void AddAuthenticated(Guid connectionId)
-            => _authenticatedConnections.Add(connectionId);
+            => _authenticatedConnections[connectionId] = true;
 
         public bool IsAuthenticated(Guid connectionId)
-            => _authenticatedConnections.Contains(connectionId);
+            => _authenticatedConnections.ContainsKey(connectionId);
 
         public void Notify(Guid connectionId, IRmNotification notification)
-            => _messageServer.Notify(connectionId, notification);
+            => _messageServer?.Notify(connectionId, notification);
 
         public NpProxy? GetProxyById(Guid proxyId)
-            => _proxies.Where(o => o.Configuration.Id == proxyId).SingleOrDefault();
+        {
+            lock (_proxiesLock)
+            {
+                return _proxies.FirstOrDefault(o => o.Configuration.Id == proxyId);
+            }
+        }
 
         public void AddProxy(NpProxy proxy)
-            => _proxies.Add(proxy);
+        {
+            lock (_proxiesLock)
+            {
+                _proxies.Add(proxy);
+            }
+        }
 
         public List<NpProxy> GetProxies()
-            => _proxies.ToList();
+        {
+            lock (_proxiesLock)
+            {
+                return _proxies.ToList();
+            }
+        }
 
         public void RemoveProxy(NpProxy proxy)
-            => _proxies.Remove(proxy);
-
-        private void _messageServer_OnDisconnected(RmContext context)
         {
-            lock (Configuration.EnsureNotNull())
+            lock (_proxiesLock)
             {
-                _authenticatedConnections.Remove(context.ConnectionId);
+                _proxies.Remove(proxy);
             }
-            Console.WriteLine($"Deregistered connection: {context.ConnectionId} (Logged in users {_authenticatedConnections.Count}).");
+        }
+
+        private void MessageServer_OnDisconnected(RmContext context)
+        {
+            RemoveAuthenticated(context.ConnectionId);
+            Singletons.Logging.Write(NpLogging.Severity.Verbose,
+                $"Management connection {context.ConnectionId} closed ({_authenticatedConnections.Count} logged in).");
+        }
+
+        /// <summary>
+        /// Applies new service settings: the log settings take effect immediately, the rest when the service restarts.
+        /// </summary>
+        public void ApplySettings(NpServiceSettings settings)
+        {
+            lock (Configuration)
+            {
+                Configuration.Settings = settings;
+            }
+
+            Singletons.ConfigureLogging(settings);
+            SaveConfiguration();
         }
 
         public void SaveConfiguration()
         {
-            try
+            lock (_saveLock)
             {
-                CommonApplicationData.SaveToDisk(Constants.FriendlyName, Configuration);
-                CommonApplicationData.SaveToDisk(Constants.FriendlyName, _proxies.CloneConfigurations());
-            }
-            catch (Exception ex)
-            {
-                Singletons.Logging.Write(new NpLogging.LoggingPayload
+                try
                 {
-                    Severity = NpLogging.Severity.Exception,
-                    CustomText = "Failed to save configuration.",
-                    Exception = ex
-                });
+                    //The secrets (password hashes, certificate passwords) are written encrypted. This works on copies, because
+                    //  the ones in use must keep the real values.
+                    NpConfiguration configuration;
+                    lock (Configuration)
+                    {
+                        configuration = new NpConfiguration
+                        {
+                            ManagementPort = Configuration.ManagementPort,
+                            Settings = Configuration.Settings
+                        };
+
+                        foreach (var user in Configuration.Users.Collection)
+                        {
+                            configuration.Users.Add(new NpUser
+                            {
+                                Id = user.Id,
+                                UserName = user.UserName,
+                                PasswordHash = SecretProtector.Protect(user.PasswordHash) ?? string.Empty,
+                                Description = user.Description
+                            });
+                        }
+                    }
+
+                    var proxyConfigurations = GetProxies().Select(o =>
+                    {
+                        var copy = o.Configuration.Clone();
+                        copy.TlsCertificatePassword = SecretProtector.Protect(copy.TlsCertificatePassword) ?? string.Empty;
+                        return copy;
+                    }).ToList();
+
+                    CommonApplicationData.SaveToDisk(Singletons.ConfigurationName, configuration);
+                    CommonApplicationData.SaveToDisk(Singletons.ConfigurationName, proxyConfigurations);
+                }
+                catch (Exception ex)
+                {
+                    Singletons.Logging.Write("Failed to save configuration", ex);
+                }
             }
         }
 
@@ -83,114 +179,69 @@ namespace NetProxy.Service
         {
             try
             {
-                Console.WriteLine("Loading configuration...");
-
-                //AddTestProxys();
-
                 var defaultConfiguration = new NpConfiguration()
                 {
-                    ManagementPort = 5854
+                    ManagementPort = Constants.DefaultManagementPort
                 };
                 defaultConfiguration.Users.Add(new NpUser()
                 {
                     UserName = "administrator",
-                    PasswordHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    PasswordHash = NpUtility.Sha256(string.Empty)
                 });
 
-                Console.WriteLine("Server configuration...");
-                Configuration = CommonApplicationData.LoadFromDisk(Constants.FriendlyName, defaultConfiguration);
+                var loaded = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, defaultConfiguration);
+                var proxyConfigurations = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, new List<NpProxyConfiguration>());
 
-                Console.WriteLine("Proxy configuration...");
-                var proxies = CommonApplicationData.LoadFromDisk(Constants.FriendlyName, new List<NpProxyConfiguration>());
-                foreach (var proxy in proxies)
+                //Files from an older version (or values typed in by hand) hold plain text secrets: read them, then save them encrypted.
+                bool hasPlainTextSecrets = false;
+
+                foreach (var user in loaded.Users.Collection)
                 {
-                    Console.WriteLine("Adding proxy {0}.", proxy.Name);
-                    _proxies.Add(new NpProxy(proxy));
+                    user.PasswordHash = SecretProtector.Unprotect(user.PasswordHash, $"the password of user '{user.UserName}'", out var plain) ?? string.Empty;
+                    hasPlainTextSecrets |= plain;
+                }
+
+                foreach (var proxy in proxyConfigurations)
+                {
+                    proxy.TlsCertificatePassword = SecretProtector.Unprotect(proxy.TlsCertificatePassword,
+                        $"the certificate password of proxy '{proxy.Name}'", out var plain) ?? string.Empty;
+                    hasPlainTextSecrets |= plain;
+                }
+
+                lock (Configuration)
+                {
+                    Configuration = loaded;
+                }
+
+                //Now that the settings are known, log the way they say to.
+                Singletons.ConfigureLogging(Configuration.Settings);
+
+                lock (_proxiesLock)
+                {
+                    _proxies.Clear();
+                    foreach (var proxy in proxyConfigurations)
+                    {
+                        Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Loaded proxy '{proxy.Name}'.");
+                        _proxies.Add(new NpProxy(proxy));
+                    }
+                }
+
+                if (hasPlainTextSecrets)
+                {
+                    SaveConfiguration();
+                }
+
+                var emptyPassword = NpUtility.Sha256(string.Empty);
+                foreach (var user in Configuration.Users.Collection.Where(o => o.PasswordHash.Equals(emptyPassword, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Warning,
+                        $"The management user '{user.UserName}' has an empty password. Set one in the NetProxy management console.");
                 }
             }
             catch (Exception ex)
             {
-                Singletons.Logging.Write(new NpLogging.LoggingPayload
-                {
-                    Severity = NpLogging.Severity.Exception,
-                    CustomText = "Failed to load configuration.",
-                    Exception = ex
-                });
+                Singletons.Logging.Write("Failed to load configuration", ex);
             }
-        }
-
-        private void AddTestProxys()
-        {
-            NpProxyCollection proxies = new();
-
-            //------------------------------------------------------------------------------------------------------------------
-            {
-                NpProxyConfiguration proxy = new NpProxyConfiguration()
-                {
-                    Name = "NetworkDLS",
-                    ListenPort = 80,
-                    TrafficType = TrafficType.Http,
-                    MaxBufferSize = 1021 * 1024,
-                    ListenOnAllAddresses = false,
-                    AutoStart = true,
-                    Description = "Default example proxy."
-
-                };
-
-                proxy.Bindings.Add(new NpBinding { Enabled = true, Address = "127.0.0.1" });
-
-                proxy.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
-                proxy.Endpoints.Add(new NpEndpoint("www.NetworkDLS.com", 80));
-
-                proxy.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.NetworkDLS.com"));
-
-                proxies.Add(new NpProxy(proxy));
-            }
-            //------------------------------------------------------------------------------------------------------------------
-            {
-                NpProxyConfiguration proxy = new NpProxyConfiguration()
-                {
-                    Name = "Ingenuity",
-                    ListenPort = 81,
-                    TrafficType = TrafficType.Http,
-                    MaxBufferSize = 1021 * 1024,
-                    ListenOnAllAddresses = true,
-                    AutoStart = true
-                };
-
-                //proxy.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
-
-                proxy.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
-                proxy.Endpoints.Add(new NpEndpoint("www.IngenuitySC.com", 80));
-
-                proxy.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "www.IngenuitySC.com"));
-
-                proxies.Add(new NpProxy(proxy));
-            }
-            //------------------------------------------------------------------------------------------------------------------
-            {
-                NpProxyConfiguration proxy = new NpProxyConfiguration()
-                {
-                    Name = "Microsoft LIVE!",
-                    ListenPort = 82,
-                    TrafficType = TrafficType.Https,
-                    MaxBufferSize = 1021 * 1024,
-                    ListenOnAllAddresses = true,
-                    AutoStart = true
-                };
-
-                //proxy.Bindings.Add(new Binding { Enabled = true, Address = "127.0.0.1" });
-
-                proxy.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
-                proxy.Endpoints.Add(new NpEndpoint("login.live.com", 443));
-
-                proxy.HttpHeaderRules.Add(new NpHttpHeaderRule(HttpHeaderType.Request, HttpVerb.Any, "Host", HttpHeaderAction.Upsert, "login.live.com"));
-
-                proxies.Add(new NpProxy(proxy));
-            }
-            //------------------------------------------------------------------------------------------------------------------
-
-            CommonApplicationData.SaveToDisk(Constants.FriendlyName, proxies.CloneConfigurations());
         }
 
         public void Start()
@@ -199,20 +250,33 @@ namespace NetProxy.Service
             {
                 LoadConfiguration();
 
-                Console.WriteLine("Starting management interface on port {0}.", Configuration.EnsureNotNull().ManagementPort);
-                _messageServer.Start(Configuration.ManagementPort);
+                var server = new RmServer(new RmConfiguration
+                {
+                    Parameter = this,
+                    ListenOnIPv6 = Configuration.Settings.ManagementListenOnIPv6
+                });
 
-                Console.WriteLine("starting proxies...");
+                server.SetCryptographyProvider(new ServiceCryptographyProvider(this));
+
+                server.AddHandler(new NpServiceManagerNotificationHandlers());
+                server.AddHandler(new NpServiceManagerQueryHandlers());
+                server.OnDisconnected += MessageServer_OnDisconnected;
+
+                _messageServer = server;
+
+                Singletons.Logging.Write(NpLogging.Severity.Information,
+                    $"Starting the management interface on port {Configuration.ManagementPort}"
+                    + (Configuration.Settings.ManagementListenOnIPv6 ? " (IPv4 and IPv6)." : " (IPv4)."));
+
+                server.Start(Configuration.ManagementPort);
+
+                Singletons.Logging.Write(NpLogging.Severity.Information, "Starting the proxies.");
+
                 _proxies.Start();
             }
             catch (Exception ex)
             {
-                Singletons.Logging.Write(new NpLogging.LoggingPayload
-                {
-                    Severity = NpLogging.Severity.Exception,
-                    CustomText = "Failed to start proxy.",
-                    Exception = ex
-                });
+                Singletons.Logging.Write("Failed to start the service", ex);
             }
         }
 
@@ -220,19 +284,13 @@ namespace NetProxy.Service
         {
             try
             {
-                SaveConfiguration();
-
-                _messageServer.Stop();
+                _messageServer?.Stop();
                 _proxies.Stop();
+                SaveConfiguration();
             }
             catch (Exception ex)
             {
-                Singletons.Logging.Write(new NpLogging.LoggingPayload
-                {
-                    Severity = NpLogging.Severity.Exception,
-                    CustomText = "Failed to stop proxy.",
-                    Exception = ex
-                });
+                Singletons.Logging.Write("Failed to stop the service", ex);
             }
         }
     }

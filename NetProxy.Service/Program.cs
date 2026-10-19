@@ -6,6 +6,18 @@ namespace NetProxy.Service
     {
         static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            {
+                if (e.ExceptionObject is Exception ex)
+                {
+                    Singletons.Logging.Write("An unhandled exception occurred", ex);
+                }
+                if (e.IsTerminating)
+                {
+                    Singletons.ShutdownLogging();
+                }
+            };
+
             HostFactory.Run(x =>
             {
                 x.StartAutomatically();

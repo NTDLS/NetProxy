@@ -1,5 +1,7 @@
 ﻿using NetProxy.Library;
 using NetProxy.Library.Utilities;
+using NTDLS.Localization;
+using NTDLS.WinFormsHelpers;
 
 namespace NetProxy.Client.Forms
 {
@@ -13,6 +15,20 @@ namespace NetProxy.Client.Forms
         public FormSetPassword()
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
+            Theming.InitializeForm(this);
+            SetupToolTips();
+        }
+
+        private void SetupToolTips()
+        {
+            var toolTips = ToolTipHelpers.CreateToolTipControl(this);
+
+            toolTips.AddControls([label3, textBoxPassword1],
+                Localize("The new password. Only a hash of it is sent to the service."));
+
+            toolTips.AddControls([label1, textBoxPassword2],
+                Localize("Type the password again, to be sure that it is what you meant."));
         }
 
         private void ButtonCancel_Click(object? sender, EventArgs e)
@@ -25,7 +41,13 @@ namespace NetProxy.Client.Forms
         {
             if (textBoxPassword1.Text != textBoxPassword2.Text)
             {
-                MessageBox.Show("The passwords do not match.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(Localize("The passwords do not match."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                return;
+            }
+
+            if (textBoxPassword1.Text.Length == 0 && MessageBox.Show(Localize("An empty password lets anyone log in as this user. Use it anyway?"), Constants.FriendlyName,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            {
                 return;
             }
 

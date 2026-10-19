@@ -25,6 +25,22 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
+            SetupToolTips();
+        }
+
+        private void SetupToolTips()
+        {
+            var toolTips = ToolTipHelpers.CreateToolTipControl(this);
+
+            toolTips.AddControls([label1, textBoxServer],
+                "The machine that the NetProxy service runs on: a name, an IPv4 address or an IPv6 address."
+                + " Add a port after a name or IPv4 address (name:5854), or after an IPv6 address in brackets ([::1]:5854). The default port is 5854.");
+
+            toolTips.AddControls([label2, textBoxUsername],
+                "The name of a user of the service.");
+
+            toolTips.AddControls([label3, textBoxPassword],
+                "The password of the user.");
         }
 
         private void FormConnect_Load(object? sender, EventArgs e)

@@ -52,6 +52,7 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
+            SetupToolTips();
 
             _populateGrid = OnPopulateGrid;
 
@@ -64,6 +65,37 @@ namespace NetProxy.Client.Forms
                 Close();
                 return;
             }
+        }
+
+        /// <summary>
+        /// Tool-tips for the inputs: the label and the control that it is for show the same text, and so do the columns of the grid.
+        /// </summary>
+        private void SetupToolTips()
+        {
+            var toolTips = ToolTipHelpers.CreateToolTipControl(this);
+
+            ColumnUsername.ToolTipText = "The name the user logs in with. A name that was saved cannot be changed: delete the user and add another.";
+            ColumnSetPassword.ToolTipText = "Set the password of this user. A new user needs one.";
+            ColumnDescription.ToolTipText = "Notes about this user.";
+
+            toolTips.AddControls([labelLogLevel, comboBoxLogLevel],
+                "The least important kind of message that is logged. Verbose logs everything, including every connection. Information logs what the service does."
+                + " Warning logs only problems. Exception logs only failures.");
+
+            toolTips.AddControls([labelLogPath, textBoxLogPath],
+                "The log file, on the machine that the service runs on. A relative path is relative to the folder the service is installed in. Leave it empty to not write a file.");
+
+            toolTips.AddControls([labelLogFileMaxSizeMB, textBoxLogFileMaxSizeMB],
+                "When the log file reaches this size in megabytes it is renamed to NetProxy.1.log and a new one is started (1 to 10240).");
+
+            toolTips.AddControls([labelLogFileRetainedCount, textBoxLogFileRetainedCount],
+                "How many of the older log files to keep, in addition to the current one (0 to 1000).");
+
+            toolTips.AddControls([checkBoxLogToEventLog],
+                "Also write warnings and exceptions to the Windows Application event log, which is where administrators and monitoring tools look. Not available on Linux.");
+
+            toolTips.AddControls([checkBoxManagementListenOnIPv6],
+                "Let the management console connect over IPv6 as well as IPv4 (one listener accepts both). It takes effect when the service restarts.");
         }
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)

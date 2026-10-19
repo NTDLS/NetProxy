@@ -33,6 +33,7 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
+            SetupToolTips();
 
             statusStripMain.Items.AddRange([_statusConnection, _statusProxies, _statusConnections, _statusTraffic]);
 
@@ -42,6 +43,17 @@ namespace NetProxy.Client.Forms
             dataGridViewProxys.SelectionChanged += (_, _) => UpdateChart();
 
             _statsTimer.Tick += StatsTimer_Tick;
+        }
+
+        private void SetupToolTips()
+        {
+            ColumnStatus.ToolTipText = "A green check is a proxy that is running, a red cross one that is stopped.";
+            ColumnName.ToolTipText = "The name of the proxy.";
+            ColumnProxyType.ToolTipText = "The traffic type of the listener, and the IP versions it listens on.";
+            ColummListenPort.ToolTipText = "The port that the proxy listens on.";
+            ColumnBytesTransferred.ToolTipText = "Everything that the proxy has passed to and from its clients since the service started.";
+            ColumnTotalConnections.ToolTipText = "The connections that the proxy has accepted since the service started.";
+            ColumnCurrentConnections.ToolTipText = "The connections that are open now.";
         }
 
         private void FormMain_Shown(object? sender, EventArgs e)

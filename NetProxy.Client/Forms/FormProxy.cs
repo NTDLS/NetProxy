@@ -34,6 +34,7 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
+            SetupToolTips();
 
             _isNewProxy = proxyId == null;
 
@@ -116,6 +117,117 @@ namespace NetProxy.Client.Forms
             //----------------------------------------------------------------------------
 
             _previousTrafficType = TrafficType.Http;
+        }
+
+        /// <summary>
+        /// Tool-tips for the inputs: the label and the control that it is for show the same text, and so do the columns of the grids.
+        /// </summary>
+        private void SetupToolTips()
+        {
+            var toolTips = ToolTipHelpers.CreateToolTipControl(this);
+
+            #region General.
+
+            toolTips.AddControls([label1, textBoxProxyName],
+                "A name for this proxy. It is only for your own identification.");
+
+            toolTips.AddControls([label2, comboBoxTrafficType],
+                "What the listener accepts. Raw passes any TCP protocol through untouched. HTTP lets the HTTP header rules change the requests and responses."
+                + " HTTPS terminates TLS with the certificate on the TLS tab, so that the header rules can be applied to HTTPS too.");
+
+            toolTips.AddControls([checkBoxListenAutoStart],
+                "Start this proxy when the service starts.");
+
+            toolTips.AddControls([label6, textBoxDescription],
+                "Notes about this proxy. They are only for you.");
+
+            #endregion
+
+            #region Bindings.
+
+            toolTips.AddControls([label4, textBoxListenPort],
+                "The port that the proxy listens on (1 to 65535).");
+
+            toolTips.AddControls([label10, comboBoxBindingProtocol],
+                "The IP version to listen on when listening on all addresses. IPv4 and IPv6 is one listener that accepts both."
+                + " Bindings that are listed use the IP version of their address.");
+
+            toolTips.AddControls([checkBoxListenOnAllAddresses],
+                "Listen on every address of the machine that the service runs on. Clear it to listen only on the addresses in the list.");
+
+            toolTips.AddControls([label7],
+                "The addresses to listen on, IPv4 or IPv6 (for example 192.168.1.5 or ::1). Only used when [Listen on All Addresses] is cleared.");
+
+            ColumnBindingsEnabled.ToolTipText = "Listen on this address. Clear it to keep the address without using it.";
+            ColumnBindingsIPAddress.ToolTipText = "An IPv4 or IPv6 address of the machine that the service runs on.";
+            ColumnBindingsDescription.ToolTipText = "Notes about this address.";
+
+            #endregion
+
+            #region TLS.
+
+            toolTips.AddControls([labelCertificatePath, textBoxCertificatePath],
+                "The PFX (PKCS#12) certificate that the listener presents to clients, for the HTTPS traffic type. The path is read by the service,"
+                + " so it is a path on the machine that the service runs on.");
+
+            toolTips.AddControls([buttonBrowseCertificate],
+                "Browse this machine for the certificate. That only helps when the service runs on this machine.");
+
+            toolTips.AddControls([labelCertificatePassword, textBoxCertificatePassword],
+                "The password of the PFX certificate. Leave it empty if the certificate has none. The service stores it encrypted.");
+
+            #endregion
+
+            #region HTTP headers.
+
+            ColumnHTTPHeadersEnabled.ToolTipText = "Apply this rule. Clear it to keep the rule without using it.";
+            ColumnHTTPHeadersType.ToolTipText = "Request rules change what clients send, at the listener. Response rules change what the endpoint answers. Any does both.";
+            ColumnHTTPHeadersVerb.ToolTipText = "The request method that the rule applies to. A response does not carry one, so response rules must use Any.";
+            ColumnHTTPHeadersHeader.ToolTipText = "The name of the header, for example Host. It is not case sensitive.";
+            ColumnHTTPHeadersAction.ToolTipText = "Insert adds the header if it is missing. Update changes it if it is there. Upsert does both. Delete removes it.";
+            ColumnHTTPHeadersValue.ToolTipText = "The value that is written. It is used as typed. Delete does not use it.";
+            ColumnHTTPHeadersDescription.ToolTipText = "Notes about this rule.";
+
+            #endregion
+
+            #region Endpoints.
+
+            toolTips.AddControls([label9, comboBoxConnectionPattern],
+                "How a new connection chooses an endpoint. Balanced starts with the endpoint that has the fewest connections. Fail-over always tries the endpoints"
+                + " in the order listed. Round-robin takes them in turn. An endpoint that cannot be reached is skipped.");
+
+            toolTips.AddControls([checkBoxUseStickySessions],
+                "Send a client back to the endpoint it used last, for as long as the sticky session expiration (on the Advanced tab) has not passed since it was last used.");
+
+            toolTips.AddControls([label8],
+                "The machines that connections are passed to. Each endpoint has its own traffic type.");
+
+            ColumnEndpointsEnabled.ToolTipText = "Use this endpoint. Clear it to keep the endpoint without using it.";
+            ColumnEndpointsAddress.ToolTipText = "A host name, or an IPv4 or IPv6 address. For HTTPS use the host name, which is what the certificate is checked against.";
+            ColumnEndpointsPort.ToolTipText = "The port on the endpoint (1 to 65535).";
+            ColumnEndpointsTrafficType.ToolTipText = "What is spoken to this endpoint. HTTPS starts TLS with it. Raw and HTTP are sent as they are."
+                + " A new endpoint starts with the traffic type of the listener.";
+            ColumnEndpointsValidateSSLCertificate.ToolTipText = "For HTTPS endpoints: check that the certificate of the endpoint is trusted and is for its address."
+                + " Clear it to accept any certificate, for example a self signed one.";
+            ColumnEndpointsDescription.ToolTipText = "Notes about this endpoint.";
+
+            #endregion
+
+            #region Advanced.
+
+            toolTips.AddControls([label3, textBoxInitialBufferSize],
+                "The size in bytes that the buffer of each connection starts at (1024 or more).");
+
+            toolTips.AddControls([label5, textBoxMaxBufferSize],
+                "The largest the buffer of a connection grows to, when it keeps filling up. It cannot be smaller than the initial size.");
+
+            toolTips.AddControls([labelAcceptBacklogSize, textBoxAcceptBacklogSize],
+                "How many connections can be waiting to be accepted. Values below 128 are raised to 128. 0 uses the largest the system allows.");
+
+            toolTips.AddControls([label15, textBoxStickySessionCacheExpiration],
+                "How long, in seconds, a client is remembered by sticky sessions after it was last connected.");
+
+            #endregion
         }
 
         private void FormProxy_Shown(object? sender, EventArgs e)

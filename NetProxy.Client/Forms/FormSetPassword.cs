@@ -15,6 +15,18 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
+            SetupToolTips();
+        }
+
+        private void SetupToolTips()
+        {
+            var toolTips = ToolTipHelpers.CreateToolTipControl(this);
+
+            toolTips.AddControls([label3, textBoxPassword1],
+                "The new password. Only a hash of it is sent to the service.");
+
+            toolTips.AddControls([label1, textBoxPassword2],
+                "Type the password again, to be sure that it is what you meant.");
         }
 
         private void ButtonCancel_Click(object? sender, EventArgs e)

@@ -1,8 +1,10 @@
 ﻿using NetProxy.Client.Classes;
+using NetProxy.Client.Properties;
 using NetProxy.Library;
 using NTDLS.Helpers;
 using NTDLS.Persistence;
 using NTDLS.WinFormsHelpers;
+using NTDLS.WinFormsHelpers.Forms;
 using System.ComponentModel;
 
 namespace NetProxy.Client.Forms
@@ -194,7 +196,7 @@ namespace NetProxy.Client.Forms
 
         private void ButtonAbout_Click(object sender, EventArgs e)
         {
-            using var form = new FormAbout();
+            using var form = new FormAbout(Constants.FriendlyName, this.Icon, Resources.Logo128);
             form.ShowDialog();
         }
     }

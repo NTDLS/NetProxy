@@ -20,9 +20,9 @@ namespace NetProxy.Library.Payloads.Routing
         public TrafficType TrafficType { get; set; } = TrafficType.Raw;
 
         /// <summary>
-        /// When true, the endpoint's certificate is not validated (Https endpoints only).
+        /// When false, the endpoint's certificate is not validated (Https endpoints only).
         /// </summary>
-        public bool TlsIgnoreCertificateErrors { get; set; }
+        public bool TlsValidateSSLCertificate { get; set; }
 
         public NpEndpoint(string address, int port)
         {

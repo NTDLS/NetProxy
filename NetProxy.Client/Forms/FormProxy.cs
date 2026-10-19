@@ -28,14 +28,12 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
-            GridTheming.Apply(this);
         }
 
         public FormProxy(ConnectionInfo connectionInfo, Guid? proxyId)
         {
             InitializeComponent();
             Theming.InitializeForm(this);
-            GridTheming.Apply(this);
 
             _isNewProxy = proxyId == null;
 
@@ -153,7 +151,7 @@ namespace NetProxy.Client.Forms
             foreach (var endpoint in proxy.Endpoints.Collection)
             {
                 dataGridViewEndpoints.Rows.Add(
-                    [$"{endpoint.Enabled}", endpoint.Address, $"{endpoint.Port}", $"{endpoint.TrafficType}", $"{endpoint.TlsIgnoreCertificateErrors}", endpoint.Description]
+                    [$"{endpoint.Enabled}", endpoint.Address, $"{endpoint.Port}", $"{endpoint.TrafficType}", $"{endpoint.TlsValidateSSLCertificate}", endpoint.Description]
                 );
             }
 
@@ -287,7 +285,7 @@ namespace NetProxy.Client.Forms
                     Address = address,
                     Port = port,
                     TrafficType = trafficType,
-                    TlsIgnoreCertificateErrors = bool.Parse(row.Cells[ColumnEndpointsIgnoreCertificateErrors.Index].Value?.ToString() ?? "False"),
+                    TlsValidateSSLCertificate = bool.Parse(row.Cells[ColumnEndpointsValidateSSLCertificate.Index].Value?.ToString() ?? "False"),
                     Description = row.Cells[ColumnEndpointsDescription.Index].Value?.ToString() ?? ""
                 });
             }

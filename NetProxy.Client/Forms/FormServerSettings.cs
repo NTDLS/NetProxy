@@ -46,14 +46,12 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
-            GridTheming.Apply(this);
         }
 
         public FormServerSettings(ConnectionInfo connectionInfo)
         {
             InitializeComponent();
             Theming.InitializeForm(this);
-            GridTheming.Apply(this);
 
             _populateGrid = OnPopulateGrid;
 

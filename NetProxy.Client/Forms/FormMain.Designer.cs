@@ -71,7 +71,7 @@ namespace NetProxy.Client.Forms
             dataGridViewProxys.Name = "dataGridViewProxys";
             dataGridViewProxys.ReadOnly = true;
             dataGridViewProxys.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridViewProxys.Size = new Size(758, 226);
+            dataGridViewProxys.Size = new Size(758, 291);
             dataGridViewProxys.TabIndex = 0;
             dataGridViewProxys.CellDoubleClick += DataGridViewProxys_CellDoubleClick;
             dataGridViewProxys.MouseDown += DataGridViewProxys_MouseDown;
@@ -94,12 +94,12 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnName
             // 
+            ColumnName.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             ColumnName.DataPropertyName = "Name";
             ColumnName.HeaderText = "Name";
+            ColumnName.MinimumWidth = 150;
             ColumnName.Name = "ColumnName";
             ColumnName.ReadOnly = true;
-            ColumnName.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            ColumnName.MinimumWidth = 150;
             // 
             // ColumnProxyType
             // 

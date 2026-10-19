@@ -8,6 +8,7 @@ using NetProxy.Library.Utilities;
 using NTDLS.Helpers;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
+using NTDLS.WinFormsHelpers.Forms;
 using System.Net;
 using System.Net.Sockets;
 
@@ -32,7 +33,6 @@ namespace NetProxy.Client.Forms
         {
             InitializeComponent();
             Theming.InitializeForm(this);
-            GridTheming.Apply(this);
 
             statusStripMain.Items.AddRange([_statusConnection, _statusProxies, _statusConnections, _statusTraffic]);
 
@@ -499,7 +499,7 @@ namespace NetProxy.Client.Forms
 
         private void AboutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
-            using var form = new FormAbout();
+            using var form = new FormAbout(Constants.FriendlyName, this.Icon, Resources.Logo128);
             form.ShowDialog();
         }
 

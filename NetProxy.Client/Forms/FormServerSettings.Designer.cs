@@ -32,6 +32,12 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormServerSettings));
             tabControl1 = new TabControl();
             tabPageUsers = new TabPage();
+            dataGridViewUsers = new DataGridView();
+            ColumnId = new DataGridViewTextBoxColumn();
+            ColumnUsername = new DataGridViewTextBoxColumn();
+            ColumnSetPassword = new DataGridViewLinkColumn();
+            ColumnDescription = new DataGridViewTextBoxColumn();
+            ColumnPassword = new DataGridViewTextBoxColumn();
             tabPageService = new TabPage();
             groupBoxLogging = new GroupBox();
             labelLogLevel = new Label();
@@ -43,22 +49,14 @@
             labelLogFileRetainedCount = new Label();
             textBoxLogFileRetainedCount = new TextBox();
             checkBoxLogToEventLog = new CheckBox();
-            groupBoxNetwork = new GroupBox();
             checkBoxManagementListenOnIPv6 = new CheckBox();
-            dataGridViewUsers = new DataGridView();
-            ColumnId = new DataGridViewTextBoxColumn();
-            ColumnUsername = new DataGridViewTextBoxColumn();
-            ColumnSetPassword = new DataGridViewLinkColumn();
-            ColumnDescription = new DataGridViewTextBoxColumn();
-            ColumnPassword = new DataGridViewTextBoxColumn();
             buttonSave = new Button();
             buttonCancel = new Button();
             tabControl1.SuspendLayout();
             tabPageUsers.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).BeginInit();
             tabPageService.SuspendLayout();
             groupBoxLogging.SuspendLayout();
-            groupBoxNetwork.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).BeginInit();
             SuspendLayout();
             // 
             // tabControl1
@@ -76,138 +74,12 @@
             // 
             tabPageUsers.Controls.Add(dataGridViewUsers);
             tabPageUsers.Location = new Point(4, 24);
-            tabPageUsers.Margin = new Padding(4, 3, 4, 3);
             tabPageUsers.Name = "tabPageUsers";
+            tabPageUsers.Padding = new Padding(3);
             tabPageUsers.Size = new Size(450, 380);
             tabPageUsers.TabIndex = 0;
             tabPageUsers.Text = "Users";
             tabPageUsers.UseVisualStyleBackColor = true;
-            //
-            // tabPageService
-            //
-            tabPageService.Controls.Add(groupBoxLogging);
-            tabPageService.Controls.Add(groupBoxNetwork);
-            tabPageService.Location = new Point(4, 24);
-            tabPageService.Margin = new Padding(4, 3, 4, 3);
-            tabPageService.Name = "tabPageService";
-            tabPageService.Size = new Size(450, 380);
-            tabPageService.TabIndex = 1;
-            tabPageService.Text = "Service";
-            tabPageService.UseVisualStyleBackColor = true;
-            //
-            // groupBoxLogging
-            //
-            groupBoxLogging.Controls.Add(labelLogLevel);
-            groupBoxLogging.Controls.Add(comboBoxLogLevel);
-            groupBoxLogging.Controls.Add(labelLogPath);
-            groupBoxLogging.Controls.Add(textBoxLogPath);
-            groupBoxLogging.Controls.Add(labelLogFileMaxSizeMB);
-            groupBoxLogging.Controls.Add(textBoxLogFileMaxSizeMB);
-            groupBoxLogging.Controls.Add(labelLogFileRetainedCount);
-            groupBoxLogging.Controls.Add(textBoxLogFileRetainedCount);
-            groupBoxLogging.Controls.Add(checkBoxLogToEventLog);
-            groupBoxLogging.Location = new Point(10, 10);
-            groupBoxLogging.Name = "groupBoxLogging";
-            groupBoxLogging.Size = new Size(430, 235);
-            groupBoxLogging.TabIndex = 0;
-            groupBoxLogging.TabStop = false;
-            groupBoxLogging.Text = "Logging (takes effect immediately)";
-            //
-            // labelLogLevel
-            //
-            labelLogLevel.AutoSize = true;
-            labelLogLevel.Location = new Point(14, 30);
-            labelLogLevel.Name = "labelLogLevel";
-            labelLogLevel.Size = new Size(54, 15);
-            labelLogLevel.TabIndex = 0;
-            labelLogLevel.Text = "Log level";
-            //
-            // comboBoxLogLevel
-            //
-            comboBoxLogLevel.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBoxLogLevel.FormattingEnabled = true;
-            comboBoxLogLevel.Location = new Point(14, 48);
-            comboBoxLogLevel.Name = "comboBoxLogLevel";
-            comboBoxLogLevel.Size = new Size(140, 23);
-            comboBoxLogLevel.TabIndex = 1;
-            //
-            // labelLogPath
-            //
-            labelLogPath.AutoSize = true;
-            labelLogPath.Location = new Point(14, 82);
-            labelLogPath.Name = "labelLogPath";
-            labelLogPath.Size = new Size(343, 15);
-            labelLogPath.TabIndex = 2;
-            labelLogPath.Text = "Log file (on the service machine, empty for no file)";
-            //
-            // textBoxLogPath
-            //
-            textBoxLogPath.Location = new Point(14, 100);
-            textBoxLogPath.Name = "textBoxLogPath";
-            textBoxLogPath.Size = new Size(400, 23);
-            textBoxLogPath.TabIndex = 3;
-            //
-            // labelLogFileMaxSizeMB
-            //
-            labelLogFileMaxSizeMB.AutoSize = true;
-            labelLogFileMaxSizeMB.Location = new Point(14, 136);
-            labelLogFileMaxSizeMB.Name = "labelLogFileMaxSizeMB";
-            labelLogFileMaxSizeMB.Size = new Size(173, 15);
-            labelLogFileMaxSizeMB.TabIndex = 4;
-            labelLogFileMaxSizeMB.Text = "Roll the file over at (MB)";
-            //
-            // textBoxLogFileMaxSizeMB
-            //
-            textBoxLogFileMaxSizeMB.Location = new Point(14, 154);
-            textBoxLogFileMaxSizeMB.Name = "textBoxLogFileMaxSizeMB";
-            textBoxLogFileMaxSizeMB.Size = new Size(116, 23);
-            textBoxLogFileMaxSizeMB.TabIndex = 5;
-            //
-            // labelLogFileRetainedCount
-            //
-            labelLogFileRetainedCount.AutoSize = true;
-            labelLogFileRetainedCount.Location = new Point(210, 136);
-            labelLogFileRetainedCount.Name = "labelLogFileRetainedCount";
-            labelLogFileRetainedCount.Size = new Size(173, 15);
-            labelLogFileRetainedCount.TabIndex = 6;
-            labelLogFileRetainedCount.Text = "Rolled files to keep";
-            //
-            // textBoxLogFileRetainedCount
-            //
-            textBoxLogFileRetainedCount.Location = new Point(210, 154);
-            textBoxLogFileRetainedCount.Name = "textBoxLogFileRetainedCount";
-            textBoxLogFileRetainedCount.Size = new Size(116, 23);
-            textBoxLogFileRetainedCount.TabIndex = 7;
-            //
-            // checkBoxLogToEventLog
-            //
-            checkBoxLogToEventLog.AutoSize = true;
-            checkBoxLogToEventLog.Location = new Point(14, 192);
-            checkBoxLogToEventLog.Name = "checkBoxLogToEventLog";
-            checkBoxLogToEventLog.Size = new Size(380, 19);
-            checkBoxLogToEventLog.TabIndex = 8;
-            checkBoxLogToEventLog.Text = "Also write warnings and exceptions to the Windows event log";
-            checkBoxLogToEventLog.UseVisualStyleBackColor = true;
-            //
-            // groupBoxNetwork
-            //
-            groupBoxNetwork.Controls.Add(checkBoxManagementListenOnIPv6);
-            groupBoxNetwork.Location = new Point(10, 255);
-            groupBoxNetwork.Name = "groupBoxNetwork";
-            groupBoxNetwork.Size = new Size(430, 70);
-            groupBoxNetwork.TabIndex = 1;
-            groupBoxNetwork.TabStop = false;
-            groupBoxNetwork.Text = "Management port (takes effect when the service restarts)";
-            //
-            // checkBoxManagementListenOnIPv6
-            //
-            checkBoxManagementListenOnIPv6.AutoSize = true;
-            checkBoxManagementListenOnIPv6.Location = new Point(14, 30);
-            checkBoxManagementListenOnIPv6.Name = "checkBoxManagementListenOnIPv6";
-            checkBoxManagementListenOnIPv6.Size = new Size(300, 19);
-            checkBoxManagementListenOnIPv6.TabIndex = 0;
-            checkBoxManagementListenOnIPv6.Text = "Accept IPv6 connections as well as IPv4";
-            checkBoxManagementListenOnIPv6.UseVisualStyleBackColor = true;
             // 
             // dataGridViewUsers
             // 
@@ -215,11 +87,11 @@
             dataGridViewUsers.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewUsers.Columns.AddRange(new DataGridViewColumn[] { ColumnId, ColumnUsername, ColumnSetPassword, ColumnDescription, ColumnPassword });
             dataGridViewUsers.Dock = DockStyle.Fill;
-            dataGridViewUsers.Location = new Point(0, 0);
+            dataGridViewUsers.Location = new Point(3, 3);
             dataGridViewUsers.Margin = new Padding(4, 3, 4, 3);
             dataGridViewUsers.MultiSelect = false;
             dataGridViewUsers.Name = "dataGridViewUsers";
-            dataGridViewUsers.Size = new Size(450, 380);
+            dataGridViewUsers.Size = new Size(444, 374);
             dataGridViewUsers.TabIndex = 0;
             dataGridViewUsers.CellClick += DataGridViewUsers_CellClick;
             // 
@@ -252,6 +124,122 @@
             ColumnPassword.HeaderText = "ColumnPassword";
             ColumnPassword.Name = "ColumnPassword";
             ColumnPassword.Visible = false;
+            // 
+            // tabPageService
+            // 
+            tabPageService.Controls.Add(checkBoxManagementListenOnIPv6);
+            tabPageService.Controls.Add(groupBoxLogging);
+            tabPageService.Location = new Point(4, 24);
+            tabPageService.Name = "tabPageService";
+            tabPageService.Padding = new Padding(3);
+            tabPageService.Size = new Size(450, 380);
+            tabPageService.TabIndex = 1;
+            tabPageService.Text = "Service";
+            tabPageService.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxLogging
+            // 
+            groupBoxLogging.Controls.Add(labelLogLevel);
+            groupBoxLogging.Controls.Add(comboBoxLogLevel);
+            groupBoxLogging.Controls.Add(labelLogPath);
+            groupBoxLogging.Controls.Add(textBoxLogPath);
+            groupBoxLogging.Controls.Add(labelLogFileMaxSizeMB);
+            groupBoxLogging.Controls.Add(textBoxLogFileMaxSizeMB);
+            groupBoxLogging.Controls.Add(labelLogFileRetainedCount);
+            groupBoxLogging.Controls.Add(textBoxLogFileRetainedCount);
+            groupBoxLogging.Controls.Add(checkBoxLogToEventLog);
+            groupBoxLogging.Location = new Point(6, 6);
+            groupBoxLogging.Name = "groupBoxLogging";
+            groupBoxLogging.Size = new Size(430, 190);
+            groupBoxLogging.TabIndex = 0;
+            groupBoxLogging.TabStop = false;
+            groupBoxLogging.Text = "Logging (takes effect immediately)";
+            // 
+            // labelLogLevel
+            // 
+            labelLogLevel.AutoSize = true;
+            labelLogLevel.Location = new Point(6, 19);
+            labelLogLevel.Name = "labelLogLevel";
+            labelLogLevel.Size = new Size(54, 15);
+            labelLogLevel.TabIndex = 0;
+            labelLogLevel.Text = "Log level";
+            // 
+            // comboBoxLogLevel
+            // 
+            comboBoxLogLevel.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxLogLevel.FormattingEnabled = true;
+            comboBoxLogLevel.Location = new Point(8, 37);
+            comboBoxLogLevel.Name = "comboBoxLogLevel";
+            comboBoxLogLevel.Size = new Size(140, 23);
+            comboBoxLogLevel.TabIndex = 1;
+            // 
+            // labelLogPath
+            // 
+            labelLogPath.AutoSize = true;
+            labelLogPath.Location = new Point(6, 65);
+            labelLogPath.Name = "labelLogPath";
+            labelLogPath.Size = new Size(273, 15);
+            labelLogPath.TabIndex = 2;
+            labelLogPath.Text = "Log file (on the service machine, empty for no file)";
+            // 
+            // textBoxLogPath
+            // 
+            textBoxLogPath.Location = new Point(8, 83);
+            textBoxLogPath.Name = "textBoxLogPath";
+            textBoxLogPath.Size = new Size(400, 23);
+            textBoxLogPath.TabIndex = 3;
+            // 
+            // labelLogFileMaxSizeMB
+            // 
+            labelLogFileMaxSizeMB.AutoSize = true;
+            labelLogFileMaxSizeMB.Location = new Point(8, 111);
+            labelLogFileMaxSizeMB.Name = "labelLogFileMaxSizeMB";
+            labelLogFileMaxSizeMB.Size = new Size(134, 15);
+            labelLogFileMaxSizeMB.TabIndex = 4;
+            labelLogFileMaxSizeMB.Text = "Roll the file over at (MB)";
+            // 
+            // textBoxLogFileMaxSizeMB
+            // 
+            textBoxLogFileMaxSizeMB.Location = new Point(8, 129);
+            textBoxLogFileMaxSizeMB.Name = "textBoxLogFileMaxSizeMB";
+            textBoxLogFileMaxSizeMB.Size = new Size(116, 23);
+            textBoxLogFileMaxSizeMB.TabIndex = 5;
+            // 
+            // labelLogFileRetainedCount
+            // 
+            labelLogFileRetainedCount.AutoSize = true;
+            labelLogFileRetainedCount.Location = new Point(210, 111);
+            labelLogFileRetainedCount.Name = "labelLogFileRetainedCount";
+            labelLogFileRetainedCount.Size = new Size(106, 15);
+            labelLogFileRetainedCount.TabIndex = 6;
+            labelLogFileRetainedCount.Text = "Rolled files to keep";
+            // 
+            // textBoxLogFileRetainedCount
+            // 
+            textBoxLogFileRetainedCount.Location = new Point(210, 129);
+            textBoxLogFileRetainedCount.Name = "textBoxLogFileRetainedCount";
+            textBoxLogFileRetainedCount.Size = new Size(116, 23);
+            textBoxLogFileRetainedCount.TabIndex = 7;
+            // 
+            // checkBoxLogToEventLog
+            // 
+            checkBoxLogToEventLog.AutoSize = true;
+            checkBoxLogToEventLog.Location = new Point(8, 160);
+            checkBoxLogToEventLog.Name = "checkBoxLogToEventLog";
+            checkBoxLogToEventLog.Size = new Size(349, 19);
+            checkBoxLogToEventLog.TabIndex = 8;
+            checkBoxLogToEventLog.Text = "Also write warnings and exceptions to the Windows event log";
+            checkBoxLogToEventLog.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxManagementListenOnIPv6
+            // 
+            checkBoxManagementListenOnIPv6.AutoSize = true;
+            checkBoxManagementListenOnIPv6.Location = new Point(6, 202);
+            checkBoxManagementListenOnIPv6.Name = "checkBoxManagementListenOnIPv6";
+            checkBoxManagementListenOnIPv6.Size = new Size(233, 19);
+            checkBoxManagementListenOnIPv6.TabIndex = 0;
+            checkBoxManagementListenOnIPv6.Text = "Accept IPv6 connections as well as IPv4";
+            checkBoxManagementListenOnIPv6.UseVisualStyleBackColor = true;
             // 
             // buttonSave
             // 
@@ -296,12 +284,11 @@
             Shown += FormServerSettings_Shown;
             tabControl1.ResumeLayout(false);
             tabPageUsers.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).EndInit();
             tabPageService.ResumeLayout(false);
+            tabPageService.PerformLayout();
             groupBoxLogging.ResumeLayout(false);
             groupBoxLogging.PerformLayout();
-            groupBoxNetwork.ResumeLayout(false);
-            groupBoxNetwork.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).EndInit();
             ResumeLayout(false);
         }
 
@@ -328,7 +315,6 @@
         private Label labelLogFileRetainedCount;
         private TextBox textBoxLogFileRetainedCount;
         private CheckBox checkBoxLogToEventLog;
-        private GroupBox groupBoxNetwork;
         private CheckBox checkBoxManagementListenOnIPv6;
     }
 }

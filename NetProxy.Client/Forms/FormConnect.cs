@@ -4,6 +4,7 @@ using NetProxy.Library;
 using NTDLS.Helpers;
 using NTDLS.Localization;
 using NTDLS.Persistence;
+using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 using NTDLS.WinFormsHelpers.Forms;
 using System.ComponentModel;
@@ -17,14 +18,37 @@ namespace NetProxy.Client.Forms
         private BackgroundWorker? _worker = null;
         private string _connectMessage = string.Empty;
 
+        private RmClient? _client = null;
+
         public ConnectionInfo GetConnectionInfo()
         {
             return _connectionInfo;
         }
 
+        /// <summary>
+        /// The connection that was made when the user connected: encrypted and logged in, ready to use. The caller owns it from here on.
+        /// </summary>
+        public RmClient TakeClient()
+        {
+            var client = _client.EnsureNotNull();
+            _client = null;
+            return client;
+        }
+
+        /// <summary>
+        /// A connection that nobody took is not left open. This is on disposal rather than on closing, because the form closes
+        /// as soon as it has connected, which is before the caller has had the chance to take the connection.
+        /// </summary>
+        private void FormConnect_Disposed(object? sender, EventArgs e)
+        {
+            try { _client?.Disconnect(); } catch { }
+            _client = null;
+        }
+
         public FormConnect()
         {
             InitializeComponent();
+            Disposed += FormConnect_Disposed;
             FormLocalizer.Apply(this);
             Theming.InitializeForm(this);
             SetupToolTips();
@@ -207,7 +231,7 @@ namespace NetProxy.Client.Forms
 
             _worker.EnsureNotNull().ReportProgress(0, Localize("Connecting..."));
 
-            //Connects and logs in, which is what every other window of the console does too.
+            //Connects, encrypts the connection and logs in. The connection is kept for the main window to use.
             var client = MessageClientFactory.Create(_connectionInfo, out var error);
 
             if (client == null)
@@ -216,14 +240,7 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            try
-            {
-                client.Disconnect();
-            }
-            catch
-            {
-            }
-
+            _client = client;
             e.Result = true;
         }
 

@@ -1,6 +1,6 @@
+using NetProxy.Library.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using NetProxy.Library.Utilities;
 
 namespace NetProxy.Library.Payloads
 {

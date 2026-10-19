@@ -1,9 +1,7 @@
+using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
-using NetProxy.Library.Utilities;
-
 using System.Text;
 using System.Text.RegularExpressions;
-using NetProxy.Library;
 
 namespace NetProxy.Service.Http
 {

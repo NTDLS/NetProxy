@@ -15,6 +15,7 @@ namespace NetProxy.Service
         private readonly object _saveLock = new();
         private readonly NpProxyCollection _proxies = new();
         private readonly ConcurrentDictionary<Guid, bool> _authenticatedConnections = new();
+        private readonly ConcurrentDictionary<Guid, ConnectionCryptography> _connectionCryptography = new();
         private RmServer? _messageServer;
 
         /// <summary>
@@ -22,8 +23,49 @@ namespace NetProxy.Service
         /// </summary>
         public NpConfiguration Configuration { get; private set; } = new() { ManagementPort = Constants.DefaultManagementPort };
 
+        private sealed class ConnectionCryptography(ManagementCryptographyProvider provider)
+        {
+            public ManagementCryptographyProvider Provider { get; } = provider;
+            public volatile bool IsApplied;
+        }
+
+        /// <summary>
+        /// Keeps the key for a connection. It is not used until the console asks for it to be applied, because the reply to the
+        /// key exchange (and the request to apply) have to be readable by the console before it has the key.
+        /// </summary>
+        public void InitializeCryptography(Guid connectionId, byte[] sharedSecret)
+            => _connectionCryptography[connectionId] = new ConnectionCryptography(new ManagementCryptographyProvider(sharedSecret));
+
+        public void ApplyCryptography(Guid connectionId)
+        {
+            if (_connectionCryptography.TryGetValue(connectionId, out var cryptography) == false)
+            {
+                throw new Exception("The key exchange has not been done.");
+            }
+
+            cryptography.IsApplied = true;
+        }
+
+        public bool IsEncrypted(Guid connectionId)
+            => _connectionCryptography.TryGetValue(connectionId, out var cryptography) && cryptography.IsApplied;
+
+        public bool TryGetAppliedCryptography(Guid connectionId, out ManagementCryptographyProvider provider)
+        {
+            if (_connectionCryptography.TryGetValue(connectionId, out var cryptography) && cryptography.IsApplied)
+            {
+                provider = cryptography.Provider;
+                return true;
+            }
+
+            provider = null!;
+            return false;
+        }
+
         public void RemoveAuthenticated(Guid connectionId)
-            => _authenticatedConnections.TryRemove(connectionId, out _);
+        {
+            _authenticatedConnections.TryRemove(connectionId, out _);
+            _connectionCryptography.TryRemove(connectionId, out _);
+        }
 
         public void AddAuthenticated(Guid connectionId)
             => _authenticatedConnections[connectionId] = true;
@@ -213,6 +255,8 @@ namespace NetProxy.Service
                     Parameter = this,
                     ListenOnIPv6 = Configuration.Settings.ManagementListenOnIPv6
                 });
+
+                server.SetCryptographyProvider(new ServiceCryptographyProvider(this));
 
                 server.AddHandler(new NpServiceManagerNotificationHandlers());
                 server.AddHandler(new NpServiceManagerQueryHandlers());

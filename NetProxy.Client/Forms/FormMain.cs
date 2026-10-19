@@ -44,6 +44,7 @@ namespace NetProxy.Client.Forms
             ApplyLanguage();
 
             dataGridViewProxys.SelectionChanged += (_, _) => UpdateChart();
+            dataGridViewProxys.KeyDown += DataGridViewProxys_KeyDown;
 
             _statsTimer.Tick += StatsTimer_Tick;
         }
@@ -177,30 +178,26 @@ namespace NetProxy.Client.Forms
                     _messageClient.Disconnect();
                 }
 
+                //The connect window made the connection: it is encrypted and logged in already.
                 var connectionInfo = formConnect.GetConnectionInfo();
+                var client = formConnect.TakeClient();
 
-                var client = MessageClientFactory.Create(connectionInfo, out var error);
-                if (client != null)
-                {
-                    _connectionInfo = connectionInfo;
-                    _messageClient = client;
-                    _history.Clear();
-                    _lastStatistics = [];
+                _connectionInfo = connectionInfo;
+                _messageClient = client;
+                _history.Clear();
+                _lastStatistics = [];
 
-                    _connectionLost = OnConnectionLost;
-                    client.OnNotificationReceived += MessageClient_OnNotificationReceived;
-                    client.OnDisconnected += MessageClient_OnDisconnected;
+                _connectionLost = OnConnectionLost;
+                client.OnNotificationReceived += MessageClient_OnNotificationReceived;
+                client.OnDisconnected += MessageClient_OnDisconnected;
 
-                    Text = $"{Constants.FriendlyName} - {connectionInfo.ServerName}";
-                    UpdateConnectionStatus();
+                Text = $"{Constants.FriendlyName} - {connectionInfo.ServerName}";
+                UpdateConnectionStatus();
 
-                    RefreshProxyList();
+                RefreshProxyList();
 
-                    _statsTimer.Start();
-                    return true;
-                }
-
-                MessageBox.Show(error ?? Localize("Could not connect to the service."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                _statsTimer.Start();
+                return true;
             }
 
             _statsTimer.Start();
@@ -441,8 +438,40 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        /// <summary>
+        /// Escape deselects the proxy, which shows the chart of all of the proxies again.
+        /// </summary>
+        private void DataGridViewProxys_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                DeselectProxy();
+                e.Handled = true;
+            }
+        }
+
+        private void DeselectProxy()
+        {
+            dataGridViewProxys.ClearSelection();
+            dataGridViewProxys.CurrentCell = null;
+            UpdateChart();
+        }
+
         private void DataGridViewProxys_MouseDown(object? sender, MouseEventArgs e)
         {
+            if (e.Button == MouseButtons.Left)
+            {
+                //Clicking empty space, or Ctrl-clicking the selected proxy, deselects it.
+                var hit = dataGridViewProxys.HitTest(e.X, e.Y);
+                if (hit.Type == DataGridViewHitTestType.None
+                    || (hit.RowIndex >= 0 && ModifierKeys.HasFlag(Keys.Control) && dataGridViewProxys.Rows[hit.RowIndex].Selected))
+                {
+                    DeselectProxy();
+                }
+
+                return;
+            }
+
             if (e.Button == MouseButtons.Right)
             {
                 NpProxyGridItem? proxy = null;

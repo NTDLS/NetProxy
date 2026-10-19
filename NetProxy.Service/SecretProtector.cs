@@ -1,8 +1,6 @@
+using NetProxy.Library.Utilities;
 using System.Security.Cryptography;
 using System.Text;
-using NetProxy.Library;
-using NetProxy.Library.Utilities;
-using static NetProxy.Library.Constants;
 
 namespace NetProxy.Service
 {

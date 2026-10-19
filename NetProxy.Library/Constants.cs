@@ -6,6 +6,11 @@ namespace NetProxy.Library
     {
         public const string FriendlyName = "NetProxy";
         public const int DefaultManagementPort = 5854;
+
+        /// <summary>
+        /// The size, in bits, of the key that a management connection is encrypted with.
+        /// </summary>
+        public const int ManagementCryptographyKeySize = 4096;
         public const int DefaultInitialBufferSize = 10 * 1024;
         public const int DefaultMaxBufferSize = 64 * 1024;
         public const int DefaultStickySessionExpiration = 60 * 60;

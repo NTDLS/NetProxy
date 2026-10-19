@@ -77,7 +77,7 @@ The configuration is stored in the common application data folder: `C:\ProgramDa
 ### Security
 
 * A new installation has one management user, `administrator`, with an **empty password**. Set a password first. The service logs a warning while any user has none.
-* The management connection between the console and the service is **not encrypted**. Passwords are only sent as hashes, but proxy settings (including a certificate password) are sent as they are. Use it on a trusted network, or through a tunnel such as [NetTunnel](https://github.com/NTDLS/NetTunnel) or a VPN, and limit who can reach the management port (5854).
+* The management connection between the console and the service is **encrypted**: on connecting, the two agree on a key (NTDLS.SecureKeyExchange) and everything after that, including the login and every setting, is encrypted (NTDLS.Permafrost). The service refuses a login over a connection that is not encrypted, so the console and the service have to be the same version. The connection is encrypted but the service is not authenticated to the console, so on an untrusted network still limit who can reach the management port (5854), for example with a VPN or [NetTunnel](https://github.com/NTDLS/NetTunnel).
 
 ## Building
 

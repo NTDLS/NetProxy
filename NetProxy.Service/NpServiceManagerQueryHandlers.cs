@@ -1,9 +1,10 @@
-﻿using NetProxy.Library.Payloads;
-using NetProxy.Library;
+﻿using NetProxy.Library;
+using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
+using NTDLS.SecureKeyExchange;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -11,6 +12,31 @@ namespace NetProxy.Service
 {
     internal class NpServiceManagerQueryHandlers : NpServiceManagerMessageHandlerBase, IRmMessageHandler
     {
+        /// <summary>
+        /// A console has connected and starts the key exchange. The key is kept, but not applied until the console says it is
+        /// ready for it (<see cref="OnQueryApplyCryptography"/>), because this reply has to be readable without it.
+        /// </summary>
+        public QueryRequestKeyExchangeReply OnQueryRequestKeyExchange(RmContext context, QueryRequestKeyExchange query)
+        {
+            var serviceManager = GetServiceManager(context);
+
+            var compoundNegotiator = new CompoundNegotiator();
+            var replyToken = compoundNegotiator.ApplyNegotiationToken(query.NegotiationToken);
+
+            serviceManager.InitializeCryptography(context.ConnectionId, compoundNegotiator.SharedSecret);
+
+            return new QueryRequestKeyExchangeReply(replyToken);
+        }
+
+        /// <summary>
+        /// The console is switching to encryption: everything it sends after this request is encrypted, and so is the reply to it.
+        /// </summary>
+        public QueryApplyCryptographyReply OnQueryApplyCryptography(RmContext context, QueryApplyCryptography query)
+        {
+            GetServiceManager(context).ApplyCryptography(context.ConnectionId);
+            return new QueryApplyCryptographyReply();
+        }
+
         public QueryLoginReply OnQueryLogin(RmContext context, QueryLogin query)
         {
             var serviceManager = GetServiceManager(context);
@@ -19,6 +45,15 @@ namespace NetProxy.Service
 
             try
             {
+                //Nobody logs in (and sends a password hash) over a connection that is not encrypted.
+                if (serviceManager.IsEncrypted(context.ConnectionId) == false)
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Warning,
+                        $"A login was refused because connection {context.ConnectionId} is not encrypted. The console is probably an older version.");
+                    reply.Message = "The connection is not encrypted. Update the console to the same version as the service.";
+                    return reply;
+                }
+
                 bool isValid;
 
                 lock (serviceManager.Configuration)

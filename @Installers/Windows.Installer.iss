@@ -14,7 +14,7 @@
  Uninstallable                   = Yes
  Compression                     = zip/9
  OutputBaseFilename              = NetProxy {#AppVersion}
- ArchitecturesInstallIn64BitMode = x64
+ ArchitecturesInstallIn64BitMode = x64os
  ArchitecturesAllowed            = x64
  AppPublisher                    = NetworkDLS
  AppPublisherURL                 = http://www.NetworkDLS.com/

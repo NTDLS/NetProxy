@@ -19,3 +19,7 @@ NetProxy.Client/bin/
 .vs/
 
 *.user
+
+\@Installers/publish/
+
+\@Installers/output/

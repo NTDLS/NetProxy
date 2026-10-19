@@ -5,6 +5,7 @@
     <File Path="@Installers/Linux Install Readme.txt" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="Localization.bat" />
     <File Path="README.md" />
     <File Path="To-Do.txt" />
   </Folder>

@@ -44,6 +44,7 @@ namespace NetProxy.Client.Forms
             exitToolStripMenuItem = new ToolStripMenuItem();
             settingsToolStripMenuItem = new ToolStripMenuItem();
             configurationToolStripMenuItem = new ToolStripMenuItem();
+            languageToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             statusStripMain = new StatusStrip();
@@ -171,7 +172,7 @@ namespace NetProxy.Client.Forms
             // 
             // settingsToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem });
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem, languageToolStripMenuItem });
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(61, 20);
             settingsToolStripMenuItem.Text = "Settings";
@@ -182,6 +183,13 @@ namespace NetProxy.Client.Forms
             configurationToolStripMenuItem.Size = new Size(148, 22);
             configurationToolStripMenuItem.Text = "Configuration";
             configurationToolStripMenuItem.Click += ConfigurationToolStripMenuItem_Click;
+            // 
+            // languageToolStripMenuItem
+            // 
+            languageToolStripMenuItem.Name = "languageToolStripMenuItem";
+            languageToolStripMenuItem.Size = new Size(148, 22);
+            languageToolStripMenuItem.Text = "Language...";
+            languageToolStripMenuItem.Click += LanguageToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
@@ -263,6 +271,7 @@ namespace NetProxy.Client.Forms
         private ToolStripMenuItem changeConnectionToolStripMenuItem;
         private ToolStripMenuItem settingsToolStripMenuItem;
         private ToolStripMenuItem configurationToolStripMenuItem;
+        private ToolStripMenuItem languageToolStripMenuItem;
         private StatusStrip statusStripMain;
         private Panel panelPerformance;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartPerformance;

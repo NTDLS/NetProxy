@@ -253,7 +253,7 @@ namespace NetProxy.Service.Proxy
                 TargetHost = NpNetwork.NormalizeHost(endpoint.Address)
             };
 
-            if (!endpoint.TlsValidateSSLCertificate)
+            if (!endpoint.TlsIgnoreCertificateErrors)
             {
                 options.RemoteCertificateValidationCallback = (_, _, _, _) => true;
             }

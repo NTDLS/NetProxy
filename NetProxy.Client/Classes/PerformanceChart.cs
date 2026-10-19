@@ -149,9 +149,9 @@ namespace NetProxy.Client.Classes
             }
 
             var last = samples.Count > 0 ? samples[^1] : default;
-            sent.LegendText = $"Sent {Formatting.Rate(last.SentPerSecond)}";
-            received.LegendText = $"Received {Formatting.Rate(last.ReceivedPerSecond)}";
-            connections.LegendText = $"Connections {Formatting.Count(last.Connections)}";
+            sent.LegendText = Localize("Sent {0}", Formatting.Rate(last.SentPerSecond));
+            received.LegendText = Localize("Received {0}", Formatting.Rate(last.ReceivedPerSecond));
+            connections.LegendText = Localize("Connections {0}", Formatting.Count(last.Connections));
 
             var area = _chart.ChartAreas[AreaName];
             area.AxisX.Minimum = (now - PerformanceHistory.Window).ToOADate();
@@ -209,7 +209,9 @@ namespace NetProxy.Client.Classes
             var received = _chart.Series[ReceivedName].Points[index].YValues[0];
             var connections = _chart.Series[ConnectionsName].Points[index].YValues[0];
 
-            e.Text = $"{time:HH:mm:ss}\nSent to clients: {Formatting.Rate(sent)}\nReceived from clients: {Formatting.Rate(received)}\nConnections: {Formatting.Count(connections)}";
+            e.Text = $"{time:HH:mm:ss}\n" + Localize("Sent to clients: {0}", Formatting.Rate(sent))
+                + "\n" + Localize("Received from clients: {0}", Formatting.Rate(received))
+                + "\n" + Localize("Connections: {0}", Formatting.Count(connections));
         }
     }
 }

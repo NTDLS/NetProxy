@@ -38,6 +38,7 @@
             label3 = new Label();
             pictureBox1 = new PictureBox();
             buttonAbout = new Button();
+            buttonLanguage = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -129,12 +130,25 @@
             buttonAbout.UseVisualStyleBackColor = true;
             buttonAbout.Click += ButtonAbout_Click;
             // 
+            // buttonLanguage
+            // 
+            buttonLanguage.Location = new Point(104, 170);
+            buttonLanguage.Margin = new Padding(4, 3, 4, 3);
+            buttonLanguage.Name = "buttonLanguage";
+            buttonLanguage.Size = new Size(83, 27);
+            buttonLanguage.TabIndex = 10;
+            buttonLanguage.TabStop = false;
+            buttonLanguage.Text = "Language";
+            buttonLanguage.UseVisualStyleBackColor = true;
+            buttonLanguage.Click += ButtonLanguage_Click;
+            // 
             // FormConnect
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(380, 203);
             Controls.Add(buttonAbout);
+            Controls.Add(buttonLanguage);
             Controls.Add(pictureBox1);
             Controls.Add(textBoxPassword);
             Controls.Add(label3);
@@ -169,5 +183,6 @@
         private Label label3;
         private PictureBox pictureBox1;
         private Button buttonAbout;
+        private Button buttonLanguage;
     }
 }

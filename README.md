@@ -48,6 +48,10 @@ Proxies listen on IPv4, IPv6, or both (one dual-stack listener) when they listen
 
 The service writes to a rolling log file (`Logs/NetProxy.log` in its installation folder by default, rolled over at a size you choose), to the Windows event log (warnings and exceptions), and to the console when it is run by hand. The level, the file and the roll-over can be changed in *Settings > Configuration > Service* and take effect immediately.
 
+### Language
+
+The console is localized with [NTDLS.Localization](https://github.com/NTDLS/NTDLS.Localization). Choose the language with *Settings > Language...* or the **Language** button on the connect window; the choice is remembered per user. The translations are in `NetProxy.Client\Translations\Translations.db`, which is created by `Localization.bat` (it runs [LocalizationScan](https://github.com/NTDLS/LocalizationScan), which needs an API key). Run it after adding or changing a user-visible string. The service itself is not localized.
+
 ### Where things are kept
 
 The configuration is stored in the common application data folder: `C:\ProgramData\NetProxy` on Windows, `/usr/share/NetProxy` on Linux (see the Linux install notes in `@Installers`). The `NETPROXY_CONFIG_NAME` environment variable names a different folder, so a test instance does not touch the real configuration.

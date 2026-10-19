@@ -25,7 +25,7 @@ namespace NetProxy.Client.Classes
                 var loginResult = client.Query(new QueryLogin(connectionInfo.UserName, NpUtility.Sha256(connectionInfo.Password)));
                 if (loginResult.Result != true)
                 {
-                    throw new Exception(string.IsNullOrEmpty(loginResult.Message) ? "The user name or password is not correct." : loginResult.Message);
+                    throw new Exception(string.IsNullOrEmpty(loginResult.Message) ? Localize("The user name or password is not correct.") : loginResult.Message);
                 }
 
                 return client;

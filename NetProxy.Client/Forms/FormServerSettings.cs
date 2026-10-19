@@ -6,6 +6,7 @@ using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NTDLS.Helpers;
+using NTDLS.Localization;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 
@@ -45,12 +46,16 @@ namespace NetProxy.Client.Forms
         public FormServerSettings()
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
+            LocalizeGrids();
             Theming.InitializeForm(this);
         }
 
         public FormServerSettings(ConnectionInfo connectionInfo)
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
+            LocalizeGrids();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -61,10 +66,20 @@ namespace NetProxy.Client.Forms
             _messageClient = MessageClientFactory.Create(connectionInfo, out var error);
             if (_messageClient == null)
             {
-                MessageBox.Show(error ?? "Could not connect to the service.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(error ?? Localize("Could not connect to the service."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 Close();
                 return;
             }
+        }
+
+        /// <summary>
+        /// The headers of a grid are not translated by FormLocalizer.
+        /// </summary>
+        private void LocalizeGrids()
+        {
+            ColumnUsername.HeaderText = Localize("Username");
+            ColumnSetPassword.HeaderText = Localize("Set Password");
+            ColumnDescription.HeaderText = Localize("Description");
         }
 
         /// <summary>
@@ -74,28 +89,28 @@ namespace NetProxy.Client.Forms
         {
             var toolTips = ToolTipHelpers.CreateToolTipControl(this);
 
-            ColumnUsername.ToolTipText = "The name the user logs in with. A name that was saved cannot be changed: delete the user and add another.";
-            ColumnSetPassword.ToolTipText = "Set the password of this user. A new user needs one.";
-            ColumnDescription.ToolTipText = "Notes about this user.";
+            ColumnUsername.ToolTipText = Localize("The name the user logs in with. A name that was saved cannot be changed: delete the user and add another.");
+            ColumnSetPassword.ToolTipText = Localize("Set the password of this user. A new user needs one.");
+            ColumnDescription.ToolTipText = Localize("Notes about this user.");
 
             toolTips.AddControls([labelLogLevel, comboBoxLogLevel],
-                "The least important kind of message that is logged. Verbose logs everything, including every connection. Information logs what the service does."
-                + " Warning logs only problems. Exception logs only failures.");
+                Localize("The least important kind of message that is logged. Verbose logs everything, including every connection. Information logs what the service does."
+                + " Warning logs only problems. Exception logs only failures."));
 
             toolTips.AddControls([labelLogPath, textBoxLogPath],
-                "The log file, on the machine that the service runs on. A relative path is relative to the folder the service is installed in. Leave it empty to not write a file.");
+                Localize("The log file, on the machine that the service runs on. A relative path is relative to the folder the service is installed in. Leave it empty to not write a file."));
 
             toolTips.AddControls([labelLogFileMaxSizeMB, textBoxLogFileMaxSizeMB],
-                "When the log file reaches this size in megabytes it is renamed to NetProxy.1.log and a new one is started (1 to 10240).");
+                Localize("When the log file reaches this size in megabytes it is renamed to NetProxy.1.log and a new one is started (1 to 10240)."));
 
             toolTips.AddControls([labelLogFileRetainedCount, textBoxLogFileRetainedCount],
-                "How many of the older log files to keep, in addition to the current one (0 to 1000).");
+                Localize("How many of the older log files to keep, in addition to the current one (0 to 1000)."));
 
             toolTips.AddControls([checkBoxLogToEventLog],
-                "Also write warnings and exceptions to the Windows Application event log, which is where administrators and monitoring tools look. Not available on Linux.");
+                Localize("Also write warnings and exceptions to the Windows Application event log, which is where administrators and monitoring tools look. Not available on Linux."));
 
             toolTips.AddControls([checkBoxManagementListenOnIPv6],
-                "Let the management console connect over IPv6 as well as IPv4 (one listener accepts both). It takes effect when the service restarts.");
+                Localize("Let the management console connect over IPv6 as well as IPv4 (one listener accepts both). It takes effect when the service restarts."));
         }
 
         private void FormServerSettings_Shown(object? sender, EventArgs e)
@@ -141,7 +156,7 @@ namespace NetProxy.Client.Forms
                 if (passwordHash == string.Empty && _existingUsers.Contains(userName) == false)
                 {
                     tabControl1.SelectedTab = tabPageUsers;
-                    MessageBox.Show($"The new user '{userName}' needs a password. Use [Set Password].", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    MessageBox.Show(Localize("The new user '{0}' needs a password. Use [Set Password].", userName), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return;
                 }
 
@@ -157,7 +172,7 @@ namespace NetProxy.Client.Forms
             if (users.Count == 0)
             {
                 tabControl1.SelectedTab = tabPageUsers;
-                MessageBox.Show("There must be at least one user, otherwise nobody could log in.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(Localize("There must be at least one user, otherwise nobody could log in."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return;
             }
 
@@ -170,9 +185,9 @@ namespace NetProxy.Client.Forms
                     LogLevel = comboBoxLogLevel.SelectedItem is NpLogging.Severity level ? level : _settings.LogLevel,
                     LogPath = textBoxLogPath.Text.Trim(),
                     LogFileMaxSizeMB = textBoxLogFileMaxSizeMB.GetAndValidateNumeric(1, 10240,
-                        "The log file roll-over size (MB) must be between [min] and [max]."),
+                        Localize("The log file roll-over size (MB) must be between [min] and [max].")),
                     LogFileRetainedCount = textBoxLogFileRetainedCount.GetAndValidateNumeric(0, 1000,
-                        "The number of rolled log files to keep must be between [min] and [max]."),
+                        Localize("The number of rolled log files to keep must be between [min] and [max].")),
                     LogToEventLog = checkBoxLogToEventLog.Checked,
                     ManagementListenOnIPv6 = checkBoxManagementListenOnIPv6.Checked
                 };

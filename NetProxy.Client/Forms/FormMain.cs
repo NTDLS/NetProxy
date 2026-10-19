@@ -6,6 +6,7 @@ using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
 using NTDLS.Helpers;
+using NTDLS.Localization;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 using NTDLS.WinFormsHelpers.Forms;
@@ -21,10 +22,11 @@ namespace NetProxy.Client.Forms
         private readonly System.Windows.Forms.Timer _statsTimer = new() { Interval = 1000 };
         private readonly PerformanceHistory _history = new();
         private readonly PerformanceChart _performanceChart;
+        private readonly UISettings _settings = UISettings.Load();
         private bool _timerTicking = false;
         private List<NpProxyGridStats> _lastStatistics = [];
 
-        private readonly ToolStripStatusLabel _statusConnection = new() { Spring = true, TextAlign = ContentAlignment.MiddleLeft, Text = "Not connected" };
+        private readonly ToolStripStatusLabel _statusConnection = new() { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
         private readonly ToolStripStatusLabel _statusProxies = new() { BorderSides = ToolStripStatusLabelBorderSides.Left };
         private readonly ToolStripStatusLabel _statusConnections = new() { BorderSides = ToolStripStatusLabelBorderSides.Left };
         private readonly ToolStripStatusLabel _statusTraffic = new() { BorderSides = ToolStripStatusLabelBorderSides.Left };
@@ -32,28 +34,79 @@ namespace NetProxy.Client.Forms
         public FormMain()
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
             Theming.InitializeForm(this);
-            SetupToolTips();
 
             statusStripMain.Items.AddRange([_statusConnection, _statusProxies, _statusConnections, _statusTraffic]);
 
             _performanceChart = new PerformanceChart(chartPerformance);
-            _performanceChart.Render([], "All proxies", DateTime.Now);
+
+            ApplyLanguage();
 
             dataGridViewProxys.SelectionChanged += (_, _) => UpdateChart();
 
             _statsTimer.Tick += StatsTimer_Tick;
         }
 
+        #region Language.
+
+        private void LanguageToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            using var form = new FormLanguage(_settings.Language) { Icon = Icon };
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            _settings.Language = form.SelectedLanguage;
+            Localizer.Default.SetLanguage(_settings.Language);
+            _settings.Save();
+            ApplyLanguage();
+        }
+
+        /// <summary>
+        /// Puts the text of the window in the current language. Called at the start and whenever the language changes.
+        /// FormLocalizer translates what the designer put on the controls; the rest is set here.
+        /// </summary>
+        private void ApplyLanguage()
+        {
+            FormLocalizer.Apply(this);
+
+            //The headers of a grid are not translated by FormLocalizer.
+            ColumnStatus.HeaderText = Localize("Status");
+            ColumnName.HeaderText = Localize("Name");
+            ColumnProxyType.HeaderText = Localize("Type");
+            ColummListenPort.HeaderText = Localize("Port");
+            ColumnBytesTransferred.HeaderText = Localize("Bytes Transferred");
+            ColumnTotalConnections.HeaderText = Localize("Total Conn.");
+            ColumnCurrentConnections.HeaderText = Localize("Curr. Conn.");
+
+            SetupToolTips();
+
+            Text = _connectionInfo != null ? $"{Constants.FriendlyName} - {_connectionInfo.ServerName}" : Constants.FriendlyName;
+            UpdateConnectionStatus();
+            UpdateStatusBar();
+            UpdateChart();
+        }
+
+        private void UpdateConnectionStatus()
+        {
+            _statusConnection.Text = _messageClient != null && _connectionInfo != null
+                ? Localize("Connected to {0} as {1}", NpUtility.FormatHostPort(_connectionInfo.ServerName, _connectionInfo.Port), _connectionInfo.UserName)
+                : Localize("Not connected");
+        }
+
+        #endregion
+
         private void SetupToolTips()
         {
-            ColumnStatus.ToolTipText = "A green check is a proxy that is running, a red cross one that is stopped.";
-            ColumnName.ToolTipText = "The name of the proxy.";
-            ColumnProxyType.ToolTipText = "The traffic type of the listener, and the IP versions it listens on.";
-            ColummListenPort.ToolTipText = "The port that the proxy listens on.";
-            ColumnBytesTransferred.ToolTipText = "Everything that the proxy has passed to and from its clients since the service started.";
-            ColumnTotalConnections.ToolTipText = "The connections that the proxy has accepted since the service started.";
-            ColumnCurrentConnections.ToolTipText = "The connections that are open now.";
+            ColumnStatus.ToolTipText = Localize("A green check is a proxy that is running, a red cross one that is stopped.");
+            ColumnName.ToolTipText = Localize("The name of the proxy.");
+            ColumnProxyType.ToolTipText = Localize("The traffic type of the listener, and the IP versions it listens on.");
+            ColummListenPort.ToolTipText = Localize("The port that the proxy listens on.");
+            ColumnBytesTransferred.ToolTipText = Localize("Everything that the proxy has passed to and from its clients since the service started.");
+            ColumnTotalConnections.ToolTipText = Localize("The connections that the proxy has accepted since the service started.");
+            ColumnCurrentConnections.ToolTipText = Localize("The connections that are open now.");
         }
 
         private void FormMain_Shown(object? sender, EventArgs e)
@@ -109,6 +162,13 @@ namespace NetProxy.Client.Forms
 
             using var formConnect = new FormConnect();
 
+            //The language can be chosen on the connect window, and this window follows it.
+            formConnect.LanguageChanged += (_, _) =>
+            {
+                _settings.Language = UISettings.Load().Language;
+                ApplyLanguage();
+            };
+
             if (formConnect.ShowDialog() == DialogResult.OK)
             {
                 if (_messageClient != null)
@@ -132,7 +192,7 @@ namespace NetProxy.Client.Forms
                     client.OnDisconnected += MessageClient_OnDisconnected;
 
                     Text = $"{Constants.FriendlyName} - {connectionInfo.ServerName}";
-                    _statusConnection.Text = $"Connected to {NpUtility.FormatHostPort(connectionInfo.ServerName, connectionInfo.Port)} as {connectionInfo.UserName}";
+                    UpdateConnectionStatus();
 
                     RefreshProxyList();
 
@@ -140,7 +200,7 @@ namespace NetProxy.Client.Forms
                     return true;
                 }
 
-                MessageBox.Show(error ?? "Could not connect to the service.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(error ?? Localize("Could not connect to the service."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
 
             _statsTimer.Start();
@@ -182,7 +242,7 @@ namespace NetProxy.Client.Forms
             }
             catch (Exception ex)
             {
-                _statusConnection.Text = $"Could not read the proxy list: {ex.GetBaseException().Message}";
+                _statusConnection.Text = Localize("Could not read the proxy list: {0}", ex.GetBaseException().Message);
             }
         }
 
@@ -196,7 +256,8 @@ namespace NetProxy.Client.Forms
             try
             {
                 _statsTimer.Stop();
-                _statusConnection.Text = "Not connected";
+                _messageClient = null;
+                UpdateConnectionStatus();
                 dataGridViewProxys.DataSource = null;
                 if (Visible)
                 {
@@ -276,11 +337,13 @@ namespace NetProxy.Client.Forms
             var latest = _history.Get(PerformanceHistory.All);
             var last = latest.Count > 0 ? latest[^1] : default;
 
-            _statusProxies.Text = $"Proxies: {_lastStatistics.Count(o => o.IsRunning)} of {_lastStatistics.Count} running";
-            _statusConnections.Text = $"Connections: {Formatting.Count(_lastStatistics.Sum(o => o.CurrentConnections))}"
-                + $" ({Formatting.Count(_lastStatistics.Aggregate(0UL, (sum, o) => sum + o.TotalConnections))} total)";
-            _statusTraffic.Text = $"Sent {Formatting.Rate(last.SentPerSecond)} ({Formatting.Bytes(_lastStatistics.Aggregate(0UL, (sum, o) => sum + o.BytesWritten))})"
-                + $"   Received {Formatting.Rate(last.ReceivedPerSecond)} ({Formatting.Bytes(_lastStatistics.Aggregate(0UL, (sum, o) => sum + o.BytesRead))})";
+            _statusProxies.Text = Localize("Proxies: {0} of {1} running", _lastStatistics.Count(o => o.IsRunning), _lastStatistics.Count);
+            _statusConnections.Text = Localize("Connections: {0} ({1} total)",
+                Formatting.Count(_lastStatistics.Sum(o => o.CurrentConnections)),
+                Formatting.Count(_lastStatistics.Aggregate(0UL, (sum, o) => sum + o.TotalConnections)));
+            _statusTraffic.Text = Localize("Sent {0} ({1})   Received {2} ({3})",
+                Formatting.Rate(last.SentPerSecond), Formatting.Bytes(_lastStatistics.Aggregate(0UL, (sum, o) => sum + o.BytesWritten)),
+                Formatting.Rate(last.ReceivedPerSecond), Formatting.Bytes(_lastStatistics.Aggregate(0UL, (sum, o) => sum + o.BytesRead)));
         }
 
         /// <summary>
@@ -289,7 +352,7 @@ namespace NetProxy.Client.Forms
         private void UpdateChart()
         {
             var key = PerformanceHistory.All;
-            var title = "All proxies";
+            var title = Localize("All proxies");
 
             if (dataGridViewProxys.SelectedRows.Count > 0 && dataGridViewProxys.SelectedRows[0].DataBoundItem is NpProxyGridItem selected)
             {
@@ -394,18 +457,18 @@ namespace NetProxy.Client.Forms
 
                 ContextMenuStrip menu = new ContextMenuStrip();
                 menu.ItemClicked += Menu_ItemClicked;
-                menu.Items.Add("Add");
-                menu.Items.Add("Refresh");
+                UIUtility.AddMenuItem(menu, "Add", Localize("Add"));
+                UIUtility.AddMenuItem(menu, "Refresh", Localize("Refresh"));
                 menu.Items.Add("-");
-                menu.Items.Add("Start").Enabled = proxy != null && proxy.IsRunning == false;
-                menu.Items.Add("Stop").Enabled = proxy != null && proxy.IsRunning == true;
-                menu.Items.Add("Edit").Enabled = proxy != null;
+                UIUtility.AddMenuItem(menu, "Start", Localize("Start")).Enabled = proxy != null && proxy.IsRunning == false;
+                UIUtility.AddMenuItem(menu, "Stop", Localize("Stop")).Enabled = proxy != null && proxy.IsRunning == true;
+                UIUtility.AddMenuItem(menu, "Edit", Localize("Edit")).Enabled = proxy != null;
                 menu.Items.Add("-");
-                menu.Items.Add("Chart all proxies").Enabled = dataGridViewProxys.SelectedRows.Count > 0;
+                UIUtility.AddMenuItem(menu, "Chart all proxies", Localize("Chart all proxies")).Enabled = dataGridViewProxys.SelectedRows.Count > 0;
 
                 if (proxy != null && (proxy.TrafficType == TrafficType.Http || proxy.TrafficType == TrafficType.Https))
                 {
-                    var bindingMenu = new ToolStripMenuItem("Browse");
+                    var bindingMenu = new ToolStripMenuItem(Localize("Browse")) { Tag = "Browse" };
 
                     foreach (var url in GetBrowseUrls(proxy))
                     {
@@ -422,7 +485,7 @@ namespace NetProxy.Client.Forms
                 }
 
                 menu.Items.Add("-");
-                menu.Items.Add("Delete").Enabled = proxy != null;
+                UIUtility.AddMenuItem(menu, "Delete", Localize("Delete")).Enabled = proxy != null;
                 menu.Show(dataGridViewProxys, e.X, e.Y);
             }
         }
@@ -445,12 +508,15 @@ namespace NetProxy.Client.Forms
                 proxyId = parsed;
             }
 
-            if (e.ClickedItem?.Text != "Browse")
+            //The tag is the key of the item, which does not depend on the language.
+            var key = e.ClickedItem?.Tag as string;
+
+            if (key != "Browse")
             {
                 (sender as ContextMenuStrip)?.Hide();
             }
 
-            switch (e.ClickedItem?.Text)
+            switch (key)
             {
                 case "Add":
                     using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), null))
@@ -473,7 +539,7 @@ namespace NetProxy.Client.Forms
                     RefreshProxyList();
                     break;
                 case "Stop":
-                    if (MessageBox.Show(@"Stop the selected proxy?", Constants.FriendlyName, MessageBoxButtons.YesNo,
+                    if (MessageBox.Show(Localize("Stop the selected proxy?"), Constants.FriendlyName, MessageBoxButtons.YesNo,
                             MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId));
@@ -491,7 +557,7 @@ namespace NetProxy.Client.Forms
                     }
                     break;
                 case "Delete":
-                    if (MessageBox.Show(@"Delete the selected proxy?", Constants.FriendlyName,
+                    if (MessageBox.Show(Localize("Delete the selected proxy?"), Constants.FriendlyName,
                         MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId));

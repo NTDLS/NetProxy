@@ -4,6 +4,7 @@ using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NTDLS.Helpers;
+using NTDLS.Localization;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 using System.Net;
@@ -27,12 +28,16 @@ namespace NetProxy.Client.Forms
         public FormProxy()
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
+            LocalizeGrids();
             Theming.InitializeForm(this);
         }
 
         public FormProxy(ConnectionInfo connectionInfo, Guid? proxyId)
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
+            LocalizeGrids();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -44,7 +49,7 @@ namespace NetProxy.Client.Forms
             _messageClient = MessageClientFactory.Create(connectionInfo, out var error);
             if (_messageClient == null)
             {
-                MessageBox.Show(error ?? "Could not connect to the service.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(error ?? Localize("Could not connect to the service."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 Close();
                 return;
             }
@@ -63,7 +68,7 @@ namespace NetProxy.Client.Forms
 
             var trafficTypes = new List<ComboItem>
             {
-                new ("Raw", TrafficType.Raw),
+                new (Localize("Raw"), TrafficType.Raw),
                 new ("HTTP", TrafficType.Http),
                 new ("HTTPS", TrafficType.Https)
             };
@@ -76,7 +81,7 @@ namespace NetProxy.Client.Forms
             {
                 new ("IPv4", BindingProtocol.IPv4),
                 new ("IPv6", BindingProtocol.IPv6),
-                new ("IPv4 and IPv6", BindingProtocol.Both)
+                new (Localize("IPv4 and IPv6"), BindingProtocol.Both)
             };
 
             comboBoxBindingProtocol.DisplayMember = "Display";
@@ -85,9 +90,9 @@ namespace NetProxy.Client.Forms
 
             var connectionPatterns = new List<ComboItem>
             {
-                new ("Balanced", ConnectionPattern.Balanced),
-                new ("Fail-Over", ConnectionPattern.FailOver),
-                new ("Round-Robbin", ConnectionPattern.RoundRobbin)
+                new (Localize("Balanced"), ConnectionPattern.Balanced),
+                new (Localize("Fail-Over"), ConnectionPattern.FailOver),
+                new (Localize("Round-Robbin"), ConnectionPattern.RoundRobbin)
             };
 
             comboBoxConnectionPattern.DisplayMember = "Display";
@@ -120,6 +125,29 @@ namespace NetProxy.Client.Forms
         }
 
         /// <summary>
+        /// The headers of a grid are not translated by FormLocalizer.
+        /// </summary>
+        private void LocalizeGrids()
+        {
+            ColumnBindingsEnabled.HeaderText = Localize("Enabled");
+            ColumnBindingsIPAddress.HeaderText = Localize("IP Address");
+            ColumnBindingsDescription.HeaderText = Localize("Description");
+            ColumnHTTPHeadersEnabled.HeaderText = Localize("Enabled");
+            ColumnHTTPHeadersType.HeaderText = Localize("Type");
+            ColumnHTTPHeadersVerb.HeaderText = Localize("Verb");
+            ColumnHTTPHeadersHeader.HeaderText = Localize("Header");
+            ColumnHTTPHeadersAction.HeaderText = Localize("Action");
+            ColumnHTTPHeadersValue.HeaderText = Localize("Value");
+            ColumnHTTPHeadersDescription.HeaderText = Localize("Description");
+            ColumnEndpointsEnabled.HeaderText = Localize("Enabled");
+            ColumnEndpointsAddress.HeaderText = Localize("Address");
+            ColumnEndpointsPort.HeaderText = Localize("Port");
+            ColumnEndpointsTrafficType.HeaderText = Localize("Traffic");
+            ColumnEndpointsValidateSSLCertificate.HeaderText = Localize("Validate Certificate");
+            ColumnEndpointsDescription.HeaderText = Localize("Description");
+        }
+
+        /// <summary>
         /// Tool-tips for the inputs: the label and the control that it is for show the same text, and so do the columns of the grids.
         /// </summary>
         private void SetupToolTips()
@@ -129,103 +157,103 @@ namespace NetProxy.Client.Forms
             #region General.
 
             toolTips.AddControls([label1, textBoxProxyName],
-                "A name for this proxy. It is only for your own identification.");
+                Localize("A name for this proxy. It is only for your own identification."));
 
             toolTips.AddControls([label2, comboBoxTrafficType],
-                "What the listener accepts. Raw passes any TCP protocol through untouched. HTTP lets the HTTP header rules change the requests and responses."
-                + " HTTPS terminates TLS with the certificate on the TLS tab, so that the header rules can be applied to HTTPS too.");
+                Localize("What the listener accepts. Raw passes any TCP protocol through untouched. HTTP lets the HTTP header rules change the requests and responses."
+                + " HTTPS terminates TLS with the certificate on the TLS tab, so that the header rules can be applied to HTTPS too."));
 
             toolTips.AddControls([checkBoxListenAutoStart],
-                "Start this proxy when the service starts.");
+                Localize("Start this proxy when the service starts."));
 
             toolTips.AddControls([label6, textBoxDescription],
-                "Notes about this proxy. They are only for you.");
+                Localize("Notes about this proxy. They are only for you."));
 
             #endregion
 
             #region Bindings.
 
             toolTips.AddControls([label4, textBoxListenPort],
-                "The port that the proxy listens on (1 to 65535).");
+                Localize("The port that the proxy listens on (1 to 65535)."));
 
             toolTips.AddControls([label10, comboBoxBindingProtocol],
-                "The IP version to listen on when listening on all addresses. IPv4 and IPv6 is one listener that accepts both."
-                + " Bindings that are listed use the IP version of their address.");
+                Localize("The IP version to listen on when listening on all addresses. IPv4 and IPv6 is one listener that accepts both."
+                + " Bindings that are listed use the IP version of their address."));
 
             toolTips.AddControls([checkBoxListenOnAllAddresses],
-                "Listen on every address of the machine that the service runs on. Clear it to listen only on the addresses in the list.");
+                Localize("Listen on every address of the machine that the service runs on. Clear it to listen only on the addresses in the list."));
 
             toolTips.AddControls([label7],
-                "The addresses to listen on, IPv4 or IPv6 (for example 192.168.1.5 or ::1). Only used when [Listen on All Addresses] is cleared.");
+                Localize("The addresses to listen on, IPv4 or IPv6 (for example 192.168.1.5 or ::1). Only used when [Listen on All Addresses] is cleared."));
 
-            ColumnBindingsEnabled.ToolTipText = "Listen on this address. Clear it to keep the address without using it.";
-            ColumnBindingsIPAddress.ToolTipText = "An IPv4 or IPv6 address of the machine that the service runs on.";
-            ColumnBindingsDescription.ToolTipText = "Notes about this address.";
+            ColumnBindingsEnabled.ToolTipText = Localize("Listen on this address. Clear it to keep the address without using it.");
+            ColumnBindingsIPAddress.ToolTipText = Localize("An IPv4 or IPv6 address of the machine that the service runs on.");
+            ColumnBindingsDescription.ToolTipText = Localize("Notes about this address.");
 
             #endregion
 
             #region TLS.
 
             toolTips.AddControls([labelCertificatePath, textBoxCertificatePath],
-                "The PFX (PKCS#12) certificate that the listener presents to clients, for the HTTPS traffic type. The path is read by the service,"
-                + " so it is a path on the machine that the service runs on.");
+                Localize("The PFX (PKCS#12) certificate that the listener presents to clients, for the HTTPS traffic type. The path is read by the service,"
+                + " so it is a path on the machine that the service runs on."));
 
             toolTips.AddControls([buttonBrowseCertificate],
-                "Browse this machine for the certificate. That only helps when the service runs on this machine.");
+                Localize("Browse this machine for the certificate. That only helps when the service runs on this machine."));
 
             toolTips.AddControls([labelCertificatePassword, textBoxCertificatePassword],
-                "The password of the PFX certificate. Leave it empty if the certificate has none. The service stores it encrypted.");
+                Localize("The password of the PFX certificate. Leave it empty if the certificate has none. The service stores it encrypted."));
 
             #endregion
 
             #region HTTP headers.
 
-            ColumnHTTPHeadersEnabled.ToolTipText = "Apply this rule. Clear it to keep the rule without using it.";
-            ColumnHTTPHeadersType.ToolTipText = "Request rules change what clients send, at the listener. Response rules change what the endpoint answers. Any does both.";
-            ColumnHTTPHeadersVerb.ToolTipText = "The request method that the rule applies to. A response does not carry one, so response rules must use Any.";
-            ColumnHTTPHeadersHeader.ToolTipText = "The name of the header, for example Host. It is not case sensitive.";
-            ColumnHTTPHeadersAction.ToolTipText = "Insert adds the header if it is missing. Update changes it if it is there. Upsert does both. Delete removes it.";
-            ColumnHTTPHeadersValue.ToolTipText = "The value that is written. It is used as typed. Delete does not use it.";
-            ColumnHTTPHeadersDescription.ToolTipText = "Notes about this rule.";
+            ColumnHTTPHeadersEnabled.ToolTipText = Localize("Apply this rule. Clear it to keep the rule without using it.");
+            ColumnHTTPHeadersType.ToolTipText = Localize("Request rules change what clients send, at the listener. Response rules change what the endpoint answers. Any does both.");
+            ColumnHTTPHeadersVerb.ToolTipText = Localize("The request method that the rule applies to. A response does not carry one, so response rules must use Any.");
+            ColumnHTTPHeadersHeader.ToolTipText = Localize("The name of the header, for example Host. It is not case sensitive.");
+            ColumnHTTPHeadersAction.ToolTipText = Localize("Insert adds the header if it is missing. Update changes it if it is there. Upsert does both. Delete removes it.");
+            ColumnHTTPHeadersValue.ToolTipText = Localize("The value that is written. It is used as typed. Delete does not use it.");
+            ColumnHTTPHeadersDescription.ToolTipText = Localize("Notes about this rule.");
 
             #endregion
 
             #region Endpoints.
 
             toolTips.AddControls([label9, comboBoxConnectionPattern],
-                "How a new connection chooses an endpoint. Balanced starts with the endpoint that has the fewest connections. Fail-over always tries the endpoints"
-                + " in the order listed. Round-robin takes them in turn. An endpoint that cannot be reached is skipped.");
+                Localize("How a new connection chooses an endpoint. Balanced starts with the endpoint that has the fewest connections. Fail-over always tries the endpoints"
+                + " in the order listed. Round-robin takes them in turn. An endpoint that cannot be reached is skipped."));
 
             toolTips.AddControls([checkBoxUseStickySessions],
-                "Send a client back to the endpoint it used last, for as long as the sticky session expiration (on the Advanced tab) has not passed since it was last used.");
+                Localize("Send a client back to the endpoint it used last, for as long as the sticky session expiration (on the Advanced tab) has not passed since it was last used."));
 
             toolTips.AddControls([label8],
-                "The machines that connections are passed to. Each endpoint has its own traffic type.");
+                Localize("The machines that connections are passed to. Each endpoint has its own traffic type."));
 
-            ColumnEndpointsEnabled.ToolTipText = "Use this endpoint. Clear it to keep the endpoint without using it.";
-            ColumnEndpointsAddress.ToolTipText = "A host name, or an IPv4 or IPv6 address. For HTTPS use the host name, which is what the certificate is checked against.";
-            ColumnEndpointsPort.ToolTipText = "The port on the endpoint (1 to 65535).";
-            ColumnEndpointsTrafficType.ToolTipText = "What is spoken to this endpoint. HTTPS starts TLS with it. Raw and HTTP are sent as they are."
-                + " A new endpoint starts with the traffic type of the listener.";
-            ColumnEndpointsValidateSSLCertificate.ToolTipText = "For HTTPS endpoints: check that the certificate of the endpoint is trusted and is for its address."
-                + " Clear it to accept any certificate, for example a self signed one.";
-            ColumnEndpointsDescription.ToolTipText = "Notes about this endpoint.";
+            ColumnEndpointsEnabled.ToolTipText = Localize("Use this endpoint. Clear it to keep the endpoint without using it.");
+            ColumnEndpointsAddress.ToolTipText = Localize("A host name, or an IPv4 or IPv6 address. For HTTPS use the host name, which is what the certificate is checked against.");
+            ColumnEndpointsPort.ToolTipText = Localize("The port on the endpoint (1 to 65535).");
+            ColumnEndpointsTrafficType.ToolTipText = Localize("What is spoken to this endpoint. HTTPS starts TLS with it. Raw and HTTP are sent as they are."
+                + " A new endpoint starts with the traffic type of the listener.");
+            ColumnEndpointsValidateSSLCertificate.ToolTipText = Localize("For HTTPS endpoints: check that the certificate of the endpoint is trusted and is for its address."
+                + " Clear it to accept any certificate, for example a self signed one.");
+            ColumnEndpointsDescription.ToolTipText = Localize("Notes about this endpoint.");
 
             #endregion
 
             #region Advanced.
 
             toolTips.AddControls([label3, textBoxInitialBufferSize],
-                "The size in bytes that the buffer of each connection starts at (1024 or more).");
+                Localize("The size in bytes that the buffer of each connection starts at (1024 or more)."));
 
             toolTips.AddControls([label5, textBoxMaxBufferSize],
-                "The largest the buffer of a connection grows to, when it keeps filling up. It cannot be smaller than the initial size.");
+                Localize("The largest the buffer of a connection grows to, when it keeps filling up. It cannot be smaller than the initial size."));
 
             toolTips.AddControls([labelAcceptBacklogSize, textBoxAcceptBacklogSize],
-                "How many connections can be waiting to be accepted. Values below 128 are raised to 128. 0 uses the largest the system allows.");
+                Localize("How many connections can be waiting to be accepted. Values below 128 are raised to 128. 0 uses the largest the system allows."));
 
             toolTips.AddControls([label15, textBoxStickySessionCacheExpiration],
-                "How long, in seconds, a client is remembered by sticky sessions after it was last connected.");
+                Localize("How long, in seconds, a client is remembered by sticky sessions after it was last connected."));
 
             #endregion
         }
@@ -299,8 +327,8 @@ namespace NetProxy.Client.Forms
             //  makes sense to browse when that is the same machine; otherwise type the path on the service machine.
             using var dialog = new OpenFileDialog
             {
-                Title = "Select the TLS certificate",
-                Filter = "PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*"
+                Title = Localize("Select the TLS certificate"),
+                Filter = Localize("PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*")
             };
 
             if (dialog.ShowDialog(this) == DialogResult.OK)
@@ -315,22 +343,22 @@ namespace NetProxy.Client.Forms
 
             try
             {
-                textBoxProxyName.GetAndValidateText("The proxy name is required.");
+                textBoxProxyName.GetAndValidateText(Localize("The proxy name is required."));
 
                 textBoxListenPort.GetAndValidateNumeric(1, 65535,
-                    "The listen port is required (between [min] and [max]).");
+                    Localize("The listen port is required (between [min] and [max])."));
 
                 textBoxInitialBufferSize.GetAndValidateNumeric(1024, 1073741824,
-                    "The initial buffer size is required (between [min] and [max].");
+                    Localize("The initial buffer size is required (between [min] and [max]."));
 
                 textBoxMaxBufferSize.GetAndValidateNumeric(1024, 1073741824,
-                    "The max buffer size is required (between [min] and [max].");
+                    Localize("The max buffer size is required (between [min] and [max]."));
 
                 textBoxAcceptBacklogSize.GetAndValidateNumeric(0, 10000,
-                    "The accept backlog size is required (between [min] and [max]).");
+                    Localize("The accept backlog size is required (between [min] and [max])."));
 
                 textBoxStickySessionCacheExpiration.GetAndValidateNumeric(1, 2592000,
-                    "The sticky session cache expiration (s) is required (between [min] and [max]).");
+                    Localize("The sticky session cache expiration (s) is required (between [min] and [max])."));
             }
             catch (Exception ex)
             {
@@ -357,7 +385,7 @@ namespace NetProxy.Client.Forms
 
             if (proxy.InitialBufferSize > proxy.MaxBufferSize)
             {
-                MessageBox.Show("The max buffer size must be larger than the initial buffer size.",
+                MessageBox.Show(Localize("The max buffer size must be larger than the initial buffer size."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
@@ -365,7 +393,7 @@ namespace NetProxy.Client.Forms
             if (proxy.TrafficType == TrafficType.Https && string.IsNullOrWhiteSpace(proxy.TlsCertificatePath))
             {
                 tabControl.SelectedTab = tabPageTls;
-                MessageBox.Show("A certificate (PFX) is required to terminate HTTPS traffic. Use the Raw traffic type to pass encrypted traffic through untouched.",
+                MessageBox.Show(Localize("A certificate (PFX) is required to terminate HTTPS traffic. Use the Raw traffic type to pass encrypted traffic through untouched."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
@@ -383,7 +411,7 @@ namespace NetProxy.Client.Forms
                 {
                     tabControl.SelectedTab = tabPageEndpoints;
                     dataGridViewEndpoints.CurrentCell = row.Cells[ColumnEndpointsPort.Index];
-                    MessageBox.Show($"The port of endpoint '{address}' must be between 1 and 65535.",
+                    MessageBox.Show(Localize("The port of endpoint '{0}' must be between 1 and 65535.", address),
                         Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return false;
                 }
@@ -417,7 +445,7 @@ namespace NetProxy.Client.Forms
                 {
                     tabControl.SelectedTab = tabPageBindings;
                     dataGridViewBindings.CurrentCell = row.Cells[ColumnBindingsIPAddress.Index];
-                    MessageBox.Show($"'{address}' is not a valid IPv4 or IPv6 address.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    MessageBox.Show(Localize("'{0}' is not a valid IPv4 or IPv6 address.", address), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return false;
                 }
 
@@ -444,7 +472,7 @@ namespace NetProxy.Client.Forms
                     //A response does not carry the verb of the request it answers, so such a rule could never match.
                     tabControl.SelectedTab = tabPageHTTPHeaders;
                     dataGridViewHTTPHeaders.CurrentCell = row.Cells[ColumnHTTPHeadersVerb.Index];
-                    MessageBox.Show($"The response header rule for '{row.Cells[ColumnHTTPHeadersHeader.Index].Value}' must use the verb 'Any'.",
+                    MessageBox.Show(Localize("The response header rule for '{0}' must use the verb 'Any'.", row.Cells[ColumnHTTPHeadersHeader.Index].Value ?? ""),
                         Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return false;
                 }
@@ -464,21 +492,21 @@ namespace NetProxy.Client.Forms
             if (proxy.Endpoints.Collection.Count == 0)
             {
                 tabControl.SelectedTab = tabPageEndpoints;
-                MessageBox.Show("At least one end-point is required.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(Localize("At least one end-point is required."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
 
             if (proxy.Endpoints.Collection.Any(o => o.Enabled) == false)
             {
                 tabControl.SelectedTab = tabPageEndpoints;
-                MessageBox.Show("At least one end-point must be enabled.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(Localize("At least one end-point must be enabled."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
 
             if (proxy.Bindings.Count == 0 && proxy.ListenOnAllAddresses == false)
             {
                 tabControl.SelectedTab = tabPageBindings;
-                MessageBox.Show("At least one binding is required unless [listen on all addresses] is selected.",
+                MessageBox.Show(Localize("At least one binding is required unless [listen on all addresses] is selected."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
@@ -571,7 +599,7 @@ namespace NetProxy.Client.Forms
         {
             if (dataGridViewHTTPHeaders.ReadOnly)
             {
-                MessageBox.Show("HTTP header rules cannot be added because the traffic type is Raw. Use HTTP, or HTTPS with a certificate.",
+                MessageBox.Show(Localize("HTTP header rules cannot be added because the traffic type is Raw. Use HTTP, or HTTPS with a certificate."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
         }
@@ -580,7 +608,7 @@ namespace NetProxy.Client.Forms
         {
             if (dataGridViewBindings.ReadOnly)
             {
-                MessageBox.Show("Bindings cannot be added because [listen on all addresses] is selected.", Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(Localize("Bindings cannot be added because [listen on all addresses] is selected."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
         }
     }

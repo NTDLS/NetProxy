@@ -2,6 +2,7 @@
 using NetProxy.Client.Properties;
 using NetProxy.Library;
 using NTDLS.Helpers;
+using NTDLS.Localization;
 using NTDLS.Persistence;
 using NTDLS.WinFormsHelpers;
 using NTDLS.WinFormsHelpers.Forms;
@@ -24,23 +25,53 @@ namespace NetProxy.Client.Forms
         public FormConnect()
         {
             InitializeComponent();
+            FormLocalizer.Apply(this);
             Theming.InitializeForm(this);
             SetupToolTips();
         }
 
+        /// <summary>
+        /// Raised after the user has chosen a language and it has been applied and saved.
+        /// </summary>
+        public event EventHandler? LanguageChanged;
+
+        private ToolTip? _toolTips;
+
+        private void ButtonLanguage_Click(object? sender, EventArgs e)
+        {
+            var settings = UISettings.Load();
+
+            using var form = new FormLanguage(settings.Language) { Icon = Icon };
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            settings.Language = form.SelectedLanguage;
+            Localizer.Default.SetLanguage(settings.Language);
+            settings.Save();
+
+            FormLocalizer.Apply(this);
+            SetupToolTips();
+            LanguageChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Sets the tool-tips in the current language. Called at the start and whenever the language changes.
+        /// </summary>
         private void SetupToolTips()
         {
-            var toolTips = ToolTipHelpers.CreateToolTipControl(this);
+            var toolTips = _toolTips ??= ToolTipHelpers.CreateToolTipControl(this);
 
             toolTips.AddControls([label1, textBoxServer],
-                "The machine that the NetProxy service runs on: a name, an IPv4 address or an IPv6 address."
-                + " Add a port after a name or IPv4 address (name:5854), or after an IPv6 address in brackets ([::1]:5854). The default port is 5854.");
+                Localize("The machine that the NetProxy service runs on: a name, an IPv4 address or an IPv6 address."
+                + " Add a port after a name or IPv4 address (name:5854), or after an IPv6 address in brackets ([::1]:5854). The default port is 5854."));
 
             toolTips.AddControls([label2, textBoxUsername],
-                "The name of a user of the service.");
+                Localize("The name of a user of the service."));
 
             toolTips.AddControls([label3, textBoxPassword],
-                "The password of the user.");
+                Localize("The password of the user."));
         }
 
         private void FormConnect_Load(object? sender, EventArgs e)
@@ -72,7 +103,7 @@ namespace NetProxy.Client.Forms
                 var end = text.IndexOf(']');
                 if (end < 0)
                 {
-                    throw new Exception("The server address is missing its closing bracket. Expected format \"[IPv6 address]\" or \"[IPv6 address]:Port\".");
+                    throw new Exception(Localize("The server address is missing its closing bracket. Expected format \"[IPv6 address]\" or \"[IPv6 address]:Port\"."));
                 }
 
                 serverName = text[1..end];
@@ -82,7 +113,7 @@ namespace NetProxy.Client.Forms
                 {
                     if (rest[0] != ':' || int.TryParse(rest[1..], out port) == false)
                     {
-                        throw new Exception("The port number could not be parsed. Expected format \"[IPv6 address]:Port\".");
+                        throw new Exception(Localize("The port number could not be parsed. Expected format \"[IPv6 address]:Port\"."));
                     }
                 }
             }
@@ -93,7 +124,7 @@ namespace NetProxy.Client.Forms
 
                 if (int.TryParse(text[(colon + 1)..], out port) == false)
                 {
-                    throw new Exception("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\".");
+                    throw new Exception(Localize("The port number could not be parsed. Expected format \"ServerName\" or \"ServerName:Port\"."));
                 }
             }
             else
@@ -103,7 +134,7 @@ namespace NetProxy.Client.Forms
 
             if (port < 1 || port > 65535)
             {
-                throw new Exception("The port number must be between 1 and 65535.");
+                throw new Exception(Localize("The port number must be between 1 and 65535."));
             }
         }
 
@@ -114,8 +145,8 @@ namespace NetProxy.Client.Forms
 
             try
             {
-                verbatimServerName = textBoxServer.GetAndValidateText("The server name is required.");
-                verbatimUsername = textBoxUsername.GetAndValidateText("The user name is required.");
+                verbatimServerName = textBoxServer.GetAndValidateText(Localize("The server name is required."));
+                verbatimUsername = textBoxUsername.GetAndValidateText(Localize("The user name is required."));
 
                 ParseServer(verbatimServerName, out var serverName, out var port);
 
@@ -162,7 +193,7 @@ namespace NetProxy.Client.Forms
 
         private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
-            _formProgress.SetHeaderText(e.UserState as string ?? "Please wait...");
+            _formProgress.SetHeaderText(e.UserState as string ?? Localize("Please wait..."));
         }
 
         private void Worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
@@ -174,14 +205,14 @@ namespace NetProxy.Client.Forms
         {
             e.Result = false;
 
-            _worker.EnsureNotNull().ReportProgress(0, "Connecting...");
+            _worker.EnsureNotNull().ReportProgress(0, Localize("Connecting..."));
 
             //Connects and logs in, which is what every other window of the console does too.
             var client = MessageClientFactory.Create(_connectionInfo, out var error);
 
             if (client == null)
             {
-                _connectMessage = error ?? "Failed to connect.";
+                _connectMessage = error ?? Localize("Failed to connect.");
                 return;
             }
 

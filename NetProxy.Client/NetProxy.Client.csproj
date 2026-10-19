@@ -26,6 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Translations\Translations.db" Condition="Exists('Translations\Translations.db')" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NTDLS.Localization.StaticLocalizer" Static="true" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
   </ItemGroup>
 

@@ -1,27 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-    <Copyright>Copyright © 2026 NetworkDLS</Copyright>
-    <Version>2.4.1</Version>
-    <Company>NetworkDLS</Company>
-    <Product>NetProxy</Product>
-    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
-  </PropertyGroup>
+		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
+		<Version>2.5.0</Version>
+		<Company>NetworkDLS</Company>
+		<Product>NetProxy</Product>
+		<ApplicationIcon>AppIcon.ico</ApplicationIcon>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="AppIcon.ico" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="AppIcon.ico" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NTDLS.Permafrost" Version="2.2.0" />
-    <PackageReference Include="NTDLS.ReliableMessaging" Version="3.5.0" />
-    <PackageReference Include="NTDLS.SecureKeyExchange" Version="3.0.3" />
-    <PackageReference Include="protobuf-net" Version="3.4.30" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="NTDLS.Permafrost" Version="2.2.0" />
+		<PackageReference Include="NTDLS.ReliableMessaging" Version="3.5.0" />
+		<PackageReference Include="NTDLS.SecureKeyExchange" Version="3.0.3" />
+		<PackageReference Include="protobuf-net" Version="3.4.30" />
+	</ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
   <Folder Name="/Installers/">
     <File Path="@Installers/Build and Compile Installers.bat" />
     <File Path="@Installers/Windows.Installer.iss" />
-    <File Path="@Installers/Linux Install Readme.txt" />
+    <File Path="@Installers/Linux Install Readme.md" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Localization.bat" />

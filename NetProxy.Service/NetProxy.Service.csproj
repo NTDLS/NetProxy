@@ -1,30 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-    <Copyright>Copyright © 2026 NetworkDLS</Copyright>
-    <Version>2.4.1</Version>
-    <Company>NetworkDLS</Company>
-    <Product>NetProxy</Product>
-    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
-  </PropertyGroup>
+		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
+		<Version>2.5.0</Version>
+		<Company>NetworkDLS</Company>
+		<Product>NetProxy</Product>
+		<ApplicationIcon>AppIcon.ico</ApplicationIcon>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="AppIcon.ico" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="AppIcon.ico" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NTDLS.Persistence" Version="1.3.1" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
-    <PackageReference Include="Topshelf" Version="4.3.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="NTDLS.Persistence" Version="1.3.1" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
+		<PackageReference Include="Topshelf" Version="4.3.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
+	</ItemGroup>
 
 </Project>

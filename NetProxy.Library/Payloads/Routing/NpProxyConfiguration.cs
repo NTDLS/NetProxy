@@ -31,6 +31,28 @@ namespace NetProxy.Library.Payloads.Routing
         public NpHTTPHeaderRules HttpHeaderRules { get; set; } = new();
 
         /// <summary>
+        /// Offer HTTP/2 to clients (and so gRPC). With the Https traffic type it is negotiated with the client (ALPN) and the endpoint
+        /// has to speak it too; with the Http traffic type a client that starts with the HTTP/2 preface (h2c) is detected.
+        /// Header rules are applied to HTTP/2 requests and responses as well.
+        /// </summary>
+        public bool AllowHttp2 { get; set; }
+
+        /// <summary>
+        /// The most connections the proxy will have open at once. Further connections are closed as they are accepted. 0 is no limit.
+        /// </summary>
+        public int MaxConnections { get; set; }
+
+        /// <summary>
+        /// The most connections that one client address will have open at once. 0 is no limit.
+        /// </summary>
+        public int MaxConnectionsPerClient { get; set; }
+
+        /// <summary>
+        /// A connection that has not carried any data in either direction for this many seconds is closed. 0 is no timeout.
+        /// </summary>
+        public int IdleTimeoutSeconds { get; set; }
+
+        /// <summary>
         /// Path (on the machine running the service) of the PFX/PKCS#12 certificate the listener presents to clients (Https traffic type).
         /// </summary>
         public string TlsCertificatePath { get; set; } = string.Empty;

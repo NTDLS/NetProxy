@@ -2,6 +2,7 @@
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Http;
+using NetProxy.Service.Http.Http2;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -34,12 +35,28 @@ namespace NetProxy.Service.Proxy
         private readonly string _clientDisplay;
         private long _lastActivityTicks = DateTime.UtcNow.Ticks;
 
+        /// <summary>
+        /// True when the client speaks HTTP/2 (negotiated with ALPN when the listener terminates TLS, or detected by its preface otherwise).
+        /// </summary>
+        private bool _clientIsHttp2;
+
+        /// <summary>
+        /// The first bytes of the client, when they had to be read to tell what it speaks. They are passed on before anything else.
+        /// </summary>
+        private byte[]? _initialClientBytes;
+
         private Stream? _clientStream;
         private TcpClient? _endpointClient;
         private Stream? _endpointStream;
         private NpProxyEndpointStatistics? _endpointStatistics;
 
         public Guid Id { get; } = Guid.NewGuid();
+
+        /// <summary>
+        /// The address of the client, as used to count its connections.
+        /// </summary>
+        public string ClientKey => _clientKey;
+
         public DateTime StartDateTime { get; } = DateTime.UtcNow;
         public DateTime LastActivityDateTime => new(Interlocked.Read(ref _lastActivityTicks), DateTimeKind.Utc);
 
@@ -77,6 +94,15 @@ namespace NetProxy.Service.Proxy
             try { _endpointClient?.Client?.Close(0); } catch { }
         }
 
+        /// <summary>
+        /// Drops a connection that was never started, because the proxy is at one of its connection limits.
+        /// </summary>
+        public void Refuse()
+        {
+            try { _client.Dispose(); } catch { }
+            try { _abort.Dispose(); } catch { }
+        }
+
         private void Touch() => Interlocked.Exchange(ref _lastActivityTicks, DateTime.UtcNow.Ticks);
 
         /// <summary>
@@ -85,6 +111,8 @@ namespace NetProxy.Service.Proxy
         public async Task RunAsync()
         {
             _proxy.Statistics.ConnectionOpened();
+
+            _ = IdleWatchAsync();
 
             Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Proxy '{_proxy.Configuration.Name}' accepted {_clientDisplay} ({Id}).");
 
@@ -95,13 +123,18 @@ namespace NetProxy.Service.Proxy
                     return;
                 }
 
+                if (await DetectClientHttp2Async() == false)
+                {
+                    return;
+                }
+
                 if (await ConnectToEndpointAsync() == false)
                 {
                     return;
                 }
 
                 await Task.WhenAll(
-                    PumpAsync(_clientStream!, _endpointStream!, direction: ConnectionDirection.Inbound),
+                    PumpAsync(_clientStream!, _endpointStream!, direction: ConnectionDirection.Inbound, _initialClientBytes),
                     PumpAsync(_endpointStream!, _clientStream!, direction: ConnectionDirection.Outbound));
             }
             catch (OperationCanceledException)
@@ -146,12 +179,15 @@ namespace NetProxy.Service.Proxy
                 await ssl.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
                 {
                     ServerCertificate = _proxy.Certificate,
-                    ApplicationProtocols = [SslApplicationProtocol.Http11],
+                    ApplicationProtocols = _proxy.Configuration.AllowHttp2
+                        ? [SslApplicationProtocol.Http2, SslApplicationProtocol.Http11]
+                        : [SslApplicationProtocol.Http11],
                     ClientCertificateRequired = false,
                     EnabledSslProtocols = SslProtocols.None, //Let the operating system choose.
                     CertificateRevocationCheckMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck
                 }, timeout.Token);
 
+                _clientIsHttp2 = ssl.NegotiatedApplicationProtocol == SslApplicationProtocol.Http2;
                 return true;
             }
             catch (AuthenticationException ex)
@@ -171,6 +207,84 @@ namespace NetProxy.Service.Proxy
                 }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Closes the connection when it has carried no data, in either direction, for the idle timeout of the proxy.
+        /// </summary>
+        private async Task IdleWatchAsync()
+        {
+            var seconds = _proxy.Configuration.IdleTimeoutSeconds;
+            if (seconds <= 0)
+            {
+                return;
+            }
+
+            var limit = TimeSpan.FromSeconds(seconds);
+            var interval = TimeSpan.FromSeconds(Math.Clamp(seconds / 4.0, 0.25, 5));
+
+            try
+            {
+                while (true)
+                {
+                    await Task.Delay(interval, _abort.Token);
+
+                    if (DateTime.UtcNow - LastActivityDateTime >= limit)
+                    {
+                        Singletons.Logging.Write(NpLogging.Severity.Verbose,
+                            $"Connection {Id} from {_clientDisplay} on proxy '{_proxy.Configuration.Name}' was idle for {seconds} seconds and is closed.");
+                        Abort();
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
+            {
+                //The connection is over.
+            }
+        }
+
+        /// <summary>
+        /// A plain (not TLS) HTTP listener that allows HTTP/2 has to look at the start of the data from the client to tell if it is HTTP/2
+        /// without TLS (h2c with prior knowledge, which is what gRPC clients use), because the endpoint has to be connected the same way.
+        /// Returns false if the client goes away before it says anything.
+        /// </summary>
+        private async Task<bool> DetectClientHttp2Async()
+        {
+            if (_proxy.TerminatesTls || _proxy.EffectiveTrafficType != TrafficType.Http || _proxy.Configuration.AllowHttp2 == false)
+            {
+                return true;
+            }
+
+            var preface = Http2StreamParser.ClientPrefaceBytes;
+            var held = new byte[preface.Length];
+            var count = 0;
+
+            while (count < preface.Length)
+            {
+                var read = await _clientStream!.ReadAsync(held.AsMemory(count), _abort.Token);
+                if (read <= 0)
+                {
+                    break;
+                }
+
+                Touch();
+                count += read;
+
+                if (held.AsSpan(0, count).SequenceEqual(preface.AsSpan(0, count)) == false)
+                {
+                    break; //Not HTTP/2.
+                }
+            }
+
+            if (count == 0)
+            {
+                return false;
+            }
+
+            _clientIsHttp2 = count == preface.Length && held.AsSpan().SequenceEqual(preface);
+            _initialClientBytes = held.AsSpan(0, count).ToArray();
+            return true;
         }
 
         /// <summary>
@@ -253,6 +367,16 @@ namespace NetProxy.Service.Proxy
                 TargetHost = NpNetwork.NormalizeHost(endpoint.Address)
             };
 
+            //The endpoint has to speak what the client speaks: the bytes of an HTTP/2 client are passed on as they are.
+            if (_clientIsHttp2)
+            {
+                options.ApplicationProtocols = [SslApplicationProtocol.Http2];
+            }
+            else if (_proxy.Configuration.AllowHttp2)
+            {
+                options.ApplicationProtocols = [SslApplicationProtocol.Http11];
+            }
+
             if (!endpoint.TlsValidateSSLCertificate)
             {
                 options.RemoteCertificateValidationCallback = (_, _, _, _) => true;
@@ -264,7 +388,22 @@ namespace NetProxy.Service.Proxy
             try
             {
                 await ssl.AuthenticateAsClientAsync(options, timeout.Token);
+
+                if (_clientIsHttp2 && ssl.NegotiatedApplicationProtocol != SslApplicationProtocol.Http2)
+                {
+                    throw new AuthenticationException("The client is using HTTP/2 but the endpoint did not agree to it. Turn off"
+                        + " [Allow HTTP/2] on the proxy, or enable HTTP/2 on the endpoint.");
+                }
+
                 return ssl;
+            }
+            catch (AuthenticationException ex) when (_clientIsHttp2 && ex.Message.Contains("did not agree") == false)
+            {
+                ssl.Dispose();
+
+                //An endpoint that does not do HTTP/2 can refuse the handshake with a message that does not say why.
+                throw new AuthenticationException("The client is using HTTP/2 and the TLS handshake with the endpoint failed. This usually means"
+                    + $" the endpoint does not support HTTP/2. ({ex.InnerException?.Message ?? ex.Message})", ex);
             }
             catch
             {
@@ -276,17 +415,29 @@ namespace NetProxy.Service.Proxy
         /// <summary>
         /// Copies data one way until the sender is finished (or the connection is aborted), applying the HTTP header rules on the way.
         /// </summary>
-        private async Task PumpAsync(Stream from, Stream to, ConnectionDirection direction)
+        private async Task PumpAsync(Stream from, Stream to, ConnectionDirection direction, byte[]? initialBytes = null)
         {
             var configuration = _proxy.Configuration;
-            var buffer = new PumpBuffer(configuration.InitialBufferSize);
+            var buffer = new PumpBuffer(Math.Max(configuration.InitialBufferSize, initialBytes?.Length ?? 0));
             var parser = CreateHttpParser(direction);
 
             try
             {
                 while (true)
                 {
-                    int read = await from.ReadAsync(buffer.Bytes.AsMemory(), _abort.Token);
+                    int read;
+                    if (initialBytes != null)
+                    {
+                        //Bytes that were already read from the client to tell what it speaks.
+                        initialBytes.CopyTo(buffer.Bytes, 0);
+                        read = initialBytes.Length;
+                        initialBytes = null;
+                    }
+                    else
+                    {
+                        read = await from.ReadAsync(buffer.Bytes.AsMemory(), _abort.Token);
+                    }
+
                     if (read <= 0)
                     {
                         FinishSending(to, direction);
@@ -382,6 +533,19 @@ namespace NetProxy.Service.Proxy
             var hasRules = _proxy.Configuration.HttpHeaderRules.Collection
                 .Any(o => o.Enabled && (o.HeaderType == wanted || o.HeaderType == HttpHeaderType.Any));
 
+            if (_clientIsHttp2)
+            {
+                //The scheme of a request has to match what the endpoint connection is, which is not always what the client's was.
+                var clientScheme = _proxy.TerminatesTls ? "https" : "http";
+                var endpointScheme = _endpointStream is SslStream ? "https" : "http";
+                var fixScheme = direction == ConnectionDirection.Inbound && clientScheme != endpointScheme;
+
+                return hasRules || fixScheme
+                    ? new Http2StreamParser(_proxy.Configuration, fromClient: direction == ConnectionDirection.Inbound)
+                    { RequestScheme = fixScheme ? endpointScheme : null }
+                    : null;
+            }
+
             return hasRules ? new HttpStreamParser(_proxy.Configuration, direction) : null;
         }
 
@@ -397,6 +561,7 @@ namespace NetProxy.Service.Proxy
             _endpointStatistics?.ConnectionClosed();
             _proxy.Statistics.ConnectionClosed();
             _proxy.RemoveConnection(this);
+            _proxy.ReleaseClient(_clientKey);
 
             try { _abort.Dispose(); } catch { }
 

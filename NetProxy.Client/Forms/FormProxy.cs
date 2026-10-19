@@ -118,6 +118,9 @@ namespace NetProxy.Client.Forms
             textBoxAcceptBacklogSize.Text = $"{Constants.DefaultAcceptBacklogSize}";
             comboBoxConnectionPattern.SelectedValue = ConnectionPattern.RoundRobbin;
             textBoxStickySessionCacheExpiration.Text = $"{Constants.DefaultStickySessionExpiration}";
+            textBoxMaxConnections.Text = "0";
+            textBoxMaxConnectionsPerClient.Text = "0";
+            textBoxIdleTimeout.Text = "0";
             checkBoxListenAutoStart.Checked = true;
             //----------------------------------------------------------------------------
 
@@ -162,6 +165,10 @@ namespace NetProxy.Client.Forms
             toolTips.AddControls([label2, comboBoxTrafficType],
                 Localize("What the listener accepts. Raw passes any TCP protocol through untouched. HTTP lets the HTTP header rules change the requests and responses."
                 + " HTTPS terminates TLS with the certificate on the TLS tab, so that the header rules can be applied to HTTPS too."));
+
+            toolTips.AddControls([checkBoxAllowHttp2],
+                Localize("Offer HTTP/2 to clients, which is also what gRPC needs. With HTTPS the endpoint has to agree to HTTP/2 as well (TLS to the endpoint)."
+                + " With HTTP, a client that starts with HTTP/2 without TLS (h2c) is detected, and the endpoint has to accept that. Header rules apply to HTTP/2."));
 
             toolTips.AddControls([checkBoxListenAutoStart],
                 Localize("Start this proxy when the service starts."));
@@ -252,6 +259,15 @@ namespace NetProxy.Client.Forms
             toolTips.AddControls([labelAcceptBacklogSize, textBoxAcceptBacklogSize],
                 Localize("How many connections can be waiting to be accepted. Values below 128 are raised to 128. 0 uses the largest the system allows."));
 
+            toolTips.AddControls([labelMaxConnections, textBoxMaxConnections],
+                Localize("The most connections the proxy has open at once. Further connections are closed as they arrive. 0 is no limit."));
+
+            toolTips.AddControls([labelMaxConnectionsPerClient, textBoxMaxConnectionsPerClient],
+                Localize("The most connections that one client address has open at once. Further connections from it are closed. 0 is no limit."));
+
+            toolTips.AddControls([labelIdleTimeout, textBoxIdleTimeout],
+                Localize("A connection that has carried no data in either direction for this many seconds is closed. 0 is no timeout."));
+
             toolTips.AddControls([label15, textBoxStickySessionCacheExpiration],
                 Localize("How long, in seconds, a client is remembered by sticky sessions after it was last connected."));
 
@@ -285,6 +301,10 @@ namespace NetProxy.Client.Forms
             checkBoxListenAutoStart.Checked = proxy.AutoStart;
             checkBoxUseStickySessions.Checked = proxy.UseStickySessions;
             textBoxStickySessionCacheExpiration.Text = $"{proxy.StickySessionCacheExpiration}";
+            textBoxMaxConnections.Text = $"{proxy.MaxConnections}";
+            textBoxMaxConnectionsPerClient.Text = $"{proxy.MaxConnectionsPerClient}";
+            textBoxIdleTimeout.Text = $"{proxy.IdleTimeoutSeconds}";
+            checkBoxAllowHttp2.Checked = proxy.AllowHttp2;
             textBoxCertificatePath.Text = proxy.TlsCertificatePath;
             textBoxCertificatePassword.Text = proxy.TlsCertificatePassword;
 
@@ -359,6 +379,15 @@ namespace NetProxy.Client.Forms
 
                 textBoxStickySessionCacheExpiration.GetAndValidateNumeric(1, 2592000,
                     Localize("The sticky session cache expiration (s) is required (between [min] and [max])."));
+
+                textBoxMaxConnections.GetAndValidateNumeric(0, 1000000,
+                    Localize("The max connections must be between [min] and [max] (0 is no limit)."));
+
+                textBoxMaxConnectionsPerClient.GetAndValidateNumeric(0, 1000000,
+                    Localize("The max connections per client must be between [min] and [max] (0 is no limit)."));
+
+                textBoxIdleTimeout.GetAndValidateNumeric(0, 31536000,
+                    Localize("The idle timeout (s) must be between [min] and [max] (0 is no timeout)."));
             }
             catch (Exception ex)
             {
@@ -380,6 +409,10 @@ namespace NetProxy.Client.Forms
             proxy.AutoStart = checkBoxListenAutoStart.Checked;
             proxy.UseStickySessions = checkBoxUseStickySessions.Checked;
             proxy.StickySessionCacheExpiration = int.Parse(textBoxStickySessionCacheExpiration.Text);
+            proxy.MaxConnections = int.Parse(textBoxMaxConnections.Text);
+            proxy.MaxConnectionsPerClient = int.Parse(textBoxMaxConnectionsPerClient.Text);
+            proxy.IdleTimeoutSeconds = int.Parse(textBoxIdleTimeout.Text);
+            proxy.AllowHttp2 = checkBoxAllowHttp2.Checked;
             proxy.TlsCertificatePath = textBoxCertificatePath.Text.Trim();
             proxy.TlsCertificatePassword = textBoxCertificatePassword.Text;
 

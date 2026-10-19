@@ -115,6 +115,13 @@ namespace NetProxy.Service.Proxy
                     client.NoDelay = true;
 
                     var connection = new NpProxyConnection(Proxy, client);
+
+                    if (Proxy.TryAdmit(connection.ClientKey) == false)
+                    {
+                        connection.Refuse(); //At a connection limit.
+                        continue;
+                    }
+
                     Proxy.AddConnection(connection);
                     _ = connection.RunAsync(); //Never throws: the connection handles and logs its own failures.
                 }

@@ -220,6 +220,76 @@ namespace NetProxy.Service.Proxy
             _stopSource = null;
         }
 
+        private readonly object _admissionLock = new();
+        private readonly Dictionary<string, int> _clientConnectionCounts = new();
+        private int _admittedConnections;
+        private long _refusedConnections;
+        private long _lastRefusedLogTicks;
+
+        /// <summary>
+        /// Counts a new connection against the limits of the proxy. Returns false when a limit is reached, in which case the caller
+        /// closes the connection and does not call <see cref="ReleaseClient"/>.
+        /// </summary>
+        internal bool TryAdmit(string clientKey)
+        {
+            var maxConnections = Configuration.MaxConnections;
+            var maxPerClient = Configuration.MaxConnectionsPerClient;
+            string limit;
+
+            lock (_admissionLock)
+            {
+                _clientConnectionCounts.TryGetValue(clientKey, out var clientCount);
+
+                if (maxConnections > 0 && _admittedConnections >= maxConnections)
+                {
+                    limit = $"the limit of {maxConnections} connections";
+                }
+                else if (maxPerClient > 0 && clientCount >= maxPerClient)
+                {
+                    limit = $"the limit of {maxPerClient} connections per client";
+                }
+                else
+                {
+                    _admittedConnections++;
+                    _clientConnectionCounts[clientKey] = clientCount + 1;
+                    return true;
+                }
+            }
+
+            //Say so now and then, not for every connection that is refused: that is what a flood would do to the log.
+            var refused = Interlocked.Increment(ref _refusedConnections);
+            var now = DateTime.UtcNow.Ticks;
+            var last = Interlocked.Read(ref _lastRefusedLogTicks);
+            if (now - last >= TimeSpan.FromMinutes(1).Ticks && Interlocked.CompareExchange(ref _lastRefusedLogTicks, now, last) == last)
+            {
+                Singletons.Logging.Write(NpLogging.Severity.Warning,
+                    $"Proxy '{Configuration.Name}' refused a connection from {clientKey} because it is at {limit}"
+                    + $" ({refused} refused since it started).");
+            }
+
+            return false;
+        }
+
+        internal void ReleaseClient(string clientKey)
+        {
+            lock (_admissionLock)
+            {
+                _admittedConnections = Math.Max(0, _admittedConnections - 1);
+
+                if (_clientConnectionCounts.TryGetValue(clientKey, out var count))
+                {
+                    if (count <= 1)
+                    {
+                        _clientConnectionCounts.Remove(clientKey);
+                    }
+                    else
+                    {
+                        _clientConnectionCounts[clientKey] = count - 1;
+                    }
+                }
+            }
+        }
+
         internal void AddConnection(NpProxyConnection connection)
             => ActiveConnections[connection.Id] = connection;
 

@@ -44,6 +44,24 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 
 Proxies listen on IPv4, IPv6, or both (one dual-stack listener) when they listen on all addresses, and a binding can be an IPv4 or IPv6 address (`::1` or `[::1]`). An endpoint can be an IPv6 address or a host name that has one. The management port accepts IPv6 too (*Settings > Configuration > Service*). Check the firewall for both IP versions: IPv6 addresses are often directly reachable from the internet.
 
+### HTTP/2 and gRPC
+
+Tick **Allow HTTP/2** on the *General* tab to offer HTTP/2 to clients; gRPC is HTTP/2, so this is also what gRPC needs. The HTTP header rules apply to HTTP/2 requests and responses too (names are lower case in HTTP/2, a rule for `Host` changes `:authority`, and the connection specific headers such as `Connection` cannot be added). Without header rules the data is passed through untouched.
+
+* **HTTPS listener:** HTTP/2 is negotiated with the client (ALPN). The endpoint has to speak what the client speaks, so a client that uses HTTP/2 needs an endpoint that agrees to HTTP/2 over TLS (traffic type HTTPS) or one that accepts plain HTTP/2 (h2c, traffic type Raw or HTTP). Clients that only know HTTP/1.1 keep working.
+* **HTTP listener:** a client that starts with the HTTP/2 preface (h2c with prior knowledge, which is what gRPC clients without TLS use) is detected, and the endpoint has to accept h2c. The `Upgrade: h2c` request is not supported.
+* HTTP/3 is not offered.
+
+### Limits and timeouts
+
+On the *Advanced* tab of a proxy (0 is no limit, which is how existing proxies behave):
+
+* **Max. connections** is the most connections the proxy has open at once.
+* **Max. connections per client** is the most that one client address has open at once. Clients are told apart by IP address, so many clients behind one NAT share a limit.
+* **Idle timeout (s)** closes a connection that has carried no data in either direction for that long. Keep it above the keep-alive interval of long lived connections (a gRPC stream, a database or SSH session).
+
+A connection over a limit is closed as soon as it is accepted. The service logs a warning when that starts, and then at most once a minute.
+
 ### Logging
 
 The service writes to a rolling log file (`Logs/NetProxy.log` in its installation folder by default, rolled over at a size you choose), to the Windows event log (warnings and exceptions), and to the console when it is run by hand. The level, the file and the roll-over can be changed in *Settings > Configuration > Service* and take effect immediately.

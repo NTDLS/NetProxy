@@ -99,6 +99,14 @@ namespace NetProxy.Client.Forms
             textBoxAcceptBacklogSize = new TextBox();
             label15 = new Label();
             groupBox1 = new GroupBox();
+            groupBoxLimits = new GroupBox();
+            labelMaxConnections = new Label();
+            textBoxMaxConnections = new TextBox();
+            labelMaxConnectionsPerClient = new Label();
+            textBoxMaxConnectionsPerClient = new TextBox();
+            labelIdleTimeout = new Label();
+            textBoxIdleTimeout = new TextBox();
+            checkBoxAllowHttp2 = new CheckBox();
             textBoxMaxBufferSize = new TextBox();
             textBoxInitialBufferSize = new TextBox();
             buttonCancel = new Button();
@@ -115,6 +123,7 @@ namespace NetProxy.Client.Forms
             tabPageAdvanced.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBox1.SuspendLayout();
+            groupBoxLimits.SuspendLayout();
             SuspendLayout();
             // 
             // label1
@@ -221,6 +230,7 @@ namespace NetProxy.Client.Forms
             tabPageGeneral.BackColor = SystemColors.Control;
             tabPageGeneral.Controls.Add(textBoxDescription);
             tabPageGeneral.Controls.Add(label6);
+            tabPageGeneral.Controls.Add(checkBoxAllowHttp2);
             tabPageGeneral.Controls.Add(checkBoxListenAutoStart);
             tabPageGeneral.Controls.Add(comboBoxTrafficType);
             tabPageGeneral.Controls.Add(textBoxProxyName);
@@ -621,6 +631,7 @@ namespace NetProxy.Client.Forms
             // 
             tabPageAdvanced.BackColor = SystemColors.Control;
             tabPageAdvanced.Controls.Add(groupBox4);
+            tabPageAdvanced.Controls.Add(groupBoxLimits);
             tabPageAdvanced.Controls.Add(groupBox1);
             tabPageAdvanced.Location = new Point(4, 24);
             tabPageAdvanced.Name = "tabPageAdvanced";
@@ -700,6 +711,88 @@ namespace NetProxy.Client.Forms
             textBoxInitialBufferSize.Name = "textBoxInitialBufferSize";
             textBoxInitialBufferSize.Size = new Size(116, 23);
             textBoxInitialBufferSize.TabIndex = 10;
+            //
+            // groupBoxLimits
+            //
+            groupBoxLimits.Controls.Add(textBoxIdleTimeout);
+            groupBoxLimits.Controls.Add(labelIdleTimeout);
+            groupBoxLimits.Controls.Add(textBoxMaxConnectionsPerClient);
+            groupBoxLimits.Controls.Add(labelMaxConnectionsPerClient);
+            groupBoxLimits.Controls.Add(textBoxMaxConnections);
+            groupBoxLimits.Controls.Add(labelMaxConnections);
+            groupBoxLimits.Location = new Point(268, 6);
+            groupBoxLimits.Margin = new Padding(4, 3, 4, 3);
+            groupBoxLimits.Name = "groupBoxLimits";
+            groupBoxLimits.Padding = new Padding(4, 3, 4, 3);
+            groupBoxLimits.Size = new Size(252, 170);
+            groupBoxLimits.TabIndex = 1;
+            groupBoxLimits.TabStop = false;
+            groupBoxLimits.Text = "Limits (0 is no limit)";
+            //
+            // labelMaxConnections
+            //
+            labelMaxConnections.AutoSize = true;
+            labelMaxConnections.Location = new Point(8, 19);
+            labelMaxConnections.Margin = new Padding(4, 0, 4, 0);
+            labelMaxConnections.Name = "labelMaxConnections";
+            labelMaxConnections.Size = new Size(100, 15);
+            labelMaxConnections.TabIndex = 20;
+            labelMaxConnections.Text = "Max. connections";
+            //
+            // textBoxMaxConnections
+            //
+            textBoxMaxConnections.Location = new Point(10, 37);
+            textBoxMaxConnections.Margin = new Padding(4, 3, 4, 3);
+            textBoxMaxConnections.Name = "textBoxMaxConnections";
+            textBoxMaxConnections.Size = new Size(116, 23);
+            textBoxMaxConnections.TabIndex = 21;
+            //
+            // labelMaxConnectionsPerClient
+            //
+            labelMaxConnectionsPerClient.AutoSize = true;
+            labelMaxConnectionsPerClient.Location = new Point(8, 65);
+            labelMaxConnectionsPerClient.Margin = new Padding(4, 0, 4, 0);
+            labelMaxConnectionsPerClient.Name = "labelMaxConnectionsPerClient";
+            labelMaxConnectionsPerClient.Size = new Size(100, 15);
+            labelMaxConnectionsPerClient.TabIndex = 22;
+            labelMaxConnectionsPerClient.Text = "Max. connections per client";
+            //
+            // textBoxMaxConnectionsPerClient
+            //
+            textBoxMaxConnectionsPerClient.Location = new Point(10, 83);
+            textBoxMaxConnectionsPerClient.Margin = new Padding(4, 3, 4, 3);
+            textBoxMaxConnectionsPerClient.Name = "textBoxMaxConnectionsPerClient";
+            textBoxMaxConnectionsPerClient.Size = new Size(116, 23);
+            textBoxMaxConnectionsPerClient.TabIndex = 23;
+            //
+            // labelIdleTimeout
+            //
+            labelIdleTimeout.AutoSize = true;
+            labelIdleTimeout.Location = new Point(8, 111);
+            labelIdleTimeout.Margin = new Padding(4, 0, 4, 0);
+            labelIdleTimeout.Name = "labelIdleTimeout";
+            labelIdleTimeout.Size = new Size(100, 15);
+            labelIdleTimeout.TabIndex = 24;
+            labelIdleTimeout.Text = "Idle timeout (s)";
+            //
+            // textBoxIdleTimeout
+            //
+            textBoxIdleTimeout.Location = new Point(10, 129);
+            textBoxIdleTimeout.Margin = new Padding(4, 3, 4, 3);
+            textBoxIdleTimeout.Name = "textBoxIdleTimeout";
+            textBoxIdleTimeout.Size = new Size(116, 23);
+            textBoxIdleTimeout.TabIndex = 25;
+            //
+            // checkBoxAllowHttp2
+            //
+            checkBoxAllowHttp2.AutoSize = true;
+            checkBoxAllowHttp2.Location = new Point(120, 294);
+            checkBoxAllowHttp2.Margin = new Padding(4, 3, 4, 3);
+            checkBoxAllowHttp2.Name = "checkBoxAllowHttp2";
+            checkBoxAllowHttp2.Size = new Size(100, 19);
+            checkBoxAllowHttp2.TabIndex = 4;
+            checkBoxAllowHttp2.Text = "Allow HTTP/2";
+            checkBoxAllowHttp2.UseVisualStyleBackColor = true;
             // 
             // buttonCancel
             // 
@@ -760,6 +853,8 @@ namespace NetProxy.Client.Forms
             groupBox4.PerformLayout();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
+            groupBoxLimits.ResumeLayout(false);
+            groupBoxLimits.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -803,6 +898,14 @@ namespace NetProxy.Client.Forms
         private TextBox textBoxStickySessionCacheExpiration;
         private Label label15;
         private GroupBox groupBox4;
+        private GroupBox groupBoxLimits;
+        private Label labelMaxConnections;
+        private TextBox textBoxMaxConnections;
+        private Label labelMaxConnectionsPerClient;
+        private TextBox textBoxMaxConnectionsPerClient;
+        private Label labelIdleTimeout;
+        private TextBox textBoxIdleTimeout;
+        private CheckBox checkBoxAllowHttp2;
         private DataGridViewCheckBoxColumn ColumnHTTPHeadersEnabled;
         private DataGridViewComboBoxColumn ColumnHTTPHeadersType;
         private DataGridViewComboBoxColumn ColumnHTTPHeadersVerb;

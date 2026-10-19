@@ -101,8 +101,8 @@ namespace NetProxy.Service.Proxy
                 }
 
                 await Task.WhenAll(
-                    PumpAsync(_clientStream!, _endpointStream!, fromClient: true),
-                    PumpAsync(_endpointStream!, _clientStream!, fromClient: false));
+                    PumpAsync(_clientStream!, _endpointStream!, direction: ConnectionDirection.Inbound),
+                    PumpAsync(_endpointStream!, _clientStream!, direction: ConnectionDirection.Outbound));
             }
             catch (OperationCanceledException)
             {
@@ -253,7 +253,7 @@ namespace NetProxy.Service.Proxy
                 TargetHost = NpNetwork.NormalizeHost(endpoint.Address)
             };
 
-            if (!endpoint.TlsIgnoreCertificateErrors)
+            if (!endpoint.TlsValidateSSLCertificate)
             {
                 options.RemoteCertificateValidationCallback = (_, _, _, _) => true;
             }
@@ -276,11 +276,11 @@ namespace NetProxy.Service.Proxy
         /// <summary>
         /// Copies data one way until the sender is finished (or the connection is aborted), applying the HTTP header rules on the way.
         /// </summary>
-        private async Task PumpAsync(Stream from, Stream to, bool fromClient)
+        private async Task PumpAsync(Stream from, Stream to, ConnectionDirection direction)
         {
             var configuration = _proxy.Configuration;
             var buffer = new PumpBuffer(configuration.InitialBufferSize);
-            var parser = CreateHttpParser(fromClient);
+            var parser = CreateHttpParser(direction);
 
             try
             {
@@ -289,7 +289,7 @@ namespace NetProxy.Service.Proxy
                     int read = await from.ReadAsync(buffer.Bytes.AsMemory(), _abort.Token);
                     if (read <= 0)
                     {
-                        FinishSending(to, fromClient);
+                        FinishSending(to, direction);
                         return;
                     }
 
@@ -298,7 +298,7 @@ namespace NetProxy.Service.Proxy
 
                     var (bytes, length) = parser != null ? parser.Process(buffer.Bytes, read) : (buffer.Bytes, read);
 
-                    if (fromClient)
+                    if (direction == ConnectionDirection.Inbound)
                     {
                         _proxy.Statistics.AddBytesRead(read);
                     }
@@ -312,7 +312,7 @@ namespace NetProxy.Service.Proxy
                         await to.WriteAsync(bytes.AsMemory(0, length), _abort.Token);
                         Touch();
 
-                        if (fromClient)
+                        if (direction == ConnectionDirection.Inbound)
                         {
                             _endpointStatistics?.AddBytesWritten(length);
                         }
@@ -332,7 +332,7 @@ namespace NetProxy.Service.Proxy
             catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
             {
                 Singletons.Logging.Write(NpLogging.Severity.Verbose,
-                    $"Connection {Id} from {_clientDisplay} ({(fromClient ? "client to endpoint" : "endpoint to client")}) ended: {ex.GetBaseException().Message}");
+                    $"Connection {Id} from {_clientDisplay} ({(direction == ConnectionDirection.Inbound ? "client to endpoint" : "endpoint to client")}) ended: {ex.GetBaseException().Message}");
                 Abort();
             }
             catch (Exception ex)
@@ -346,13 +346,13 @@ namespace NetProxy.Service.Proxy
         /// One side has finished sending. Tell the other side, so that (for example) a client that is done with its request still
         /// receives the whole response. A TLS session cannot be half closed, so the connection ends instead.
         /// </summary>
-        private void FinishSending(Stream to, bool fromClient)
+        private void FinishSending(Stream to, ConnectionDirection direction)
         {
             try
             {
                 if (to is NetworkStream)
                 {
-                    var socket = fromClient ? _endpointClient?.Client : _client.Client;
+                    var socket = direction == ConnectionDirection.Inbound ? _endpointClient?.Client : _client.Client;
                     socket?.Shutdown(SocketShutdown.Send);
                 }
                 else
@@ -370,19 +370,19 @@ namespace NetProxy.Service.Proxy
         /// Follows the HTTP stream in one direction when there are header rules for it: requests (from the client) with request rules,
         /// responses (from the endpoint) with response rules. This applies to HTTP, and to HTTPS where the listener terminates TLS.
         /// </summary>
-        private IHttpStreamProcessor? CreateHttpParser(bool fromClient)
+        private IHttpStreamProcessor? CreateHttpParser(ConnectionDirection direction)
         {
             if (_proxy.EffectiveTrafficType != TrafficType.Http && _proxy.EffectiveTrafficType != TrafficType.Https)
             {
                 return null;
             }
 
-            var wanted = fromClient ? HttpHeaderType.Request : HttpHeaderType.Response;
+            var wanted = direction == ConnectionDirection.Inbound ? HttpHeaderType.Request : HttpHeaderType.Response;
 
             var hasRules = _proxy.Configuration.HttpHeaderRules.Collection
                 .Any(o => o.Enabled && (o.HeaderType == wanted || o.HeaderType == HttpHeaderType.Any));
 
-            return hasRules ? new HttpStreamParser(_proxy.Configuration, isInbound: fromClient) : null;
+            return hasRules ? new HttpStreamParser(_proxy.Configuration, direction) : null;
         }
 
         private void Close()

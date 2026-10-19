@@ -54,17 +54,17 @@ namespace NetProxy.Service.Http
         }
 
         private readonly NpProxyConfiguration _configuration;
-        private readonly bool _isInbound;
+        private readonly ConnectionDirection _direction;
         private readonly MemoryStream _pending = new();
         private ParserState _state = ParserState.Header;
         private long _remaining;
 
         /// <param name="configuration">The proxy, for its header rules.</param>
-        /// <param name="isInbound">True when the bytes come from the client (requests), false when they come from an endpoint (responses).</param>
-        public HttpStreamParser(NpProxyConfiguration configuration, bool isInbound)
+        /// <param name="direction">Inbound when the bytes come from the client (requests), Outbound when they come from an endpoint (responses).</param>
+        public HttpStreamParser(NpProxyConfiguration configuration, ConnectionDirection direction)
         {
             _configuration = configuration;
-            _isInbound = isInbound;
+            _direction = direction;
         }
 
         /// <summary>
@@ -182,11 +182,11 @@ namespace NetProxy.Service.Http
                 return;
             }
 
-            if (_isInbound && headerType == HttpHeaderType.Response)
+            if (_direction == ConnectionDirection.Inbound && headerType == HttpHeaderType.Response)
             {
                 Singletons.Logging.Write(NpLogging.Severity.Warning, "A HTTP response header was detected on the listener.");
             }
-            else if (!_isInbound && headerType == HttpHeaderType.Request)
+            else if (_direction == ConnectionDirection.Outbound && headerType == HttpHeaderType.Request)
             {
                 Singletons.Logging.Write(NpLogging.Severity.Warning, "A HTTP request header was detected on an endpoint.");
             }

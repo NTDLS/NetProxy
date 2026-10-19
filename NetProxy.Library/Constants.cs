@@ -31,7 +31,6 @@ namespace NetProxy.Library
 
     public enum ConnectionDirection
     {
-        Undefined,
         Inbound,
         Outbound
     }

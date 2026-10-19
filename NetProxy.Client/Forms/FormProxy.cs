@@ -257,7 +257,7 @@ namespace NetProxy.Client.Forms
                 Localize("The largest the buffer of a connection grows to, when it keeps filling up. It cannot be smaller than the initial size."));
 
             toolTips.AddControls([labelAcceptBacklogSize, textBoxAcceptBacklogSize],
-                Localize("How many connections can be waiting to be accepted. Values below 128 are raised to 128. 0 uses the largest the system allows."));
+                Localize("How many connections can be waiting to be accepted. The smallest is 128. 0 uses the largest the system allows."));
 
             toolTips.AddControls([labelMaxConnections, textBoxMaxConnections],
                 Localize("The most connections the proxy has open at once. Further connections are closed as they arrive. 0 is no limit."));
@@ -296,7 +296,8 @@ namespace NetProxy.Client.Forms
             checkBoxListenOnAllAddresses.Checked = proxy.ListenOnAllAddresses;
             textBoxInitialBufferSize.Text = $"{proxy.InitialBufferSize}";
             textBoxMaxBufferSize.Text = $"{proxy.MaxBufferSize}";
-            textBoxAcceptBacklogSize.Text = $"{proxy.AcceptBacklogSize}";
+            //Proxies saved with a smaller backlog have been using the minimum, so that is what they are shown with.
+            textBoxAcceptBacklogSize.Text = $"{(proxy.AcceptBacklogSize > 0 ? Math.Max(proxy.AcceptBacklogSize, Constants.MinAcceptBacklogSize) : 0)}";
             comboBoxConnectionPattern.SelectedValue = proxy.Endpoints.ConnectionPattern;
             checkBoxListenAutoStart.Checked = proxy.AutoStart;
             checkBoxUseStickySessions.Checked = proxy.UseStickySessions;
@@ -374,8 +375,13 @@ namespace NetProxy.Client.Forms
                 textBoxMaxBufferSize.GetAndValidateNumeric(1024, 1073741824,
                     Localize("The max buffer size is required (between [min] and [max]."));
 
-                textBoxAcceptBacklogSize.GetAndValidateNumeric(0, 10000,
+                var backlog = textBoxAcceptBacklogSize.GetAndValidateNumeric(0, 10000,
                     Localize("The accept backlog size is required (between [min] and [max])."));
+
+                if (backlog is > 0 and < Constants.MinAcceptBacklogSize)
+                {
+                    throw new Exception(Localize("The accept backlog size must be 0 or at least {0}.", Constants.MinAcceptBacklogSize));
+                }
 
                 textBoxStickySessionCacheExpiration.GetAndValidateNumeric(1, 2592000,
                     Localize("The sticky session cache expiration (s) is required (between [min] and [max])."));

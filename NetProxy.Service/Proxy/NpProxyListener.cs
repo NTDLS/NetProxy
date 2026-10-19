@@ -46,7 +46,7 @@ namespace NetProxy.Service.Proxy
         {
             //The accept loop takes connections off the queue as soon as they arrive, so a small backlog only makes connections that
             //  arrive together be refused. Values below 128 are raised to 128 (this setting was not applied at all before).
-            var backlog = Proxy.Configuration.AcceptBacklogSize > 0 ? Math.Max(Proxy.Configuration.AcceptBacklogSize, 128) : int.MaxValue;
+            var backlog = Proxy.Configuration.AcceptBacklogSize > 0 ? Math.Max(Proxy.Configuration.AcceptBacklogSize, NetProxy.Library.Constants.MinAcceptBacklogSize) : int.MaxValue;
 
             try
             {

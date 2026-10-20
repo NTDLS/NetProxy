@@ -79,24 +79,20 @@ The configuration is stored in the common application data folder: `C:\ProgramDa
 * A new installation has one management user, `administrator`, with an **empty password**. Set a password first. The service logs a warning while any user has none.
 * The management connection between the console and the service is **encrypted**: on connecting, the two agree on a key (NTDLS.SecureKeyExchange) and everything after that, including the login and every setting, is encrypted (NTDLS.Permafrost). The service refuses a login over a connection that is not encrypted, so the console and the service have to be the same version. The connection is encrypted but the service is not authenticated to the console, so on an untrusted network still limit who can reach the management port (5854), for example with a VPN or [NetTunnel](https://github.com/NTDLS/NetTunnel).
 
-## Building
+## Screenshots
 
-Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download). The solution is `NetProxy.slnx`.
+<img width="982" height="625" alt="NetProxy" src="https://github.com/user-attachments/assets/d51d04d1-deab-4bb1-bff7-3c96fe1d519e" />
 
-```
-dotnet build NetProxy.slnx
-```
+<img width="488" height="500" alt="NetProxy Config" src="https://github.com/user-attachments/assets/34e6b83f-00be-4982-a66c-87cef9bb8585" />
 
-`@Installers\Build and Compile Installers.bat` builds the Windows installer (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php)) and the self contained Linux x64 and arm64 zips of the service (needs 7-Zip).
+<img width="625" height="442" alt="NetProxy General" src="https://github.com/user-attachments/assets/f3a19b64-7228-4439-b7ac-5c93f48f7157" />
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/cdd3eadb-50ba-4e30-8bad-ffdf93e4d2c3)
+<img width="625" height="442" alt="NetProxy Bindings" src="https://github.com/user-attachments/assets/069bd1ea-3f29-456a-b5a6-f22eb6b240b8" />
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/02094550-08ed-4563-bca6-6b227da9e85a)
+<img width="625" height="442" alt="NetProxy LTLS" src="https://github.com/user-attachments/assets/3388c923-897d-4ef7-ac66-444d8372c280" />
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/0a70bb69-d457-4c8a-b04c-a304ce80f312)
+<img width="625" height="442" alt="NetProxy Headers" src="https://github.com/user-attachments/assets/bdf4875b-ea2e-4177-ad15-6c871d3add9f" />
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/aab92b62-79f3-4dbb-aa4c-266bfc214b2b)
+<img width="625" height="442" alt="NetProxy Endpoints" src="https://github.com/user-attachments/assets/6c129c9b-f7b9-4433-a7ce-d94847c9ff69" />
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/03622ca0-145e-441c-8aa0-b0bca65fd3b5)
 
-![image](https://github.com/NTDLS/NetProxy/assets/11428567/8f64d630-1683-4e7c-b285-e1d9b6de689d)

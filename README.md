@@ -11,6 +11,11 @@ As always, the service is high performance, secure, and can be remotely administ
 
 If you require similar routing but through firewalls where you have no control, then be sure to check out https://github.com/NTDLS/NetTunnel
 
+*There are more screenshots at the bottom of this page.*
+
+<img width="982" height="625" alt="NetProxy" src="https://github.com/user-attachments/assets/d51d04d1-deab-4bb1-bff7-3c96fe1d519e" />
+
+
 ## What it does
 
 A **proxy** listens on a port and passes every connection it accepts to one of its **endpoints**: the machines it is proxying to. Each endpoint has its own address and port, and its own traffic type. A proxy has:
@@ -80,8 +85,6 @@ The configuration is stored in the common application data folder: `C:\ProgramDa
 * The management connection between the console and the service is **encrypted**: on connecting, the two agree on a key (NTDLS.SecureKeyExchange) and everything after that, including the login and every setting, is encrypted (NTDLS.Permafrost). The service refuses a login over a connection that is not encrypted, so the console and the service have to be the same version. The connection is encrypted but the service is not authenticated to the console, so on an untrusted network still limit who can reach the management port (5854), for example with a VPN or [NetTunnel](https://github.com/NTDLS/NetTunnel).
 
 ## Screenshots
-
-<img width="982" height="625" alt="NetProxy" src="https://github.com/user-attachments/assets/d51d04d1-deab-4bb1-bff7-3c96fe1d519e" />
 
 <img width="488" height="500" alt="NetProxy Config" src="https://github.com/user-attachments/assets/34e6b83f-00be-4982-a66c-87cef9bb8585" />
 

@@ -26,6 +26,14 @@ namespace NetProxy.Client.Forms
         private bool _timerTicking = false;
         private List<NpProxyGridStats> _lastStatistics = [];
 
+        /// <summary>
+        /// The connection list shows the connections of this proxy, and the rate of each is worked out from the bytes of the previous sample.
+        /// </summary>
+        private Guid _connectionsProxyId = Guid.Empty;
+        private readonly Dictionary<Guid, ConnectionSample> _connectionSamples = [];
+
+        private record ConnectionSample(DateTime Time, ulong BytesIn, ulong BytesOut, double InPerSecond, double OutPerSecond);
+
         private readonly ToolStripStatusLabel _statusConnection = new() { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
         private readonly ToolStripStatusLabel _statusProxies = new() { BorderSides = ToolStripStatusLabelBorderSides.Left };
         private readonly ToolStripStatusLabel _statusConnections = new() { BorderSides = ToolStripStatusLabelBorderSides.Left };
@@ -43,7 +51,13 @@ namespace NetProxy.Client.Forms
 
             ApplyLanguage();
 
-            dataGridViewProxys.SelectionChanged += (_, _) => UpdateChart();
+            SetupConnectionList();
+
+            dataGridViewProxys.SelectionChanged += (_, _) =>
+            {
+                UpdateChart();
+                SelectedProxyChanged();
+            };
             dataGridViewProxys.KeyDown += DataGridViewProxys_KeyDown;
 
             _statsTimer.Tick += StatsTimer_Tick;
@@ -83,6 +97,7 @@ namespace NetProxy.Client.Forms
             ColumnCurrentConnections.HeaderText = Localize("Curr. Conn.");
 
             SetupToolTips();
+            SetupConnectionColumnHeaders();
 
             Text = _connectionInfo != null ? $"{Constants.FriendlyName} - {_connectionInfo.ServerName}" : Constants.FriendlyName;
             UpdateConnectionStatus();
@@ -146,6 +161,8 @@ namespace NetProxy.Client.Forms
                 {
                     RefreshProxyList();
                 }
+
+                await RefreshConnectionsAsync(client);
             }
             catch
             {
@@ -186,6 +203,9 @@ namespace NetProxy.Client.Forms
                 _messageClient = client;
                 _history.Clear();
                 _lastStatistics = [];
+                _connectionsProxyId = Guid.Empty;
+                _connectionSamples.Clear();
+                listViewEndpointConnections.Items.Clear();
 
                 _connectionLost = OnConnectionLost;
                 client.OnNotificationReceived += MessageClient_OnNotificationReceived;
@@ -358,6 +378,349 @@ namespace NetProxy.Client.Forms
             }
 
             _performanceChart.Render(_history.Get(key), title, DateTime.Now);
+        }
+
+        #endregion
+
+        #region Endpoint connections.
+
+        /// <summary>
+        /// The column titles in the current language. Each is a literal Localize() call so that the localization scan finds it.
+        /// </summary>
+        private static string[] GetConnectionColumnTitles() =>
+        [
+            Localize("Source IP"), Localize("Source Host"), Localize("Source Port"),
+            Localize("Destination IP"), Localize("Destination Host"), Localize("Destination Port"),
+            Localize("Protocol"), Localize("Version"), Localize("Encryption"),
+            Localize("Bytes In"), Localize("Bytes Out"), Localize("In/s"), Localize("Out/s"),
+            Localize("Started"), Localize("Duration"), Localize("Idle")
+        ];
+
+        private static readonly int[] _connectionColumnWidths = [110, 150, 80, 110, 150, 110, 70, 70, 130, 80, 80, 80, 80, 140, 80, 70];
+
+        private void SetupConnectionList()
+        {
+            var list = listViewEndpointConnections;
+            list.FullRowSelect = true;
+            list.GridLines = true;
+            list.HideSelection = false;
+            list.ListViewItemSorter = _connectionSorter;
+            list.ColumnClick += ListViewEndpointConnections_ColumnClick;
+            list.MouseUp += ListViewEndpointConnections_MouseUp;
+
+            //Avoids the flicker of updating the rows once a second.
+            typeof(ListView).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(list, true);
+
+            var titles = GetConnectionColumnTitles();
+
+            for (int i = 0; i < titles.Length; i++)
+            {
+                var alignRight = i is 2 or 5 or >= 9 and <= 12 or 14 or 15;
+                list.Columns.Add(new ColumnHeader
+                {
+                    Width = _connectionColumnWidths[i],
+                    TextAlign = alignRight ? HorizontalAlignment.Right : HorizontalAlignment.Left
+                });
+            }
+
+            SetupConnectionColumnHeaders();
+        }
+
+        private void SetupConnectionColumnHeaders()
+        {
+            var titles = GetConnectionColumnTitles();
+
+            for (int i = 0; i < titles.Length && i < listViewEndpointConnections.Columns.Count; i++)
+            {
+                var arrow = i != _connectionSorter.Column ? "" : _connectionSorter.Ascending ? " ▲" : " ▼";
+                listViewEndpointConnections.Columns[i].Text = titles[i] + arrow;
+            }
+        }
+
+        /// <summary>
+        /// What a row sorts by in each column: the value itself (numbers, times) rather than the text that is shown.
+        /// </summary>
+        private sealed class ConnectionRow(Guid id)
+        {
+            public Guid Id { get; } = id;
+            public object[] Keys { get; set; } = [];
+        }
+
+        private sealed class ConnectionSorter : System.Collections.IComparer
+        {
+            public int Column { get; set; } = -1;
+            public bool Ascending { get; set; } = true;
+
+            public int Compare(object? x, object? y)
+            {
+                if (Column < 0 || (x as ListViewItem)?.Tag is not ConnectionRow a || (y as ListViewItem)?.Tag is not ConnectionRow b)
+                {
+                    return 0;
+                }
+
+                var result = a.Keys[Column] is IComparable left ? left.CompareTo(b.Keys[Column]) : 0;
+                if (result == 0)
+                {
+                    result = a.Id.CompareTo(b.Id); //Keeps rows with equal values from jumping around.
+                }
+
+                return Ascending ? result : -result;
+            }
+        }
+
+        private readonly ConnectionSorter _connectionSorter = new();
+
+        /// <summary>
+        /// Addresses sort by their value, not their text ("10.0.0.9" before "10.0.0.10").
+        /// </summary>
+        private static string IpSortKey(string address)
+            => System.Net.IPAddress.TryParse(address, out var ip) ? Convert.ToHexString(ip.MapToIPv6().GetAddressBytes()) : address;
+
+        /// <summary>
+        /// Right-click on a connection: copy the cell that was clicked, or the whole row.
+        /// </summary>
+        private void ListViewEndpointConnections_MouseUp(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right)
+            {
+                return;
+            }
+
+            var hit = listViewEndpointConnections.HitTest(e.Location);
+            if (hit.Item == null)
+            {
+                return;
+            }
+
+            hit.Item.Selected = true;
+            var item = hit.Item;
+            var cell = hit.SubItem?.Text ?? string.Empty;
+
+            var menu = new ContextMenuStrip();
+            menu.Closed += (_, _) => menu.BeginInvoke(menu.Dispose);
+
+            var copyValue = menu.Items.Add(Localize("Copy value"), null, (_, _) => CopyToClipboard(cell));
+            copyValue.Enabled = cell.Length > 0;
+            menu.Items.Add(Localize("Copy row"), null,
+                (_, _) => CopyToClipboard(string.Join('\t', item.SubItems.Cast<ListViewItem.ListViewSubItem>().Select(o => o.Text))));
+
+            menu.Show(listViewEndpointConnections, e.Location);
+        }
+
+        private static void CopyToClipboard(string text)
+        {
+            try
+            {
+                Clipboard.SetText(text);
+            }
+            catch (System.Runtime.InteropServices.ExternalException)
+            {
+                //The clipboard is in use by another program.
+            }
+        }
+
+        private void ListViewEndpointConnections_ColumnClick(object? sender, ColumnClickEventArgs e)
+        {
+            if (_connectionSorter.Column == e.Column)
+            {
+                _connectionSorter.Ascending = !_connectionSorter.Ascending;
+            }
+            else
+            {
+                _connectionSorter.Column = e.Column;
+                _connectionSorter.Ascending = true;
+            }
+
+            SetupConnectionColumnHeaders();
+            listViewEndpointConnections.Sort();
+        }
+
+        private Guid GetSelectedProxyId()
+            => dataGridViewProxys.SelectedRows.Count > 0 && dataGridViewProxys.SelectedRows[0].DataBoundItem is NpProxyGridItem selected
+                ? selected.Id : Guid.Empty;
+
+        /// <summary>
+        /// The connection list follows the selected proxy: clear it and fill it for the new one without waiting for the next tick.
+        /// </summary>
+        private void SelectedProxyChanged()
+        {
+            var proxyId = GetSelectedProxyId();
+            if (proxyId == _connectionsProxyId)
+            {
+                return;
+            }
+
+            _connectionsProxyId = proxyId;
+            _connectionSamples.Clear();
+            listViewEndpointConnections.Items.Clear();
+
+            var client = _messageClient;
+            if (proxyId != Guid.Empty && client != null && _timerTicking == false)
+            {
+                _timerTicking = true;
+                _ = RefreshConnectionsThenReleaseAsync(client);
+            }
+        }
+
+        private async Task RefreshConnectionsThenReleaseAsync(RmClient client)
+        {
+            try
+            {
+                await RefreshConnectionsAsync(client);
+            }
+            catch
+            {
+                //The connection was lost. Losing it is reported by OnDisconnected.
+            }
+            finally
+            {
+                _timerTicking = false;
+            }
+        }
+
+        private async Task RefreshConnectionsAsync(RmClient client)
+        {
+            var proxyId = _connectionsProxyId;
+            if (proxyId == Guid.Empty)
+            {
+                return;
+            }
+
+            var reply = await Task.Run(() => client.Query<QueryProxyConnectionsReply>(new QueryProxyConnections(proxyId)));
+
+            //The selection or the connection may have changed while the service was answering.
+            if (ReferenceEquals(client, _messageClient) == false || IsDisposed || proxyId != _connectionsProxyId)
+            {
+                return;
+            }
+
+            ApplyConnections(reply.Collection);
+        }
+
+        private void ApplyConnections(List<NpConnectionGridItem> connections)
+        {
+            var list = listViewEndpointConnections;
+            var now = DateTime.Now;
+            var utcNow = DateTime.UtcNow;
+            var present = new HashSet<Guid>();
+
+            list.BeginUpdate();
+            try
+            {
+                var existing = list.Items.Cast<ListViewItem>().ToDictionary(o => ((ConnectionRow)o.Tag!).Id);
+
+                foreach (var connection in connections)
+                {
+                    present.Add(connection.Id);
+
+                    //The rates are the change since the previous sample. The first sample of a connection has no rate yet.
+                    _connectionSamples.TryGetValue(connection.Id, out var previous);
+                    var inPerSecond = 0.0;
+                    var outPerSecond = 0.0;
+                    if (previous != null)
+                    {
+                        var seconds = (now - previous.Time).TotalSeconds;
+                        if (seconds > 0.1)
+                        {
+                            inPerSecond = (connection.BytesIn - previous.BytesIn) / seconds;
+                            outPerSecond = (connection.BytesOut - previous.BytesOut) / seconds;
+                        }
+                        else
+                        {
+                            inPerSecond = previous.InPerSecond;
+                            outPerSecond = previous.OutPerSecond;
+                        }
+                    }
+
+                    if (previous == null || (now - previous.Time).TotalSeconds > 0.1)
+                    {
+                        _connectionSamples[connection.Id] = new ConnectionSample(now, connection.BytesIn, connection.BytesOut, inPerSecond, outPerSecond);
+                    }
+
+                    var encryption = (connection.ClientTls, connection.EndpointTls) switch
+                    {
+                        ("", "") => "",
+                        (var c, "") => c,
+                        ("", var e) => "-> " + e,
+                        var (c, e) => c + " -> " + e
+                    };
+
+                    string[] cells =
+                    [
+                        connection.SourceAddress,
+                        connection.SourceHostName ?? "",
+                        connection.SourcePort.ToString(),
+                        connection.DestinationAddress,
+                        connection.DestinationHostName ?? "",
+                        connection.IsConnectedToEndpoint ? connection.DestinationPort.ToString() : "",
+                        connection.Protocol,
+                        connection.Version,
+                        encryption,
+                        Formatting.Bytes(connection.BytesIn),
+                        Formatting.Bytes(connection.BytesOut),
+                        Formatting.Rate(inPerSecond),
+                        Formatting.Rate(outPerSecond),
+                        connection.StartDateTime.ToLocalTime().ToString("g"),
+                        FormatDuration(utcNow - connection.StartDateTime),
+                        FormatDuration(utcNow - connection.LastActivityDateTime)
+                    ];
+
+                    object[] keys =
+                    [
+                        IpSortKey(connection.SourceAddress), connection.SourceHostName ?? "", connection.SourcePort,
+                        IpSortKey(connection.DestinationAddress), connection.DestinationHostName ?? "", connection.DestinationPort,
+                        connection.Protocol, connection.Version, encryption,
+                        connection.BytesIn, connection.BytesOut, inPerSecond, outPerSecond,
+                        connection.StartDateTime, utcNow - connection.StartDateTime, utcNow - connection.LastActivityDateTime
+                    ];
+
+                    if (existing.TryGetValue(connection.Id, out var item))
+                    {
+                        ((ConnectionRow)item.Tag!).Keys = keys;
+
+                        for (int i = 0; i < cells.Length; i++)
+                        {
+                            if (item.SubItems[i].Text != cells[i])
+                            {
+                                item.SubItems[i].Text = cells[i];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        list.Items.Add(new ListViewItem(cells) { Tag = new ConnectionRow(connection.Id) { Keys = keys } });
+                    }
+                }
+
+                foreach (var gone in existing.Where(o => present.Contains(o.Key) == false))
+                {
+                    list.Items.Remove(gone.Value);
+                }
+
+                foreach (var staleId in _connectionSamples.Keys.Where(o => present.Contains(o) == false).ToList())
+                {
+                    _connectionSamples.Remove(staleId);
+                }
+
+                list.Sort();
+            }
+            finally
+            {
+                list.EndUpdate();
+            }
+        }
+
+        private static string FormatDuration(TimeSpan span)
+        {
+            if (span < TimeSpan.Zero)
+            {
+                span = TimeSpan.Zero;
+            }
+
+            return span.TotalDays >= 1
+                ? $"{(int)span.TotalDays}d {span.Hours:00}:{span.Minutes:00}:{span.Seconds:00}"
+                : $"{(int)span.TotalHours:00}:{span.Minutes:00}:{span.Seconds:00}";
         }
 
         #endregion

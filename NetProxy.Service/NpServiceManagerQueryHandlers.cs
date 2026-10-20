@@ -164,6 +164,29 @@ namespace NetProxy.Service
             return reply;
         }
 
+        public QueryProxyConnectionsReply OnQueryProxyConnections(RmContext context, QueryProxyConnections query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+
+            var reply = new QueryProxyConnectionsReply();
+
+            try
+            {
+                var proxy = serviceManager.GetProxyById(query.ProxyId);
+                if (proxy != null)
+                {
+                    reply.Collection = proxy.ActiveConnections.Values.Select(o => o.GetGridItem()).OrderBy(o => o.StartDateTime).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to get the proxy connections", ex);
+                reply.Message = ex.Message;
+            }
+
+            return reply;
+        }
+
         public QueryProxyConfigurationReply OnQueryProxyConfiguration(RmContext context, QueryProxyConfiguration query)
         {
             var serviceManager = EnforceLoginAndGetServiceManager(context);

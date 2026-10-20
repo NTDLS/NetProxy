@@ -48,12 +48,21 @@ namespace NetProxy.Client.Forms
             helpToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             statusStripMain = new StatusStrip();
-            panelPerformance = new Panel();
             chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            splitContainerOuter = new SplitContainer();
+            splitContainerInner = new SplitContainer();
+            listViewEndpointConnections = new ListView();
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).BeginInit();
             menuStrip1.SuspendLayout();
-            panelPerformance.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)chartPerformance).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)splitContainerOuter).BeginInit();
+            splitContainerOuter.Panel1.SuspendLayout();
+            splitContainerOuter.Panel2.SuspendLayout();
+            splitContainerOuter.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainerInner).BeginInit();
+            splitContainerInner.Panel1.SuspendLayout();
+            splitContainerInner.Panel2.SuspendLayout();
+            splitContainerInner.SuspendLayout();
             SuspendLayout();
             // 
             // dataGridViewProxys
@@ -66,13 +75,13 @@ namespace NetProxy.Client.Forms
             dataGridViewProxys.Columns.AddRange(new DataGridViewColumn[] { ColumnStatus, ColumnId, ColumnName, ColumnProxyType, ColummListenPort, ColumnBytesTransferred, ColumnTotalConnections, ColumnCurrentConnections });
             dataGridViewProxys.Dock = DockStyle.Fill;
             dataGridViewProxys.EditMode = DataGridViewEditMode.EditProgrammatically;
-            dataGridViewProxys.Location = new Point(0, 204);
+            dataGridViewProxys.Location = new Point(0, 0);
             dataGridViewProxys.Margin = new Padding(4, 3, 4, 3);
             dataGridViewProxys.MultiSelect = false;
             dataGridViewProxys.Name = "dataGridViewProxys";
             dataGridViewProxys.ReadOnly = true;
             dataGridViewProxys.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridViewProxys.Size = new Size(758, 291);
+            dataGridViewProxys.Size = new Size(784, 193);
             dataGridViewProxys.TabIndex = 0;
             dataGridViewProxys.CellDoubleClick += DataGridViewProxys_CellDoubleClick;
             dataGridViewProxys.MouseDown += DataGridViewProxys_MouseDown;
@@ -145,7 +154,7 @@ namespace NetProxy.Client.Forms
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Padding = new Padding(7, 2, 0, 2);
-            menuStrip1.Size = new Size(758, 24);
+            menuStrip1.Size = new Size(784, 24);
             menuStrip1.TabIndex = 1;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -207,22 +216,12 @@ namespace NetProxy.Client.Forms
             // 
             // statusStripMain
             // 
-            statusStripMain.Location = new Point(0, 495);
+            statusStripMain.Location = new Point(0, 539);
             statusStripMain.Name = "statusStripMain";
             statusStripMain.Padding = new Padding(1, 0, 16, 0);
-            statusStripMain.Size = new Size(758, 22);
+            statusStripMain.Size = new Size(784, 22);
             statusStripMain.TabIndex = 2;
             statusStripMain.Text = "statusStrip1";
-            // 
-            // panelPerformance
-            // 
-            panelPerformance.Controls.Add(chartPerformance);
-            panelPerformance.Dock = DockStyle.Top;
-            panelPerformance.Location = new Point(0, 24);
-            panelPerformance.Margin = new Padding(4, 3, 4, 3);
-            panelPerformance.Name = "panelPerformance";
-            panelPerformance.Size = new Size(758, 180);
-            panelPerformance.TabIndex = 3;
             // 
             // chartPerformance
             // 
@@ -230,22 +229,69 @@ namespace NetProxy.Client.Forms
             chartPerformance.Location = new Point(0, 0);
             chartPerformance.Margin = new Padding(4, 3, 4, 3);
             chartPerformance.Name = "chartPerformance";
-            chartPerformance.Size = new Size(758, 180);
+            chartPerformance.Size = new Size(784, 164);
             chartPerformance.TabIndex = 0;
             chartPerformance.Text = "chartPerformance";
+            // 
+            // splitContainerOuter
+            // 
+            splitContainerOuter.Dock = DockStyle.Fill;
+            splitContainerOuter.FixedPanel = FixedPanel.Panel1;
+            splitContainerOuter.Location = new Point(0, 24);
+            splitContainerOuter.Name = "splitContainerOuter";
+            splitContainerOuter.Orientation = Orientation.Horizontal;
+            // 
+            // splitContainerOuter.Panel1
+            // 
+            splitContainerOuter.Panel1.Controls.Add(chartPerformance);
+            // 
+            // splitContainerOuter.Panel2
+            // 
+            splitContainerOuter.Panel2.Controls.Add(splitContainerInner);
+            splitContainerOuter.Size = new Size(784, 515);
+            splitContainerOuter.SplitterDistance = 164;
+            splitContainerOuter.TabIndex = 3;
+            // 
+            // splitContainerInner
+            // 
+            splitContainerInner.Dock = DockStyle.Fill;
+            splitContainerInner.Location = new Point(0, 0);
+            splitContainerInner.Name = "splitContainerInner";
+            splitContainerInner.Orientation = Orientation.Horizontal;
+            // 
+            // splitContainerInner.Panel1
+            // 
+            splitContainerInner.Panel1.Controls.Add(dataGridViewProxys);
+            // 
+            // splitContainerInner.Panel2
+            // 
+            splitContainerInner.Panel2.Controls.Add(listViewEndpointConnections);
+            splitContainerInner.Size = new Size(784, 347);
+            splitContainerInner.SplitterDistance = 193;
+            splitContainerInner.TabIndex = 4;
+            // 
+            // listViewEndpointConnections
+            // 
+            listViewEndpointConnections.Dock = DockStyle.Fill;
+            listViewEndpointConnections.Location = new Point(0, 0);
+            listViewEndpointConnections.Name = "listViewEndpointConnections";
+            listViewEndpointConnections.Size = new Size(784, 150);
+            listViewEndpointConnections.TabIndex = 0;
+            listViewEndpointConnections.UseCompatibleStateImageBehavior = false;
+            listViewEndpointConnections.View = View.Details;
             // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(758, 517);
-            Controls.Add(dataGridViewProxys);
+            ClientSize = new Size(784, 561);
+            Controls.Add(splitContainerOuter);
             Controls.Add(statusStripMain);
-            Controls.Add(panelPerformance);
             Controls.Add(menuStrip1);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             Margin = new Padding(4, 3, 4, 3);
+            MinimumSize = new Size(600, 400);
             Name = "FormMain";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "NetProxy";
@@ -254,8 +300,15 @@ namespace NetProxy.Client.Forms
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
-            panelPerformance.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)chartPerformance).EndInit();
+            splitContainerOuter.Panel1.ResumeLayout(false);
+            splitContainerOuter.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerOuter).EndInit();
+            splitContainerOuter.ResumeLayout(false);
+            splitContainerInner.Panel1.ResumeLayout(false);
+            splitContainerInner.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerInner).EndInit();
+            splitContainerInner.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -273,7 +326,6 @@ namespace NetProxy.Client.Forms
         private ToolStripMenuItem configurationToolStripMenuItem;
         private ToolStripMenuItem languageToolStripMenuItem;
         private StatusStrip statusStripMain;
-        private Panel panelPerformance;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartPerformance;
         private DataGridViewImageColumn ColumnStatus;
         private DataGridViewTextBoxColumn ColumnId;
@@ -283,5 +335,8 @@ namespace NetProxy.Client.Forms
         private DataGridViewTextBoxColumn ColumnBytesTransferred;
         private DataGridViewTextBoxColumn ColumnTotalConnections;
         private DataGridViewTextBoxColumn ColumnCurrentConnections;
+        private SplitContainer splitContainerOuter;
+        private SplitContainer splitContainerInner;
+        private ListView listViewEndpointConnections;
     }
 }

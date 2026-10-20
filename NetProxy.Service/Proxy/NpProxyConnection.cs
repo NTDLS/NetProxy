@@ -1,4 +1,5 @@
 ﻿using NetProxy.Library;
+using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Service.Http;
@@ -49,6 +50,14 @@ namespace NetProxy.Service.Proxy
         private TcpClient? _endpointClient;
         private Stream? _endpointStream;
         private NpProxyEndpointStatistics? _endpointStatistics;
+        private long _bytesIn;
+        private long _bytesOut;
+
+        private readonly string _listenAddress = string.Empty;
+        private readonly int _listenPort;
+        private readonly int _clientPort;
+        private string _endpointAddress = string.Empty;
+        private int _endpointPort;
 
         public Guid Id { get; } = Guid.NewGuid();
 
@@ -76,13 +85,60 @@ namespace NetProxy.Service.Proxy
                 //Clients that connected over IPv4 to a dual-stack listener are shown (and remembered) by their IPv4 address.
                 _clientKey = NpNetwork.Unmap(remote.Address).ToString();
                 _clientDisplay = NpNetwork.FormatHostPort(_clientKey, remote.Port);
+                _clientPort = remote.Port;
             }
             else
             {
                 _clientKey = $"{client.Client.RemoteEndPoint}";
                 _clientDisplay = _clientKey;
             }
+
+            if (client.Client.LocalEndPoint is IPEndPoint local)
+            {
+                _listenAddress = NpNetwork.Unmap(local.Address).ToString();
+                _listenPort = local.Port;
+            }
         }
+
+        /// <summary>
+        /// A snapshot of the connection for the connection list of the console.
+        /// </summary>
+        public NpConnectionGridItem GetGridItem()
+        {
+            var clientTls = (_clientStream as SslStream)?.SslProtocol;
+            var endpointTls = (_endpointStream as SslStream)?.SslProtocol;
+            var trafficType = _proxy.EffectiveTrafficType;
+
+            return new NpConnectionGridItem
+            {
+                Id = Id,
+                StartDateTime = StartDateTime,
+                LastActivityDateTime = LastActivityDateTime,
+                SourceAddress = _clientKey,
+                SourceHostName = NpHostNames.Get(_clientKey),
+                SourcePort = _clientPort,
+                ListenAddress = _listenAddress,
+                ListenPort = _listenPort,
+                DestinationAddress = _endpointAddress,
+                DestinationHostName = NpHostNames.Get(_endpointAddress),
+                DestinationPort = _endpointPort,
+                Protocol = trafficType.ToString(),
+                Version = trafficType is TrafficType.Http or TrafficType.Https ? (_clientIsHttp2 ? "HTTP/2" : "HTTP/1.x") : string.Empty,
+                ClientTls = FormatTls(clientTls),
+                EndpointTls = FormatTls(endpointTls),
+                IsConnectedToEndpoint = _endpointStream != null,
+                BytesIn = (ulong)Interlocked.Read(ref _bytesIn),
+                BytesOut = (ulong)Interlocked.Read(ref _bytesOut)
+            };
+        }
+
+        private static string FormatTls(SslProtocols? protocol) => protocol switch
+        {
+            null or SslProtocols.None => string.Empty,
+            SslProtocols.Tls13 => "TLS 1.3",
+            SslProtocols.Tls12 => "TLS 1.2",
+            _ => protocol.ToString() ?? string.Empty
+        };
 
         /// <summary>
         /// Ends the connection. Whatever is waiting on one of its sockets is released.
@@ -319,6 +375,11 @@ namespace NetProxy.Service.Proxy
                     _endpointStream = stream;
                     _endpointStatistics = statistics;
 
+                    //The address that was connected to, which is not what is configured when that is a host name.
+                    _endpointPort = endpoint.Port;
+                    _endpointAddress = tcpClient.Client.RemoteEndPoint is IPEndPoint endpointRemote
+                        ? NpNetwork.Unmap(endpointRemote.Address).ToString() : endpoint.Address;
+
                     statistics.Established();
                     _proxy.RememberStickySession(_clientKey, endpoint);
 
@@ -451,10 +512,12 @@ namespace NetProxy.Service.Proxy
 
                     if (direction == ConnectionDirection.Inbound)
                     {
+                        Interlocked.Add(ref _bytesIn, read);
                         _proxy.Statistics.AddBytesRead(read);
                     }
                     else
                     {
+                        Interlocked.Add(ref _bytesOut, read);
                         _endpointStatistics?.AddBytesRead(read);
                     }
 

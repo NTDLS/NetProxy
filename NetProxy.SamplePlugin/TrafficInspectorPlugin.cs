@@ -77,7 +77,7 @@ namespace NetProxy.SamplePlugin
             {
                 var length = Math.Min(data.Data.Length, _maxLoggedBytes);
                 var text = Encoding.UTF8.GetString(data.Data.Span[..length]).Replace("\r", "\\r").Replace("\n", "\\n");
-                Host.Log(NpPluginLogLevel.Verbose,
+                Host.Log(NpPluginLogLevel.Information,
                     $"{data.Direction} {data.Data.Length} bytes{(data.ReceivedEncrypted ? " (decrypted)" : "")}: {text}");
             }
 

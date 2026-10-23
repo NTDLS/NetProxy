@@ -9,7 +9,7 @@
 		<RootNamespace>NetProxy.Cli</RootNamespace>
 
 		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
-		<Version>2.5.1</Version>
+		<Version>2.6.0</Version>
 		<Company>NetworkDLS</Company>
 		<Product>NetProxy</Product>
 		<Description>Manages a NetProxy service from the command line.</Description>

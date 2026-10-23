@@ -57,6 +57,28 @@ Several **HTTP** or **HTTPS** proxies can listen on the same port, if each answe
 * The proxy is chosen once per connection: the first request decides, so later requests on a keep-alive connection go to the same proxy. For the same reason HTTP/2 connections go to the proxy of the first host name (HTTPS) or to the default proxy (HTTP/2 without TLS, where the host is compressed), so clients that reuse one HTTP/2 connection for several host names can reach the wrong proxy.
 * A proxy that is alone on its port answers to every host name, whatever it lists.
 
+### Managing the service without the console (`netproxyctl`)
+
+`netproxyctl` is a cross-platform command line tool (Windows, Linux, macOS) that does what the console does, over the same encrypted management connection, so it works against a remote service too. `NetProxy.ClientApi` is the library underneath it, if you want to do the same from your own .NET code.
+
+```
+netproxyctl login --server myhost --user administrator     # asks for the password
+netproxyctl status
+netproxyctl proxy list
+netproxyctl proxy get web > web.json                        # edit it...
+netproxyctl proxy apply -f web.json --dry-run               # ...see what would change...
+netproxyctl proxy apply -f web.json                         # ...and apply it
+netproxyctl proxy restart web
+netproxyctl user add bob --password-stdin
+netproxyctl help                                            # everything else
+```
+
+* **Login:** `login` keeps the server, user and the hash of the password (not the password) in `~/.netproxy/credentials.json` for the user that ran it; on Linux and macOS only that user can read the file. `NETPROXY_SERVER`, `NETPROXY_PORT`, `NETPROXY_USER` and `NETPROXY_PASSWORD`, or `--server`, `--port`, `--user` and `--password`, take precedence, which is how scripts log in.
+* **Apply by name:** `proxy apply` and `plugin apply` add the proxy or plugin, or replace the one with the same name (not case sensitive), the way `kubectl apply` does. One that is the same as what the service has is left alone, so it is not restarted. A file can hold one proxy, a list, or an export. In `proxy get` secrets are shown as `********`, and applying that keeps the secret the proxy has.
+* **Editing the files by hand:** the files are in the configuration folder (see below). Edit them, run `netproxyctl validate` to check them and see what would change, then `netproxyctl reload` (or `kill -HUP` the service on Linux and macOS). Reload applies only what changed: proxies you did not touch keep running and keep their connections, and nothing is changed if the files have a problem (including a file with no proxies, which is what a file that could not be read looks like). Plain text passwords you typed into the files are encrypted the next time the service saves. The management port only changes when the service restarts. Do not edit the files while a console is changing the same things: the service rewrites them on every change.
+* **Scripts:** `--json` prints JSON, and the exit code is 0 when it was done, 1 when it was not, 2 for a wrong command line and 3 when it could not connect or log in. `export` and `import` move the proxies, plugins and settings between services (users are not included).
+* Also: `reload`, `logs`, `certs` (when the certificates expire), `stats`, `connections` (and `connections close`), `user ...`, `plugin ...`, `settings ...`.
+
 ### Plugins
 
 NetProxy can be extended with .NET plugins. A plugin is an assembly with a class that derives from `NpPlugin` (the `NetProxy.PluginApi` project, which has no dependencies). `NetProxy.SamplePlugin` is a small working example: it logs connections, can block clients, and can find and replace text in the traffic.

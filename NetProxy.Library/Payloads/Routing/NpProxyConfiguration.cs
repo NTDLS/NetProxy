@@ -85,6 +85,28 @@ namespace NetProxy.Library.Payloads.Routing
         }
 
         /// <summary>
+        /// For a configuration that was written by hand (its endpoints have no ids of their own): the endpoints that are the same as
+        /// ones of the proxy that this replaces (same address and port) keep their ids, so that they keep their statistics and a
+        /// configuration that has not changed is seen as not changed.
+        /// </summary>
+        public void AdoptEndpointIds(NpProxyConfiguration existing)
+        {
+            var available = existing.Endpoints.Collection.ToList();
+
+            foreach (var endpoint in Endpoints.Collection)
+            {
+                var match = available.FirstOrDefault(o => o.Port == endpoint.Port
+                    && string.Equals(o.Address, endpoint.Address, StringComparison.OrdinalIgnoreCase));
+
+                if (match != null)
+                {
+                    endpoint.Id = match.Id;
+                    available.Remove(match);
+                }
+            }
+        }
+
+        /// <summary>
         /// A copy that can be changed or stored without affecting the one in use.
         /// </summary>
         public NpProxyConfiguration Clone()

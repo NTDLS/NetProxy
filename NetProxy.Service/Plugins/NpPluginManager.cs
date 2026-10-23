@@ -317,6 +317,156 @@ namespace NetProxy.Service.Plugins
             }
         }
 
+        public sealed class FileReloadResult
+        {
+            public List<string> Changes { get; } = [];
+            public List<string> Problems { get; } = [];
+        }
+
+        /// <summary>
+        /// Applies what was changed in the plugin file by hand: plugins that were added, changed (they are loaded again), removed,
+        /// and the order. With <paramref name="dryRun"/> it only says what it would do.
+        /// </summary>
+        public async Task<FileReloadResult> ReloadFromDiskAsync(bool dryRun)
+        {
+            var result = new FileReloadResult();
+
+            List<NpPluginConfiguration> desired;
+            try
+            {
+                desired = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, new List<NpPluginConfiguration>());
+            }
+            catch (Exception ex)
+            {
+                result.Problems.Add($"The plugin file could not be read: {ex.GetBaseException().Message}");
+                return result;
+            }
+
+            await _gate.WaitAsync();
+            try
+            {
+                NpLoadedPlugin[] current;
+                lock (_listLock)
+                {
+                    current = [.. _plugins];
+                }
+
+                //A file with no plugins is how a file that could not be understood looks. Deleting every plugin is done on purpose.
+                if (desired.Count == 0 && current.Length > 0)
+                {
+                    result.Problems.Add("The plugin file has no plugins, which is probably a mistake (delete the plugins with the plugin remove command if you mean it).");
+                    return result;
+                }
+
+                var matches = new Dictionary<NpPluginConfiguration, NpLoadedPlugin>();
+                var taken = new HashSet<NpLoadedPlugin>();
+
+                foreach (var plugin in desired)
+                {
+                    var existing = current.FirstOrDefault(o => o.Configuration.Id == plugin.Id && taken.Contains(o) == false);
+                    if (existing != null)
+                    {
+                        matches[plugin] = existing;
+                        taken.Add(existing);
+                    }
+                }
+
+                foreach (var plugin in desired.Where(o => matches.ContainsKey(o) == false))
+                {
+                    var existing = current.FirstOrDefault(o => taken.Contains(o) == false
+                        && o.Configuration.Name.Equals(plugin.Name, StringComparison.CurrentCultureIgnoreCase));
+                    if (existing != null)
+                    {
+                        plugin.Id = existing.Configuration.Id;
+                        matches[plugin] = existing;
+                        taken.Add(existing);
+                    }
+                }
+
+                foreach (var plugin in desired)
+                {
+                    if (string.IsNullOrWhiteSpace(plugin.Name) || string.IsNullOrWhiteSpace(plugin.AssemblyPath))
+                    {
+                        result.Problems.Add($"Plugin '{plugin.Name}': it needs a name and an assembly.");
+                    }
+                    else if (desired.Count(o => o.Name.Equals(plugin.Name, StringComparison.CurrentCultureIgnoreCase)) > 1)
+                    {
+                        result.Problems.Add($"There is more than one plugin named '{plugin.Name}'.");
+                    }
+                }
+
+                if (result.Problems.Count > 0)
+                {
+                    return result;
+                }
+
+                var removed = current.Where(o => taken.Contains(o) == false).ToList();
+                var added = desired.Where(o => matches.ContainsKey(o) == false).ToList();
+                var changed = desired.Where(o => matches.TryGetValue(o, out var existing)
+                    && Newtonsoft.Json.JsonConvert.SerializeObject(existing.Configuration) != Newtonsoft.Json.JsonConvert.SerializeObject(o)).ToList();
+                var reordered = removed.Count == 0 && added.Count == 0
+                    && desired.Select(o => o.Id).SequenceEqual(current.Select(o => o.Configuration.Id)) == false;
+
+                result.Changes.AddRange(removed.Select(o => $"Plugin '{o.Configuration.Name}': removed."));
+                result.Changes.AddRange(changed.Select(o => $"Plugin '{o.Name}': changed."));
+                result.Changes.AddRange(added.Select(o => $"Plugin '{o.Name}': added."));
+                if (reordered)
+                {
+                    result.Changes.Add("Plugins: new order.");
+                }
+
+                if (dryRun)
+                {
+                    return result;
+                }
+
+                foreach (var plugin in removed)
+                {
+                    await plugin.StopAsync();
+                }
+
+                var replacements = new Dictionary<NpLoadedPlugin, NpLoadedPlugin>();
+                foreach (var plugin in changed)
+                {
+                    var existing = matches[plugin];
+                    await existing.StopAsync();
+                    replacements[existing] = await CreateAsync(plugin);
+                }
+
+                var created = new Dictionary<Guid, NpLoadedPlugin>();
+                foreach (var plugin in added)
+                {
+                    created[plugin.Id] = await CreateAsync(plugin);
+                }
+
+                lock (_listLock)
+                {
+                    var next = new List<NpLoadedPlugin>();
+                    foreach (var plugin in desired)
+                    {
+                        if (created.TryGetValue(plugin.Id, out var fresh))
+                        {
+                            next.Add(fresh);
+                        }
+                        else
+                        {
+                            var existing = matches[plugin];
+                            next.Add(replacements.TryGetValue(existing, out var replacement) ? replacement : existing);
+                        }
+                    }
+
+                    _plugins = next;
+                }
+
+                Save();
+                return result;
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
         public async Task<bool> ReloadAsync(Guid id)
         {
             NpPluginConfiguration? configuration;

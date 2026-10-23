@@ -156,6 +156,248 @@ namespace NetProxy.Service
             return reply;
         }
 
+        public QueryServiceInfoReply OnQueryServiceInfo(RmContext context, QueryServiceInfo query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var proxies = serviceManager.GetProxies();
+
+            return new QueryServiceInfoReply
+            {
+                Version = typeof(NpServiceManager).Assembly.GetName().Version?.ToString(3) ?? string.Empty,
+                UptimeSeconds = (long)(DateTime.UtcNow - serviceManager.StartedUtc).TotalSeconds,
+                ProxyCount = proxies.Count,
+                RunningProxyCount = proxies.Count(o => o.IsRunning),
+                PluginCount = Singletons.Plugins.GetGridItems().Count,
+                ManagementPort = serviceManager.Configuration.ManagementPort,
+                ConfigurationName = Singletons.ConfigurationName,
+                OperatingSystem = System.Runtime.InteropServices.RuntimeInformation.OSDescription
+            };
+        }
+
+        public QueryUpsertProxyReply OnQueryUpsertProxy(RmContext context, QueryUpsertProxy query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryUpsertProxyReply();
+
+            try
+            {
+                var problem = serviceManager.UpsertProxy(query.Proxy, query.MatchByName, out var action, out var startError);
+                reply.Success = problem == null;
+                reply.Message = problem;
+                reply.Action = action;
+                reply.Id = query.Proxy.Id;
+                reply.StartError = startError;
+
+                if (problem == null)
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Information, $"Proxy '{query.Proxy.Name}' was {action} by connection {context.ConnectionId}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to save the proxy", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryActionReply OnQueryProxyAction(RmContext context, QueryProxyAction query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryActionReply();
+
+            try
+            {
+                var problem = serviceManager.ApplyProxyAction(query.Id, query.Name, query.Action);
+                reply.Success = problem == null;
+                reply.Message = problem;
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write($"Failed to {query.Action} the proxy", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryValidateProxyReply OnQueryValidateProxy(RmContext context, QueryValidateProxy query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryValidateProxyReply();
+
+            try
+            {
+                reply.Problems = serviceManager.ValidateProxy(query.Proxy, query.MatchByName);
+            }
+            catch (Exception ex)
+            {
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryCloseConnectionsReply OnQueryCloseConnections(RmContext context, QueryCloseConnections query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryCloseConnectionsReply();
+
+            try
+            {
+                reply.Closed = serviceManager.CloseConnections(query.ConnectionId, query.ProxyId, query.ProxyName);
+            }
+            catch (Exception ex)
+            {
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryActionReply OnQueryUserAction(RmContext context, QueryUserAction query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryActionReply();
+
+            try
+            {
+                var problem = serviceManager.ApplyUserAction(query.Action, query.UserName, query.PasswordHash, query.Description);
+                reply.Success = problem == null;
+                reply.Message = problem;
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to change the users", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryReloadConfigurationReply OnQueryReloadConfiguration(RmContext context, QueryReloadConfiguration query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryReloadConfigurationReply();
+
+            try
+            {
+                var result = serviceManager.ReloadConfiguration(query.DryRun);
+                reply.Success = result.Success;
+                reply.Changes = result.Changes;
+                reply.Problems = result.Problems;
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to reload the configuration", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryLogTailReply OnQueryLogTail(RmContext context, QueryLogTail query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryLogTailReply();
+
+            reply.Lines = serviceManager.TailLog(query.Lines, out var message);
+            reply.Message = message;
+            return reply;
+        }
+
+        public QueryCertificateStatusReply OnQueryCertificateStatus(RmContext context, QueryCertificateStatus query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryCertificateStatusReply();
+
+            try
+            {
+                reply.Collection = serviceManager.GetCertificateStatus();
+            }
+            catch (Exception ex)
+            {
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryUpsertPluginReply OnQueryUpsertPlugin(RmContext context, QueryUpsertPlugin query)
+        {
+            EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryUpsertPluginReply();
+
+            try
+            {
+                var existing = query.MatchByName
+                    ? Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Name.Equals(query.Plugin.Name.Trim(), StringComparison.CurrentCultureIgnoreCase))
+                    : Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == query.Plugin.Id);
+
+                if (existing != null)
+                {
+                    query.Plugin.Id = existing.Id;
+                }
+
+                var problem = Singletons.Plugins.UpsertAsync(query.Plugin).GetAwaiter().GetResult();
+                reply.Success = problem == null;
+                reply.Message = problem;
+                reply.Action = existing != null ? "updated" : "created";
+                reply.LoadError = Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == query.Plugin.Id)?.LoadError;
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to save the plugin", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryActionReply OnQueryPluginAction(RmContext context, QueryPluginAction query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryActionReply();
+
+            try
+            {
+                var plugin = Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == query.Id
+                    || (string.IsNullOrWhiteSpace(query.Name) == false && o.Name.Equals(query.Name.Trim(), StringComparison.CurrentCultureIgnoreCase)));
+
+                if (plugin == null)
+                {
+                    reply.Message = $"There is no plugin '{query.Name ?? query.Id?.ToString()}'.";
+                    return reply;
+                }
+
+                switch (query.Action)
+                {
+                    case NpPluginAction.Delete:
+                        reply.Success = Singletons.Plugins.DeleteAsync(plugin.Id).GetAwaiter().GetResult();
+                        serviceManager.RemovePluginFromProxies(plugin.Id);
+                        break;
+
+                    case NpPluginAction.Reload:
+                        reply.Success = Singletons.Plugins.ReloadAsync(plugin.Id).GetAwaiter().GetResult();
+                        reply.Message = Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == plugin.Id)?.LoadError;
+                        break;
+
+                    default:
+                        Singletons.Plugins.MoveAsync(plugin.Id, query.Action == NpPluginAction.MoveUp ? -1 : 1).GetAwaiter().GetResult();
+                        reply.Success = true;
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to change the plugin", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
         public QueryProxyStatisticsReply OnQueryProxyStatistics(RmContext context, QueryProxyStatistics query)
         {
             var serviceManager = EnforceLoginAndGetServiceManager(context);

@@ -10,6 +10,8 @@
     <File Path="To-Do.txt" />
   </Folder>
   <Project Path="NetProxy.Client/NetProxy.Client.csproj" />
+  <Project Path="NetProxy.ClientApi/NetProxy.ClientApi.csproj" />
+  <Project Path="NetProxy.Cli/NetProxy.Cli.csproj" />
   <Project Path="NetProxy.Library/NetProxy.Library.csproj" />
   <Project Path="NetProxy.PluginApi/NetProxy.PluginApi.csproj" />
   <Project Path="NetProxy.SamplePlugin/NetProxy.SamplePlugin.csproj" />

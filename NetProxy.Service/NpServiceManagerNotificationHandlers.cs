@@ -97,10 +97,7 @@ namespace NetProxy.Service
 
             try
             {
-                var configuration = notification.ProxyConfiguration;
-
-                var problem = NpHostRouter.NormalizeAndValidate(configuration)
-                    ?? NpHostRouter.FindSharingConflict(configuration, serviceManager.GetProxies().Select(o => o.Configuration));
+                var problem = serviceManager.UpsertProxy(notification.ProxyConfiguration, matchByName: false, out _, out var startError);
 
                 if (problem != null)
                 {
@@ -108,28 +105,9 @@ namespace NetProxy.Service
                     return;
                 }
 
-                var existingProxy = serviceManager.GetProxyById(notification.ProxyConfiguration.Id);
-
-                if (existingProxy != null)
+                if (startError != null)
                 {
-                    existingProxy.Stop();
-                    serviceManager.RemoveProxy(existingProxy);
-                }
-
-                var newProxy = new NpProxy(notification.ProxyConfiguration);
-
-                serviceManager.AddProxy(newProxy);
-                serviceManager.SaveConfiguration();
-
-                Singletons.Logging.Write(NpLogging.Severity.Information,
-                    $"Proxy '{newProxy.Configuration.Name}' was {(existingProxy != null ? "changed" : "added")} by connection {context.ConnectionId}.");
-
-                newProxy.Plugins.ProxyConfigurationChangedAsync(newProxy.Info, existingProxy != null ? NpChangeKind.Changed : NpChangeKind.Added)
-                    .AsTask().GetAwaiter().GetResult();
-
-                if (newProxy.Configuration.AutoStart && newProxy.Start(out var error) == false)
-                {
-                    serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The proxy was saved but could not be started: {error}"));
+                    serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The proxy was saved but could not be started: {startError}"));
                 }
             }
             catch (Exception ex)

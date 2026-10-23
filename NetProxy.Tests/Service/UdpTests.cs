@@ -514,7 +514,7 @@ namespace NetProxy.Tests.Service
         public void The_save_rules_allow_tcp_and_udp_on_one_port_but_not_two_udp_proxies()
         {
             var udp = Udp("udp", 53, 9);
-            var tcp = ProxyBuilder.Configuration("tcp", 53, TrafficType.Raw, 9);
+            var tcp = ProxyBuilder.Configuration("tcp", 53, TrafficType.Tcp, 9);
             var udp2 = Udp("udp2", 53, 9);
 
             Assert.Null(NpHostRouter.FindSharingConflict(udp, [tcp]));

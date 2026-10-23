@@ -400,13 +400,13 @@ namespace NetProxy.Tests.Management
         public async Task Statistics_and_connections_are_listed_and_connections_can_be_closed()
         {
             var echo = Host.Own(new TcpEchoBackend());
-            var proxy = NewProxy("raw", change: c =>
+            var proxy = NewProxy("tcp", change: c =>
             {
-                c.TrafficType = TrafficType.Raw;
+                c.TrafficType = TrafficType.Tcp;
                 c.Endpoints.Collection[0].Port = echo.Port;
             });
             Client.ApplyProxy(proxy);
-            var id = Client.GetProxy("raw")!.Id;
+            var id = Client.GetProxy("tcp")!.Id;
 
             using var open = new TcpClient();
             await open.ConnectAsync("127.0.0.1", proxy.ListenPort);
@@ -430,9 +430,9 @@ namespace NetProxy.Tests.Management
         public async Task All_the_connections_of_a_proxy_are_closed_together()
         {
             var echo = Host.Own(new TcpEchoBackend());
-            var proxy = NewProxy("raw", change: c =>
+            var proxy = NewProxy("tcp", change: c =>
             {
-                c.TrafficType = TrafficType.Raw;
+                c.TrafficType = TrafficType.Tcp;
                 c.Endpoints.Collection[0].Port = echo.Port;
             });
             Client.ApplyProxy(proxy);
@@ -447,7 +447,7 @@ namespace NetProxy.Tests.Management
                 clients.Add(client);
             }
 
-            Assert.Equal(3, Client.CloseConnections(null, "raw"));
+            Assert.Equal(3, Client.CloseConnections(null, "tcp"));
             Assert.Equal(0, Client.CloseConnections(null, "nobody"));
 
             foreach (var client in clients)

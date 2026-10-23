@@ -106,9 +106,9 @@ namespace NetProxy.Service.Proxy
 
                 var inUse = $"Port {candidate.ListenPort} is already used by proxy '{other.Name}'.";
 
-                if (candidate.TrafficType == TrafficType.Raw || other.TrafficType == TrafficType.Raw)
+                if (candidate.TrafficType == TrafficType.Tcp || other.TrafficType == TrafficType.Tcp)
                 {
-                    return $"{inUse} Only HTTP and HTTPS proxies can share a port (a RAW proxy has no host name to tell it apart by).";
+                    return $"{inUse} Only HTTP and HTTPS proxies can share a port (a TCP proxy has no host name to tell it apart by).";
                 }
 
                 if (candidate.TrafficType != other.TrafficType)

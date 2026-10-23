@@ -28,7 +28,7 @@ namespace NetProxy.Library.Payloads
         public int DestinationPort { get; set; }
 
         /// <summary>
-        /// What the proxy treats the traffic as: Raw, Http or Https.
+        /// What the proxy treats the traffic as: Tcp, Http, Https or Udp.
         /// </summary>
         public string Protocol { get; set; } = string.Empty;
 

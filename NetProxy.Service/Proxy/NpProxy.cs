@@ -65,7 +65,7 @@ namespace NetProxy.Service.Proxy
         /// <summary>
         /// What the listener does with the traffic while the proxy is running. This is the configured traffic type, except that an
         /// Https listener without a certificate (the way HTTPS was configured before TLS could be terminated) passes the
-        /// encrypted traffic through untouched, which is Raw.
+        /// encrypted traffic through untouched, which is Tcp.
         /// </summary>
         internal TrafficType EffectiveTrafficType { get; private set; }
 
@@ -91,7 +91,7 @@ namespace NetProxy.Service.Proxy
             TrafficType.Http => NpTrafficKind.Http,
             TrafficType.Https => NpTrafficKind.Https,
             TrafficType.Udp => NpTrafficKind.Udp,
-            _ => NpTrafficKind.Raw
+            _ => NpTrafficKind.Tcp
         });
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace NetProxy.Service.Proxy
             if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath) && hostsWithCertificate.Count == 0)
             {
                 //How HTTPS was configured before TLS could be terminated: the encrypted traffic is passed through.
-                EffectiveTrafficType = TrafficType.Raw;
+                EffectiveTrafficType = TrafficType.Tcp;
                 Singletons.Logging.Write(NpLogging.Severity.Warning,
                     $"Proxy '{Configuration.Name}' is set to HTTPS but has no certificate, so the encrypted traffic is passed through untouched"
                     + " (header rules do not apply). Choose a certificate (PFX) to terminate TLS at the proxy.");

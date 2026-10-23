@@ -135,7 +135,7 @@ namespace NetProxy.Service.Proxy
             var other = current[0];
             var inUse = $"Port {port} is already in use by proxy '{other.Configuration.Name}'.";
 
-            if (proxy.EffectiveTrafficType == TrafficType.Raw || current.Any(o => o.EffectiveTrafficType == TrafficType.Raw))
+            if (proxy.EffectiveTrafficType == TrafficType.Tcp || current.Any(o => o.EffectiveTrafficType == TrafficType.Tcp))
             {
                 return $"{inUse} Only HTTP and HTTPS proxies can share a port.";
             }

@@ -169,8 +169,8 @@ namespace NetProxy.Tests.Service
             Assert.False(host.Create(Proxy("same-host", port, TrafficType.Http, backend, hosts: "a.example.com")).Start(out var duplicate));
             Assert.Contains("a.example.com", duplicate);
 
-            Assert.False(host.Create(Proxy("raw", port, TrafficType.Raw, backend)).Start(out var raw));
-            Assert.Contains("HTTP and HTTPS", raw);
+            Assert.False(host.Create(Proxy("tcp", port, TrafficType.Tcp, backend)).Start(out var tcp));
+            Assert.Contains("HTTP and HTTPS", tcp);
 
             Assert.False(host.Create(Proxy("tls", port, TrafficType.Https, backend, Certs.WritePfx(host.Directory, "x.test"), "x.example.com")).Start(out var mixed));
             Assert.Contains("all HTTP or all HTTPS", mixed);
@@ -303,7 +303,7 @@ namespace NetProxy.Tests.Service
 
             //Whatever arrives is sent to the endpoint untouched, so a TLS server behind it is what the client talks to.
             var passthrough = host.Own(new TlsEchoBackend(Certs.PfxBytes("behind.test.local")));
-            host.Start(ProxyBuilder.Configuration("legacy", port, TrafficType.Https, passthrough.Port, c => c.Endpoints.Collection[0].TrafficType = TrafficType.Raw));
+            host.Start(ProxyBuilder.Configuration("legacy", port, TrafficType.Https, passthrough.Port, c => c.Endpoints.Collection[0].TrafficType = TrafficType.Tcp));
 
             var (body, certificate) = await Client.Https(port, "behind.test.local");
 

@@ -55,7 +55,7 @@ namespace NetProxy.Tests.Management
         public async Task A_proxy_edited_in_the_file_is_replaced_and_the_others_keep_running_with_their_connections()
         {
             var edited = NewProxy("edited", "OLD");
-            var untouched = NewProxy("untouched", "UNTOUCHED", c => { c.TrafficType = TrafficType.Raw; });
+            var untouched = NewProxy("untouched", "UNTOUCHED", c => { c.TrafficType = TrafficType.Tcp; });
             var echo = Host.Own(new TcpEchoBackend());
             untouched.Endpoints.Collection[0].Port = echo.Port;
             Client.ApplyProxy(edited);

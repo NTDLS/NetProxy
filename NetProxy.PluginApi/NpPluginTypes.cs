@@ -54,7 +54,13 @@ namespace NetProxy.PluginApi
         void Log(NpPluginLogLevel level, string message);
     }
 
-    public enum NpTrafficKind { Raw, Http, Https, Udp }
+    public enum NpTrafficKind
+    {
+        Tcp,
+        Http,
+        Https,
+        Udp,
+    }
 
     public enum NpChangeKind { Added, Changed, Deleted }
 
@@ -146,7 +152,7 @@ namespace NetProxy.PluginApi
     /// <summary>
     /// The data that is passing through the proxy, between the two sides of it. This is the data as the proxy handles it: for an
     /// HTTPS proxy that terminates TLS it is decrypted on the way in and is encrypted again (for the endpoint, if that uses TLS) on
-    /// the way out. A Raw proxy that passes TLS through only has the encrypted bytes.
+    /// the way out. A TCP proxy that passes TLS through only has the encrypted bytes.
     /// </summary>
     public sealed class NpDataEventArgs(INpConnection connection, NpDataDirection direction, ReadOnlyMemory<byte> data,
         bool receivedEncrypted, bool willBeSentEncrypted)

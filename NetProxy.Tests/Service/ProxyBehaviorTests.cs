@@ -14,15 +14,15 @@ namespace NetProxy.Tests.Service
     /// </summary>
     public class ProxyBehaviorTests
     {
-        //---------------------------------------------------------------- Raw traffic
+        //---------------------------------------------------------------- TCP traffic
 
         [Fact]
-        public async Task Raw_traffic_goes_both_ways_unchanged()
+        public async Task TCP_traffic_goes_both_ways_unchanged()
         {
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("raw", port, TrafficType.Raw, echo.Port));
+            host.Start(ProxyBuilder.Configuration("tcp", port, TrafficType.Tcp, echo.Port));
 
             var sent = RandomNumberGenerator.GetBytes(3 * 1024 * 1024 + 17);
             using var client = new TcpClient();
@@ -50,7 +50,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("raw", port, TrafficType.Raw, echo.Port));
+            host.Start(ProxyBuilder.Configuration("tcp", port, TrafficType.Tcp, echo.Port));
 
             using var client = new TcpClient();
             await client.ConnectAsync("127.0.0.1", port);
@@ -77,7 +77,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("raw", port, TrafficType.Raw, echo.Port));
+            host.Start(ProxyBuilder.Configuration("tcp", port, TrafficType.Tcp, echo.Port));
 
             var results = await Task.WhenAll(Enumerable.Range(0, 40).Select(async i =>
             {
@@ -321,7 +321,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Raw, echo.Port, c => c.MaxConnectionsPerClient = 2));
+            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Tcp, echo.Port, c => c.MaxConnectionsPerClient = 2));
 
             using var first = new TcpClient(); await first.ConnectAsync("127.0.0.1", port);
             using var second = new TcpClient(); await second.ConnectAsync("127.0.0.1", port);
@@ -346,7 +346,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Raw, echo.Port, c => c.MaxConnections = 1));
+            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Tcp, echo.Port, c => c.MaxConnections = 1));
 
             using var first = new TcpClient(); await first.ConnectAsync("127.0.0.1", port);
             await Task.Delay(300);
@@ -361,7 +361,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Raw, echo.Port, c => c.IdleTimeoutSeconds = 1));
+            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Tcp, echo.Port, c => c.IdleTimeoutSeconds = 1));
 
             using var client = new TcpClient(); await client.ConnectAsync("127.0.0.1", port);
             Assert.True(await IsClosedByTheProxy(client));
@@ -373,7 +373,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Raw, echo.Port, c => c.IdleTimeoutSeconds = 2));
+            host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Tcp, echo.Port, c => c.IdleTimeoutSeconds = 2));
 
             using var client = new TcpClient(); await client.ConnectAsync("127.0.0.1", port);
             var stream = client.GetStream();
@@ -440,7 +440,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            var proxy = host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Raw, echo.Port));
+            var proxy = host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Tcp, echo.Port));
 
             using var client = new TcpClient(); await client.ConnectAsync("127.0.0.1", port);
             await client.GetStream().WriteAsync("x"u8.ToArray());
@@ -458,7 +458,7 @@ namespace NetProxy.Tests.Service
             using var host = new TestHost();
             var echo = host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            var proxy = host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Raw, echo.Port));
+            var proxy = host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Tcp, echo.Port));
 
             using (var client = new TcpClient())
             {

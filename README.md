@@ -22,9 +22,9 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 
 | Setting | |
 | --- | --- |
-| **Traffic type** | What the listener accepts: Raw (any TCP protocol), HTTP, or HTTPS (the proxy terminates TLS with the certificate you give it). |
+| **Traffic type** | What the listener accepts: TCP (any TCP protocol), HTTP, HTTPS (the proxy terminates TLS with the certificate you give it), or UDP. |
 | **Bindings** | Listen on all addresses (IPv4, IPv6 or both), or only on the addresses you list. |
-| **Endpoints** | Where connections go. Each endpoint is Raw, HTTP or HTTPS, and can be switched off without deleting it. |
+| **Endpoints** | Where connections go. Each endpoint is TCP, HTTP or HTTPS (UDP proxies relay to UDP endpoints), and can be switched off without deleting it. |
 | **Connection pattern** | Fail-over (the first endpoint that works, in the order listed), Round-robin, or Balanced (the endpoint with the fewest connections). |
 | **Sticky sessions** | Send a client back to the endpoint it used before, until the session cache expiration (since it was last used) passes. |
 | **HTTP header rules** | Insert, update, upsert or delete request and response headers in flight (HTTP, and HTTPS where the proxy terminates TLS). |
@@ -41,8 +41,8 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 
 * **The listener** terminates TLS when the traffic type is **HTTPS**. Give it a PFX certificate (the path is on the machine that the service runs on) and its password. HTTP header rules then work on HTTPS traffic.
 * **Each endpoint** chooses its own traffic type. An **HTTPS** endpoint makes the proxy start TLS with it, checking its certificate against the endpoint address (use the host name, not an IP address; tick *Ignore cert errors* for a self signed certificate). A new endpoint starts with the traffic type of the listener, which is HTTPS to HTTPS (re-encrypt) when the listener is HTTPS, and plain to plain otherwise. Any combination is allowed, for example a plain HTTP listener in front of an HTTPS endpoint.
-* To pass TLS through **untouched** (the proxy cannot read it, and header rules do not apply), use the **Raw** traffic type.
-* Proxies saved by an earlier version as HTTPS without a certificate are passed through as Raw, and the service logs a warning.
+* To pass TLS through **untouched** (the proxy cannot read it, and header rules do not apply), use the **TCP** traffic type.
+* Proxies saved by an earlier version as HTTPS without a certificate are passed through as TCP, and the service logs a warning.
 * **Renewed certificates are picked up by themselves.** The PFX files (of the proxy and of its host names) are watched. When one is replaced, for example by a renewal with win-acme or certbot, new connections use the new certificate a few seconds later; connections that are open keep the one they started with, and nothing is restarted. A file that cannot be read (still being written, or broken) is retried for a minute and then left alone, and the previous certificate stays in use; the service logs it. Files on network shares are also checked every 30 seconds.
 * Certificate passwords and the password hashes of the management users are stored encrypted in the configuration files (DPAPI on Windows, a key file next to the configuration on Linux).
 
@@ -74,7 +74,7 @@ Several **HTTP** or **HTTPS** proxies can listen on the same port, if each answe
 * A request goes to the proxy that has its host name: the `Host` header for HTTP, or the server name (SNI) of the TLS handshake for HTTPS.
 * A proxy with **no host names** is the default for the port and gets whatever no other proxy claims. Only one proxy per port can be the default. With no default, a plain HTTP request for an unknown host gets a `404`, and an unknown HTTPS server name fails the handshake.
 * **HTTPS:** each host name can have its own PFX certificate (and password), for example one for `www.example.com` and another for `example.com`. A host name without one uses the certificate of the proxy. Proxies that share a port must all be HTTP or all be HTTPS.
-* **Raw** proxies cannot share a port, because there is nothing to tell them apart by. The service refuses to save a proxy that conflicts with another one on the same port (and addresses).
+* **TCP** (and **UDP**) proxies cannot share a port, because there is nothing to tell them apart by. The service refuses to save a proxy that conflicts with another one on the same port (and addresses).
 * The proxy is chosen once per connection: the first request decides, so later requests on a keep-alive connection go to the same proxy. For the same reason HTTP/2 connections go to the proxy of the first host name (HTTPS) or to the default proxy (HTTP/2 without TLS, where the host is compressed), so clients that reuse one HTTP/2 connection for several host names can reach the wrong proxy.
 * A proxy with host names answers only to them, even when it is the only one on its port (so when the proxy of another site is stopped, that site gets a 404 and its requests do not end up at a different site). A proxy without host names answers every host name.
 
@@ -111,7 +111,7 @@ NetProxy can be extended with .NET plugins. A plugin is an assembly with a class
   * Proxy: `OnProxyStarting` (can say no), `OnProxyStarted`, `OnProxyStartFailed`, `OnProxyStopping`, `OnProxyStopped`, `OnProxyConfigurationChanged`.
   * Connection: `OnConnectionRefused`, `OnClientTlsEstablished`, `OnConnecting` (can say no), `OnEndpointConnecting` (can say no, and the next endpoint is tried), `OnEndpointConnected`, `OnEndpointConnectFailed`, `OnConnected`, `OnIdleTimeout`, `OnDisconnecting`, `OnDisconnected`.
   * Data: `OnDataReceived`, `OnDataSending` and `OnDataSent`.
-* **Data events** sit between the two sides of a connection, so for an HTTPS proxy that terminates TLS they see the **decrypted** data (`ReceivedEncrypted` says it was encrypted on the wire) before it is encrypted again for the endpoint (`WillBeSentEncrypted`). `OnDataReceived` is called with what was read, before the HTTP header rules; `OnDataSending` is called after them, right before the write. Both can `Replace` the data (any length), `Drop` it, or `CloseConnection`. A read is whatever arrived together, not a message. A Raw proxy that passes TLS through only has encrypted bytes to give to a plugin.
+* **Data events** sit between the two sides of a connection, so for an HTTPS proxy that terminates TLS they see the **decrypted** data (`ReceivedEncrypted` says it was encrypted on the wire) before it is encrypted again for the endpoint (`WillBeSentEncrypted`). `OnDataReceived` is called with what was read, before the HTTP header rules; `OnDataSending` is called after them, right before the write. Both can `Replace` the data (any length), `Drop` it, or `CloseConnection`. A read is whatever arrived together, not a message. A TCP proxy that passes TLS through only has encrypted bytes to give to a plugin.
 * **UDP:** on a UDP proxy a client's session is a connection (it is "connecting" when its first datagram arrives and "disconnected" when the session ends), and every datagram is a data event, so `OnDataReceived` and `OnDataSending` get whole datagrams: a datagram is a message, unlike a read. Nothing is encrypted by the proxy, so `ReceivedEncrypted` and `WillBeSentEncrypted` are false.
 * **Order and safety:** the plugins of a proxy are called in order, and each gets the data as the one before left it. An event that can say no stops at the first plugin that does. A plugin that throws, or takes longer than its time limit, is logged and skipped for that event; the connection carries on.
 * Not in this version: events for individual HTTP requests and responses (use the data events), and for certificates that are about to expire.
@@ -124,7 +124,7 @@ Proxies listen on IPv4, IPv6, or both (one dual-stack listener) when they listen
 
 Tick **Allow HTTP/2** on the *General* tab to offer HTTP/2 to clients; gRPC is HTTP/2, so this is also what gRPC needs. The HTTP header rules apply to HTTP/2 requests and responses too (names are lower case in HTTP/2, a rule for `Host` changes `:authority`, and the connection specific headers such as `Connection` cannot be added). Without header rules the data is passed through untouched.
 
-* **HTTPS listener:** HTTP/2 is negotiated with the client (ALPN). The endpoint has to speak what the client speaks, so a client that uses HTTP/2 needs an endpoint that agrees to HTTP/2 over TLS (traffic type HTTPS) or one that accepts plain HTTP/2 (h2c, traffic type Raw or HTTP). Clients that only know HTTP/1.1 keep working.
+* **HTTPS listener:** HTTP/2 is negotiated with the client (ALPN). The endpoint has to speak what the client speaks, so a client that uses HTTP/2 needs an endpoint that agrees to HTTP/2 over TLS (traffic type HTTPS) or one that accepts plain HTTP/2 (h2c, traffic type TCP or HTTP). Clients that only know HTTP/1.1 keep working.
 * **HTTP listener:** a client that starts with the HTTP/2 preface (h2c with prior knowledge, which is what gRPC clients without TLS use) is detected, and the endpoint has to accept h2c. The `Upgrade: h2c` request is not supported.
 * HTTP/3 is not offered.
 

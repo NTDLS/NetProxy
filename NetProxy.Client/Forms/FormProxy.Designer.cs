@@ -587,7 +587,7 @@ namespace NetProxy.Client.Forms
             // ColumnEndpointsTrafficType
             // 
             ColumnEndpointsTrafficType.HeaderText = "Traffic";
-            ColumnEndpointsTrafficType.Items.AddRange(new object[] { "Raw", "Http", "Https" });
+            ColumnEndpointsTrafficType.Items.AddRange(new object[] { "Tcp", "Http", "Https" });
             ColumnEndpointsTrafficType.Name = "ColumnEndpointsTrafficType";
             ColumnEndpointsTrafficType.Resizable = DataGridViewTriState.True;
             ColumnEndpointsTrafficType.SortMode = DataGridViewColumnSortMode.Automatic;

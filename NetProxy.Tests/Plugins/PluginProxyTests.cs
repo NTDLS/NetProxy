@@ -204,7 +204,7 @@ namespace NetProxy.Tests.Plugins
             var plugin = await Plugin("rec");
             var echo = _host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            _host.Start(Proxy(port, echo.Port, TrafficType.Raw, c => c.IdleTimeoutSeconds = 1, plugin));
+            _host.Start(Proxy(port, echo.Port, TrafficType.Tcp, c => c.IdleTimeoutSeconds = 1, plugin));
 
             using var client = new TcpClient();
             await client.ConnectAsync("127.0.0.1", port);
@@ -220,7 +220,7 @@ namespace NetProxy.Tests.Plugins
             var plugin = await Plugin("rec");
             var echo = _host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            _host.Start(Proxy(port, echo.Port, TrafficType.Raw, c => c.MaxConnections = 1, plugin));
+            _host.Start(Proxy(port, echo.Port, TrafficType.Tcp, c => c.MaxConnections = 1, plugin));
 
             using var first = new TcpClient(); await first.ConnectAsync("127.0.0.1", port);
             await Task.Delay(300);
@@ -324,12 +324,12 @@ namespace NetProxy.Tests.Plugins
         }
 
         [Fact]
-        public async Task A_plugin_sees_only_encrypted_bytes_on_a_raw_proxy()
+        public async Task A_plugin_sees_only_encrypted_bytes_on_a_tcp_proxy()
         {
             var plugin = await Plugin("rec");
             var tls = _host.Own(new TlsEchoBackend(Certs.PfxBytes("behind.test.local")));
             var port = Net.FreePort();
-            _host.Start(Proxy(port, tls.Port, TrafficType.Raw, null, plugin));
+            _host.Start(Proxy(port, tls.Port, TrafficType.Tcp, null, plugin));
 
             var (body, certificate) = await Client.Https(port, "behind.test.local");
             Assert.Contains("hello from tls", body);
@@ -346,7 +346,7 @@ namespace NetProxy.Tests.Plugins
             var plugin = await Plugin("rec", new() { ["DropOnData"] = "/secret" });
             var echo = _host.Own(new TcpEchoBackend());
             var port = Net.FreePort();
-            _host.Start(Proxy(port, echo.Port, TrafficType.Raw, null, plugin));
+            _host.Start(Proxy(port, echo.Port, TrafficType.Tcp, null, plugin));
 
             using var client = new TcpClient();
             await client.ConnectAsync("127.0.0.1", port);

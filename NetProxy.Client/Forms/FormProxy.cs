@@ -73,7 +73,7 @@ namespace NetProxy.Client.Forms
 
             var trafficTypes = new List<ComboItem>
             {
-                new (Localize("Raw"), TrafficType.Raw),
+                new ("TCP", TrafficType.Tcp),
                 new ("HTTP", TrafficType.Http),
                 new ("HTTPS", TrafficType.Https),
                 new ("UDP", TrafficType.Udp)
@@ -216,7 +216,7 @@ namespace NetProxy.Client.Forms
                 Location = new Point(9, 9),
                 Size = new Size(579, 54),
                 Text = Localize("Several HTTP or HTTPS proxies can listen on the same port if they answer to different host names. A request goes to the proxy with the host name it asks for"
-                    + " (the Host header, or the server name of the TLS handshake). A proxy with no host names gets the requests that no other proxy claims. Raw proxies cannot share a port.")
+                    + " (the Host header, or the server name of the TLS handshake). A proxy with no host names gets the requests that no other proxy claims. TCP and UDP proxies cannot share a port.")
             };
 
             _tabPageHostNames = new TabPage
@@ -267,7 +267,7 @@ namespace NetProxy.Client.Forms
                 Localize("A name for this proxy. It is only for your own identification."));
 
             toolTips.AddControls([label2, comboBoxTrafficType],
-                Localize("What the listener accepts. Raw passes any TCP protocol through untouched. HTTP lets the HTTP header rules change the requests and responses."
+                Localize("What the listener accepts. TCP passes any TCP protocol through untouched. HTTP lets the HTTP header rules change the requests and responses."
                 + " HTTPS terminates TLS with the certificate on the TLS tab, so that the header rules can be applied to HTTPS too."));
 
             toolTips.AddControls([checkBoxAllowHttp2],
@@ -344,7 +344,7 @@ namespace NetProxy.Client.Forms
             ColumnEndpointsEnabled.ToolTipText = Localize("Use this endpoint. Clear it to keep the endpoint without using it.");
             ColumnEndpointsAddress.ToolTipText = Localize("A host name, or an IPv4 or IPv6 address. For HTTPS use the host name, which is what the certificate is checked against.");
             ColumnEndpointsPort.ToolTipText = Localize("The port on the endpoint (1 to 65535).");
-            ColumnEndpointsTrafficType.ToolTipText = Localize("What is spoken to this endpoint. HTTPS starts TLS with it. Raw and HTTP are sent as they are."
+            ColumnEndpointsTrafficType.ToolTipText = Localize("What is spoken to this endpoint. HTTPS starts TLS with it. TCP and HTTP are sent as they are."
                 + " A new endpoint starts with the traffic type of the listener.");
             ColumnEndpointsValidateSSLCertificate.ToolTipText = Localize("For HTTPS endpoints: check that the certificate of the endpoint is trusted and is for its address."
                 + " Clear it to accept any certificate, for example a self signed one.");
@@ -565,7 +565,7 @@ namespace NetProxy.Client.Forms
         }
 
         private TrafficType SelectedTrafficType
-            => comboBoxTrafficType.SelectedValue is TrafficType trafficType ? trafficType : TrafficType.Raw;
+            => comboBoxTrafficType.SelectedValue is TrafficType trafficType ? trafficType : TrafficType.Tcp;
 
         private void DataGridViewEndpoints_DefaultValuesNeeded(object? sender, DataGridViewRowEventArgs e)
         {
@@ -709,7 +709,7 @@ namespace NetProxy.Client.Forms
                 && proxy.HostNames.Any(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false) == false)
             {
                 tabControl.SelectedTab = tabPageTls;
-                MessageBox.Show(Localize("A certificate (PFX) is required to terminate HTTPS traffic. Use the Raw traffic type to pass encrypted traffic through untouched."),
+                MessageBox.Show(Localize("A certificate (PFX) is required to terminate HTTPS traffic. Use the TCP traffic type to pass encrypted traffic through untouched."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
@@ -905,7 +905,7 @@ namespace NetProxy.Client.Forms
             textBoxCertificatePassword.Enabled = trafficType == TrafficType.Https;
             buttonBrowseCertificate.Enabled = trafficType == TrafficType.Https;
 
-            //Raw and UDP traffic have no host name to tell proxies apart by, so they cannot share a port. HTTP/2 is HTTP.
+            //TCP and UDP traffic have no host name to tell proxies apart by, so they cannot share a port. HTTP/2 is HTTP.
             _forwardedHeaders.Enabled = isHttp;
             checkBoxAllowHttp2.Enabled = isHttp;
             _hostNamesGrid.ReadOnly = isHttp == false;
@@ -927,7 +927,7 @@ namespace NetProxy.Client.Forms
         {
             if (dataGridViewHTTPHeaders.ReadOnly)
             {
-                MessageBox.Show(Localize("HTTP header rules cannot be added because the traffic type is Raw or UDP. Use HTTP, or HTTPS with a certificate."),
+                MessageBox.Show(Localize("HTTP header rules cannot be added because the traffic type is TCP or UDP. Use HTTP, or HTTPS with a certificate."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
         }

@@ -64,7 +64,7 @@ namespace NetProxy.Library
 
     public enum TrafficType
     {
-        Raw,
+        Tcp,
         Http,
         Https,
         /// <summary>UDP datagrams, relayed between sessions that are kept for each client address and port.</summary>

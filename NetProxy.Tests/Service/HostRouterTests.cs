@@ -152,13 +152,13 @@ namespace NetProxy.Tests.Service
         [Fact]
         public void Proxies_on_different_ports_never_conflict()
             => Assert.Null(NpHostRouter.FindSharingConflict(
-                Config("b", TrafficType.Raw, 444), [Config("a", TrafficType.Raw, 443)]));
+                Config("b", TrafficType.Tcp, 444), [Config("a", TrafficType.Tcp, 443)]));
 
         [Fact]
-        public void A_raw_proxy_cannot_share_a_port()
+        public void A_tcp_proxy_cannot_share_a_port()
         {
-            Assert.NotNull(NpHostRouter.FindSharingConflict(Config("b", TrafficType.Raw, 443), [Config("a", TrafficType.Http, 443, "a.example.com")]));
-            Assert.NotNull(NpHostRouter.FindSharingConflict(Config("b", TrafficType.Http, 443, "b.example.com"), [Config("a", TrafficType.Raw, 443)]));
+            Assert.NotNull(NpHostRouter.FindSharingConflict(Config("b", TrafficType.Tcp, 443), [Config("a", TrafficType.Http, 443, "a.example.com")]));
+            Assert.NotNull(NpHostRouter.FindSharingConflict(Config("b", TrafficType.Http, 443, "b.example.com"), [Config("a", TrafficType.Tcp, 443)]));
         }
 
         [Fact]
@@ -185,8 +185,8 @@ namespace NetProxy.Tests.Service
         [Fact]
         public void Proxies_on_different_addresses_of_the_same_port_do_not_conflict()
         {
-            var first = Config("a", TrafficType.Raw, 443);
-            var second = Config("b", TrafficType.Raw, 443);
+            var first = Config("a", TrafficType.Tcp, 443);
+            var second = Config("b", TrafficType.Tcp, 443);
             second.Bindings[0].Address = "127.0.0.2";
 
             Assert.Null(NpHostRouter.FindSharingConflict(second, [first]));
@@ -195,8 +195,8 @@ namespace NetProxy.Tests.Service
         [Fact]
         public void Listening_on_all_addresses_overlaps_every_binding()
         {
-            var specific = Config("a", TrafficType.Raw, 443);
-            var all = Config("b", TrafficType.Raw, 443);
+            var specific = Config("a", TrafficType.Tcp, 443);
+            var all = Config("b", TrafficType.Tcp, 443);
             all.ListenOnAllAddresses = true;
 
             Assert.NotNull(NpHostRouter.FindSharingConflict(all, [specific]));

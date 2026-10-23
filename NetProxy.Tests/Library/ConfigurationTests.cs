@@ -59,6 +59,15 @@ namespace NetProxy.Tests.Library
         }
 
         [Fact]
+        public void The_traffic_types_are_tcp_http_https_and_udp()
+        {
+            Assert.Equal(["Tcp", "Http", "Https", "Udp"], Enum.GetNames<TrafficType>());
+            Assert.Equal(["Tcp", "Http", "Https", "Udp"], Enum.GetNames<NetProxy.PluginApi.NpTrafficKind>());
+            Assert.Contains("\"TrafficType\":\"Tcp\"", JsonConvert.SerializeObject(ProxyBuilder.Configuration("a", 80, TrafficType.Tcp, 9000)));
+            Assert.Equal(TrafficType.Tcp, default(TrafficType));
+        }
+
+        [Fact]
         public void Files_from_before_a_setting_existed_still_load_with_its_default()
         {
             var loaded = JsonConvert.DeserializeObject<NpProxyConfiguration>(

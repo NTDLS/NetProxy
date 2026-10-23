@@ -62,6 +62,12 @@ namespace NetProxy.Library.Payloads.Routing
         /// </summary>
         public string TlsCertificatePassword { get; set; } = string.Empty;
 
+        /// <summary>
+        /// The host names that this proxy answers to. Proxies (of the HTTP or HTTPS traffic type) that listen on the same port tell
+        /// the requests apart by these. A proxy with none is the default for the port: it gets the requests that no other proxy claims.
+        /// </summary>
+        public List<NpHostName> HostNames { get; set; } = new();
+
         public NpProxyConfiguration()
         {
             Id = Guid.NewGuid();

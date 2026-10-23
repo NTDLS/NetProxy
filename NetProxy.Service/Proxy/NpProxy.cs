@@ -39,6 +39,37 @@ namespace NetProxy.Service.Proxy
         internal X509Certificate2? Certificate { get; private set; }
 
         /// <summary>
+        /// The certificates of the host names that have their own, by host name (as configured, normalized).
+        /// </summary>
+        private Dictionary<string, X509Certificate2> _hostCertificates = new();
+
+        /// <summary>
+        /// The (normalized) host names that this proxy answers to. Empty for a proxy that is the default for its port.
+        /// </summary>
+        internal IReadOnlyCollection<string> HostPatterns { get; }
+
+        /// <summary>
+        /// The certificate to present to a client that asks for a host name: the one of the most specific host name that matches
+        /// and has its own, otherwise the certificate of the proxy. Null if there is none.
+        /// </summary>
+        internal X509Certificate2? GetCertificate(string? host)
+        {
+            var normalized = NpHostMatcher.Normalize(host);
+            var certificates = _hostCertificates;
+
+            if (normalized != null && certificates.Count > 0)
+            {
+                var pattern = NpHostMatcher.FindBest(certificates.Keys, normalized);
+                if (pattern != null)
+                {
+                    return certificates[pattern];
+                }
+            }
+
+            return Certificate;
+        }
+
+        /// <summary>
         /// What the listener does with the traffic while the proxy is running. This is the configured traffic type, except that an
         /// Https listener without a certificate (the way HTTPS was configured before TLS could be terminated) passes the
         /// encrypted traffic through untouched, which is Raw.
@@ -56,6 +87,7 @@ namespace NetProxy.Service.Proxy
         {
             Configuration = configuration;
             EffectiveTrafficType = configuration.TrafficType;
+            HostPatterns = NpHostRouter.Patterns(configuration);
         }
 
         public bool Start() => Start(out _);
@@ -101,9 +133,8 @@ namespace NetProxy.Service.Proxy
 
                     foreach (var tcpListener in NpNetwork.CreateListeners(Configuration))
                     {
-                        var listener = new NpProxyListener(this, tcpListener);
-                        listener.Start();
-                        started.Add(listener);
+                        //Joins the listener of the port when another proxy already has it, if they can share it.
+                        started.Add(NpProxyListener.Attach(this, tcpListener));
                     }
 
                     if (started.Count == 0)
@@ -123,7 +154,7 @@ namespace NetProxy.Service.Proxy
                 {
                     foreach (var listener in started)
                     {
-                        listener.Stop();
+                        listener.Detach(this);
                     }
 
                     ReleaseResources();
@@ -155,9 +186,10 @@ namespace NetProxy.Service.Proxy
 
             stopSource?.Cancel();
 
+            //The port stays open for the other proxies that share it.
             foreach (var listener in listeners)
             {
-                listener.Stop();
+                listener.Detach(this);
             }
 
             var connections = ActiveConnections.Values.ToList();
@@ -186,7 +218,10 @@ namespace NetProxy.Service.Proxy
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath))
+            var hostsWithCertificate = Configuration.HostNames
+                .Where(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false).ToList();
+
+            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath) && hostsWithCertificate.Count == 0)
             {
                 //How HTTPS was configured before TLS could be terminated: the encrypted traffic is passed through.
                 EffectiveTrafficType = TrafficType.Raw;
@@ -196,15 +231,33 @@ namespace NetProxy.Service.Proxy
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath) == false)
+            {
+                Certificate = LoadPfx(Configuration.TlsCertificatePath, Configuration.TlsCertificatePassword);
+            }
+
+            var hostCertificates = new Dictionary<string, X509Certificate2>();
+            foreach (var host in hostsWithCertificate)
+            {
+                var pattern = NpHostMatcher.Normalize(host.Host);
+                if (pattern != null)
+                {
+                    hostCertificates[pattern] = LoadPfx(host.TlsCertificatePath, host.TlsCertificatePassword);
+                }
+            }
+            _hostCertificates = hostCertificates;
+        }
+
+        private static X509Certificate2 LoadPfx(string path, string password)
+        {
             try
             {
-                Certificate = X509CertificateLoader.LoadPkcs12FromFile(Configuration.TlsCertificatePath,
-                    string.IsNullOrEmpty(Configuration.TlsCertificatePassword) ? null : Configuration.TlsCertificatePassword);
+                return X509CertificateLoader.LoadPkcs12FromFile(path, string.IsNullOrEmpty(password) ? null : password);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"The TLS certificate '{Configuration.TlsCertificatePath}' could not be loaded: {ex.GetBaseException().Message}", ex);
+                    $"The TLS certificate '{path}' could not be loaded: {ex.GetBaseException().Message}", ex);
             }
         }
 
@@ -212,6 +265,12 @@ namespace NetProxy.Service.Proxy
         {
             Certificate?.Dispose();
             Certificate = null;
+
+            foreach (var certificate in _hostCertificates.Values)
+            {
+                certificate.Dispose();
+            }
+            _hostCertificates = new();
 
             _stickySessions?.Dispose();
             _stickySessions = null;

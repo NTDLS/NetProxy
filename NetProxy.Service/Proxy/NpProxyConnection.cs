@@ -28,7 +28,16 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         private static readonly TimeSpan _endpointConnectTimeout = TimeSpan.FromSeconds(10);
 
-        private readonly NpProxy _proxy;
+        private readonly NpProxyListener _listener;
+
+        /// <summary>
+        /// The proxy that the connection is for. When the port is shared by several proxies it is not known until the client says
+        /// which host name it wants (the Host header, or the server name of the TLS handshake), so this is only used once it is known.
+        /// </summary>
+        private NpProxy _proxy = null!;
+
+        private string ProxyName => _proxy?.Configuration.Name ?? "(not chosen yet)";
+
         private readonly TcpClient _client;
         private readonly CancellationTokenSource _abort;
         private readonly TaskCompletionSource _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -45,6 +54,16 @@ namespace NetProxy.Service.Proxy
         /// The first bytes of the client, when they had to be read to tell what it speaks. They are passed on before anything else.
         /// </summary>
         private byte[]? _initialClientBytes;
+
+        /// <summary>
+        /// True when the first bytes of the client were read to find its host name, which also told if it speaks HTTP/2.
+        /// </summary>
+        private bool _peeked;
+
+        /// <summary>
+        /// True once the connection is counted against the limits of its proxy.
+        /// </summary>
+        private bool _admitted;
 
         private Stream? _clientStream;
         private TcpClient? _endpointClient;
@@ -74,11 +93,15 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         public Task Completion => _completion.Task;
 
-        public NpProxyConnection(NpProxy proxy, TcpClient client)
+        /// <summary>
+        /// The proxy is null when the port is shared, in which case the connection works out which proxy it is for.
+        /// </summary>
+        public NpProxyConnection(NpProxyListener listener, TcpClient client, NpProxy? proxy)
         {
-            _proxy = proxy;
+            _listener = listener;
+            _proxy = proxy!;
             _client = client;
-            _abort = CancellationTokenSource.CreateLinkedTokenSource(proxy.StopToken);
+            _abort = CancellationTokenSource.CreateLinkedTokenSource(proxy?.StopToken ?? listener.StopToken);
 
             if (client.Client.RemoteEndPoint is IPEndPoint remote)
             {
@@ -151,12 +174,29 @@ namespace NetProxy.Service.Proxy
         }
 
         /// <summary>
-        /// Drops a connection that was never started, because the proxy is at one of its connection limits.
+        /// Counts the connection against the limits of its proxy and starts watching it. Returns false (and the connection is closed
+        /// by the caller) when the proxy is at one of its limits, or has been stopped.
         /// </summary>
-        public void Refuse()
+        private bool Admit()
         {
-            try { _client.Dispose(); } catch { }
-            try { _abort.Dispose(); } catch { }
+            if (_proxy.TryAdmit(_clientKey) == false)
+            {
+                return false; //At a connection limit.
+            }
+
+            _admitted = true;
+            _proxy.AddConnection(this);
+            _proxy.Statistics.ConnectionOpened();
+
+            if (_proxy.IsRunning == false)
+            {
+                return false; //Stopped while the connection was being set up. It was added too late to be aborted by the stop.
+            }
+
+            _ = IdleWatchAsync();
+
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Proxy '{_proxy.Configuration.Name}' accepted {_clientDisplay} ({Id}).");
+            return true;
         }
 
         private void Touch() => Interlocked.Exchange(ref _lastActivityTicks, DateTime.UtcNow.Ticks);
@@ -166,15 +206,35 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         public async Task RunAsync()
         {
-            _proxy.Statistics.ConnectionOpened();
-
-            _ = IdleWatchAsync();
-
-            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Proxy '{_proxy.Configuration.Name}' accepted {_clientDisplay} ({Id}).");
-
             try
             {
-                if (await TerminateClientTlsAsync() == false)
+                //With one proxy on the port the limits apply before any work is done for the connection.
+                if (_proxy != null && Admit() == false)
+                {
+                    return;
+                }
+
+                var terminatesTls = _proxy?.TerminatesTls ?? _listener.Routes.FirstOrDefault()?.TerminatesTls ?? false;
+
+                if (terminatesTls)
+                {
+                    //Chooses the proxy too, by the server name that the client asks for, when that is not known yet.
+                    if (await TerminateClientTlsAsync() == false)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    _clientStream = _client.GetStream();
+
+                    if (_proxy == null && await PeekAndRouteAsync() == false)
+                    {
+                        return;
+                    }
+                }
+
+                if (_admitted == false && Admit() == false)
                 {
                     return;
                 }
@@ -216,15 +276,7 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         private async Task<bool> TerminateClientTlsAsync()
         {
-            Stream stream = _client.GetStream();
-
-            if (_proxy.TerminatesTls == false)
-            {
-                _clientStream = stream;
-                return true;
-            }
-
-            var ssl = new SslStream(stream, false);
+            var ssl = new SslStream(_client.GetStream(), false);
             _clientStream = ssl;
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_abort.Token);
@@ -232,16 +284,9 @@ namespace NetProxy.Service.Proxy
 
             try
             {
-                await ssl.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
-                {
-                    ServerCertificate = _proxy.Certificate,
-                    ApplicationProtocols = _proxy.Configuration.AllowHttp2
-                        ? [SslApplicationProtocol.Http2, SslApplicationProtocol.Http11]
-                        : [SslApplicationProtocol.Http11],
-                    ClientCertificateRequired = false,
-                    EnabledSslProtocols = SslProtocols.None, //Let the operating system choose.
-                    CertificateRevocationCheckMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck
-                }, timeout.Token);
+                //The server name that the client asks for (SNI) picks the proxy, when the port is shared, and the certificate.
+                await ssl.AuthenticateAsServerAsync(
+                    (_, hello, _, _) => ValueTask.FromResult(SelectTlsOptions(hello.ServerName)), null, timeout.Token);
 
                 _clientIsHttp2 = ssl.NegotiatedApplicationProtocol == SslApplicationProtocol.Http2;
                 return true;
@@ -250,7 +295,7 @@ namespace NetProxy.Service.Proxy
             {
                 //Usually a client that does not trust the certificate and hung up.
                 Singletons.Logging.Write(NpLogging.Severity.Warning,
-                    $"TLS handshake with {_clientDisplay} failed on proxy '{_proxy.Configuration.Name}': {ex.InnerException?.Message ?? ex.Message}");
+                    $"TLS handshake with {_clientDisplay} failed on proxy '{ProxyName}': {ex.InnerException?.Message ?? ex.Message}");
                 return false;
             }
             catch (Exception ex) when (ex is IOException or OperationCanceledException)
@@ -259,10 +304,128 @@ namespace NetProxy.Service.Proxy
                 {
                     //Browsers routinely open connections that they drop before the handshake is done.
                     Singletons.Logging.Write(NpLogging.Severity.Verbose,
-                        $"TLS handshake with {_clientDisplay} on proxy '{_proxy.Configuration.Name}' did not complete: {ex.GetBaseException().Message}");
+                        $"TLS handshake with {_clientDisplay} on proxy '{ProxyName}' did not complete: {ex.GetBaseException().Message}");
                 }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Chooses the proxy for a TLS client (if the port is shared) and what it is offered: the certificate for the server name
+        /// it asked for, and HTTP/2 if the proxy allows it. Throws if there is no proxy or certificate for it, which fails the handshake.
+        /// </summary>
+        private SslServerAuthenticationOptions SelectTlsOptions(string? serverName)
+        {
+            var proxy = _proxy ?? NpHostRouter.Match(_listener.Routes, serverName);
+
+            if (proxy == null)
+            {
+                throw new AuthenticationException($"No proxy on this port answers to the host name '{serverName}'.");
+            }
+
+            var certificate = proxy.GetCertificate(serverName)
+                ?? throw new AuthenticationException($"Proxy '{proxy.Configuration.Name}' has no certificate for the host name '{serverName}'.");
+
+            _proxy = proxy;
+
+            return new SslServerAuthenticationOptions
+            {
+                ServerCertificate = certificate,
+                ApplicationProtocols = proxy.Configuration.AllowHttp2
+                    ? [SslApplicationProtocol.Http2, SslApplicationProtocol.Http11]
+                    : [SslApplicationProtocol.Http11],
+                ClientCertificateRequired = false,
+                EnabledSslProtocols = SslProtocols.None, //Let the operating system choose.
+                CertificateRevocationCheckMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck
+            };
+        }
+
+        /// <summary>
+        /// For a port that is shared by several plain (not TLS) HTTP proxies: reads the start of the request to find the Host header,
+        /// which picks the proxy. What was read is kept, to be passed on first. A client that speaks HTTP/2 without TLS has no Host
+        /// header to read (it is compressed), so it goes to the default proxy of the port. A request for a host name that no proxy
+        /// answers to (and there is no default) gets a 404. Returns false if the connection should end.
+        /// </summary>
+        private async Task<bool> PeekAndRouteAsync()
+        {
+            var preface = Http2StreamParser.ClientPrefaceBytes;
+            var held = new MemoryStream();
+            var buffer = new byte[4096];
+            string? host = null;
+            var isHttp2 = false;
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_abort.Token);
+            timeout.CancelAfter(_handshakeTimeout);
+
+            try
+            {
+                while (held.Length < NpHostRouter.MaxHeaderBytes)
+                {
+                    var read = await _clientStream!.ReadAsync(buffer.AsMemory(), timeout.Token);
+                    if (read <= 0)
+                    {
+                        break;
+                    }
+
+                    Touch();
+                    held.Write(buffer, 0, read);
+
+                    var data = held.GetBuffer().AsSpan(0, (int)held.Length);
+                    var compared = Math.Min(data.Length, preface.Length);
+
+                    if (data[..compared].SequenceEqual(preface.AsSpan(0, compared)))
+                    {
+                        if (compared == preface.Length)
+                        {
+                            isHttp2 = true;
+                            break;
+                        }
+
+                        continue; //Could still turn out to be the HTTP/2 preface.
+                    }
+
+                    if (NpHostRouter.TryReadHost(data, out host))
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (_abort.IsCancellationRequested == false)
+            {
+                Singletons.Logging.Write(NpLogging.Severity.Verbose,
+                    $"{_clientDisplay} did not send a request on {_listener.Description} in time and is closed.");
+                return false;
+            }
+
+            if (held.Length == 0)
+            {
+                return false; //The client went away without saying anything.
+            }
+
+            var proxy = NpHostRouter.Match(_listener.Routes, host);
+
+            if (proxy == null)
+            {
+                Singletons.Logging.Write(NpLogging.Severity.Warning,
+                    $"No proxy on {_listener.Description} answers to the host name '{host ?? "(none)"}' asked for by {_clientDisplay}.");
+
+                try
+                {
+                    await _clientStream!.WriteAsync("HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"u8.ToArray(), _abort.Token);
+                }
+                catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or OperationCanceledException)
+                {
+                    //The client is gone.
+                }
+
+                return false;
+            }
+
+            _proxy = proxy;
+            _initialClientBytes = held.ToArray();
+            _clientIsHttp2 = isHttp2 && proxy.Configuration.AllowHttp2;
+            _peeked = true;
+            return true;
         }
 
         /// <summary>
@@ -307,7 +470,7 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         private async Task<bool> DetectClientHttp2Async()
         {
-            if (_proxy.TerminatesTls || _proxy.EffectiveTrafficType != TrafficType.Http || _proxy.Configuration.AllowHttp2 == false)
+            if (_peeked || _proxy.TerminatesTls || _proxy.EffectiveTrafficType != TrafficType.Http || _proxy.Configuration.AllowHttp2 == false)
             {
                 return true;
             }
@@ -622,9 +785,13 @@ namespace NetProxy.Service.Proxy
             try { _endpointClient?.Dispose(); } catch { }
 
             _endpointStatistics?.ConnectionClosed();
-            _proxy.Statistics.ConnectionClosed();
-            _proxy.RemoveConnection(this);
-            _proxy.ReleaseClient(_clientKey);
+
+            if (_admitted)
+            {
+                _proxy.Statistics.ConnectionClosed();
+                _proxy.RemoveConnection(this);
+                _proxy.ReleaseClient(_clientKey);
+            }
 
             try { _abort.Dispose(); } catch { }
 

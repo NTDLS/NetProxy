@@ -795,6 +795,13 @@ namespace NetProxy.Client.Forms
                 addresses.AddRange(proxy.Bindings.Where(o => o.Enabled).Select(o => o.Address));
             }
 
+            //A proxy that shares its port is reached by its host names (a wildcard is not a name to browse to).
+            var defaultPort = (scheme == "https" && proxy.ListenPort == 443) || (scheme == "http" && proxy.ListenPort == 80);
+            foreach (var host in proxy.HostNames.Where(o => o.Enabled && o.Host.StartsWith('*') == false))
+            {
+                yield return $"{scheme}://{host.Host}{(defaultPort ? "" : $":{proxy.ListenPort}")}/";
+            }
+
             foreach (var address in addresses.Select(NpUtility.NormalizeHost).Distinct())
             {
                 yield return $"{scheme}://{(address.Contains(':') ? $"[{address}]" : address)}:{proxy.ListenPort}/";

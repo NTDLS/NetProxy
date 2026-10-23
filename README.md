@@ -45,6 +45,18 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 * Proxies saved by an earlier version as HTTPS without a certificate are passed through as Raw, and the service logs a warning.
 * Certificate passwords and the password hashes of the management users are stored encrypted in the configuration files (DPAPI on Windows, a key file next to the configuration on Linux).
 
+### Sharing a port (host names)
+
+Several **HTTP** or **HTTPS** proxies can listen on the same port, if each answers to different **host names** (the *Host names* tab of the proxy).
+
+* A host name is exact (`www.example.com`) or a wildcard for everything below a domain (`*.example.com`, which does not include `example.com` itself, so list that too). The most specific match wins: an exact name before a wildcard, a longer wildcard before a shorter one.
+* A request goes to the proxy that has its host name: the `Host` header for HTTP, or the server name (SNI) of the TLS handshake for HTTPS.
+* A proxy with **no host names** is the default for the port and gets whatever no other proxy claims. Only one proxy per port can be the default. With no default, a plain HTTP request for an unknown host gets a `404`, and an unknown HTTPS server name fails the handshake.
+* **HTTPS:** each host name can have its own PFX certificate (and password), for example one for `www.example.com` and another for `example.com`. A host name without one uses the certificate of the proxy. Proxies that share a port must all be HTTP or all be HTTPS.
+* **Raw** proxies cannot share a port, because there is nothing to tell them apart by. The service refuses to save a proxy that conflicts with another one on the same port (and addresses).
+* The proxy is chosen once per connection: the first request decides, so later requests on a keep-alive connection go to the same proxy. For the same reason HTTP/2 connections go to the proxy of the first host name (HTTPS) or to the default proxy (HTTP/2 without TLS, where the host is compressed), so clients that reuse one HTTP/2 connection for several host names can reach the wrong proxy.
+* A proxy that is alone on its port answers to every host name, whatever it lists.
+
 ### IPv6
 
 Proxies listen on IPv4, IPv6, or both (one dual-stack listener) when they listen on all addresses, and a binding can be an IPv4 or IPv6 address (`::1` or `[::1]`). An endpoint can be an IPv6 address or a host name that has one. The management port accepts IPv6 too (*Settings > Configuration > Service*). Check the firewall for both IP versions: IPv6 addresses are often directly reachable from the internet.

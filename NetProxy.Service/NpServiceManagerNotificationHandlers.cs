@@ -96,6 +96,17 @@ namespace NetProxy.Service
 
             try
             {
+                var configuration = notification.ProxyConfiguration;
+
+                var problem = NpHostRouter.NormalizeAndValidate(configuration)
+                    ?? NpHostRouter.FindSharingConflict(configuration, serviceManager.GetProxies().Select(o => o.Configuration));
+
+                if (problem != null)
+                {
+                    serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The proxy was not saved. {problem}"));
+                    return;
+                }
+
                 var existingProxy = serviceManager.GetProxyById(notification.ProxyConfiguration.Id);
 
                 if (existingProxy != null)

@@ -3,6 +3,7 @@ using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
+using NetProxy.Library.Utilities;
 using NTDLS.Helpers;
 using NTDLS.Localization;
 using NTDLS.ReliableMessaging;
@@ -38,6 +39,7 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
             FormLocalizer.Apply(this);
             LocalizeGrids();
+            InitializeHostNamesTab();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -125,6 +127,102 @@ namespace NetProxy.Client.Forms
             //----------------------------------------------------------------------------
 
             _previousTrafficType = TrafficType.Http;
+        }
+
+        private DataGridView _hostNamesGrid = null!;
+        private DataGridViewCheckBoxColumn _hostNamesEnabled = null!;
+        private DataGridViewTextBoxColumn _hostNamesHost = null!;
+        private DataGridViewTextBoxColumn _hostNamesCertificate = null!;
+        private DataGridViewTextBoxColumn _hostNamesPassword = null!;
+        private DataGridViewTextBoxColumn _hostNamesDescription = null!;
+        private TabPage _tabPageHostNames = null!;
+
+        /// <summary>
+        /// The host names tab, which is where proxies that share a port are told apart (and given a certificate each).
+        /// </summary>
+        private void InitializeHostNamesTab()
+        {
+            _hostNamesEnabled = new DataGridViewCheckBoxColumn { HeaderText = Localize("Enabled"), Width = 55, Frozen = true };
+            _hostNamesEnabled.DefaultCellStyle.NullValue = true;
+            _hostNamesHost = new DataGridViewTextBoxColumn
+            {
+                HeaderText = Localize("Host name"),
+                Width = 170,
+                ToolTipText = Localize("A host name such as www.example.com, or *.example.com for every name below a domain.")
+            };
+            _hostNamesCertificate = new DataGridViewTextBoxColumn
+            {
+                HeaderText = Localize("Certificate (PFX)"),
+                Width = 170,
+                ToolTipText = Localize("HTTPS only. The certificate for this host name, on the machine that the service runs on (double-click to browse). When empty, the certificate of the proxy is used.")
+            };
+            _hostNamesPassword = new DataGridViewTextBoxColumn { HeaderText = Localize("Password"), Width = 80 };
+            _hostNamesDescription = new DataGridViewTextBoxColumn { HeaderText = Localize("Description"), Width = 120 };
+
+            _hostNamesGrid = new DataGridView
+            {
+                Location = new Point(9, 66),
+                Size = new Size(579, 253),
+                BackgroundColor = SystemColors.ButtonFace,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+            _hostNamesGrid.Columns.AddRange(_hostNamesEnabled, _hostNamesHost, _hostNamesCertificate, _hostNamesPassword, _hostNamesDescription);
+            _hostNamesGrid.DataError += (_, e) => e.ThrowException = false;
+
+            //The password is not shown, in the grid or while it is typed.
+            _hostNamesGrid.CellFormatting += (_, e) =>
+            {
+                if (e.ColumnIndex == _hostNamesPassword.Index && string.IsNullOrEmpty(e.Value as string) == false)
+                {
+                    e.Value = "••••••";
+                    e.FormattingApplied = true;
+                }
+            };
+            _hostNamesGrid.EditingControlShowing += (_, e) =>
+            {
+                if (e.Control is TextBox textBox)
+                {
+                    textBox.UseSystemPasswordChar = _hostNamesGrid.CurrentCell?.ColumnIndex == _hostNamesPassword.Index;
+                }
+            };
+            _hostNamesGrid.CellDoubleClick += (_, e) =>
+            {
+                if (e.RowIndex < 0 || e.ColumnIndex != _hostNamesCertificate.Index || _hostNamesGrid.ReadOnly)
+                {
+                    return;
+                }
+
+                using var dialog = new OpenFileDialog
+                {
+                    Title = Localize("Select the TLS certificate"),
+                    Filter = Localize("PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*")
+                };
+
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    _hostNamesGrid.Rows[e.RowIndex].Cells[_hostNamesCertificate.Index].Value = dialog.FileName;
+                }
+            };
+
+            var info = new Label
+            {
+                Location = new Point(9, 9),
+                Size = new Size(579, 54),
+                Text = Localize("Several HTTP or HTTPS proxies can listen on the same port if they answer to different host names. A request goes to the proxy with the host name it asks for"
+                    + " (the Host header, or the server name of the TLS handshake). A proxy with no host names gets the requests that no other proxy claims. Raw proxies cannot share a port.")
+            };
+
+            _tabPageHostNames = new TabPage
+            {
+                Text = Localize("Host names"),
+                BackColor = SystemColors.Control,
+                Padding = new Padding(3)
+            };
+            _tabPageHostNames.Controls.Add(info);
+            _tabPageHostNames.Controls.Add(_hostNamesGrid);
+
+            tabControl.TabPages.Insert(tabControl.TabPages.IndexOf(tabPageBindings) + 1, _tabPageHostNames);
         }
 
         /// <summary>
@@ -316,6 +414,13 @@ namespace NetProxy.Client.Forms
                 );
             }
 
+            foreach (var host in proxy.HostNames)
+            {
+                _hostNamesGrid.Rows.Add(
+                    [$"{host.Enabled}", host.Host, host.TlsCertificatePath, host.TlsCertificatePassword, host.Description]
+                );
+            }
+
             foreach (var binding in proxy.Bindings)
             {
                 dataGridViewBindings.Rows.Add(
@@ -429,7 +534,44 @@ namespace NetProxy.Client.Forms
                 return false;
             }
 
-            if (proxy.TrafficType == TrafficType.Https && string.IsNullOrWhiteSpace(proxy.TlsCertificatePath))
+            foreach (DataGridViewRow row in _hostNamesGrid.Rows)
+            {
+                var host = ((string)(row.Cells[_hostNamesHost.Index].Value ?? "")).Trim();
+                if (row.IsNewRow || host == string.Empty)
+                {
+                    continue;
+                }
+
+                var hostPattern = NpHostMatcher.Normalize(host);
+                if (NpHostMatcher.IsValidPattern(hostPattern) == false)
+                {
+                    tabControl.SelectedTab = _tabPageHostNames;
+                    _hostNamesGrid.CurrentCell = row.Cells[_hostNamesHost.Index];
+                    MessageBox.Show(Localize("'{0}' is not a valid host name (use a name like www.example.com, or *.example.com for all names below a domain).", host),
+                        Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return false;
+                }
+
+                if (proxy.HostNames.Any(o => o.Host == hostPattern))
+                {
+                    tabControl.SelectedTab = _tabPageHostNames;
+                    _hostNamesGrid.CurrentCell = row.Cells[_hostNamesHost.Index];
+                    MessageBox.Show(Localize("The host name '{0}' is listed more than once.", hostPattern!), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return false;
+                }
+
+                proxy.HostNames.Add(new NpHostName
+                {
+                    Enabled = bool.Parse(row.Cells[_hostNamesEnabled.Index].Value?.ToString() ?? "True"),
+                    Host = hostPattern!,
+                    TlsCertificatePath = (row.Cells[_hostNamesCertificate.Index].Value?.ToString() ?? "").Trim(),
+                    TlsCertificatePassword = row.Cells[_hostNamesPassword.Index].Value?.ToString() ?? "",
+                    Description = row.Cells[_hostNamesDescription.Index].Value?.ToString() ?? ""
+                });
+            }
+
+            if (proxy.TrafficType == TrafficType.Https && string.IsNullOrWhiteSpace(proxy.TlsCertificatePath)
+                && proxy.HostNames.Any(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false) == false)
             {
                 tabControl.SelectedTab = tabPageTls;
                 MessageBox.Show(Localize("A certificate (PFX) is required to terminate HTTPS traffic. Use the Raw traffic type to pass encrypted traffic through untouched."),
@@ -626,6 +768,11 @@ namespace NetProxy.Client.Forms
             textBoxCertificatePath.Enabled = trafficType == TrafficType.Https;
             textBoxCertificatePassword.Enabled = trafficType == TrafficType.Https;
             buttonBrowseCertificate.Enabled = trafficType == TrafficType.Https;
+
+            //Raw traffic has no host name to tell proxies apart by, so it cannot share a port.
+            _hostNamesGrid.ReadOnly = trafficType == TrafficType.Raw;
+            _hostNamesCertificate.ReadOnly = trafficType != TrafficType.Https;
+            _hostNamesPassword.ReadOnly = trafficType != TrafficType.Https;
         }
 
         private void CheckBoxListenOnAllAddresses_CheckedChanged(object? sender, EventArgs e)

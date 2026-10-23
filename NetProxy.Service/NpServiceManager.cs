@@ -162,6 +162,10 @@ namespace NetProxy.Service
                     {
                         var copy = o.Configuration.Clone();
                         copy.TlsCertificatePassword = SecretProtector.Protect(copy.TlsCertificatePassword) ?? string.Empty;
+                        foreach (var host in copy.HostNames)
+                        {
+                            host.TlsCertificatePassword = SecretProtector.Protect(host.TlsCertificatePassword) ?? string.Empty;
+                        }
                         return copy;
                     }).ToList();
 
@@ -206,6 +210,13 @@ namespace NetProxy.Service
                     proxy.TlsCertificatePassword = SecretProtector.Unprotect(proxy.TlsCertificatePassword,
                         $"the certificate password of proxy '{proxy.Name}'", out var plain) ?? string.Empty;
                     hasPlainTextSecrets |= plain;
+
+                    foreach (var host in proxy.HostNames)
+                    {
+                        host.TlsCertificatePassword = SecretProtector.Unprotect(host.TlsCertificatePassword,
+                            $"the certificate password of host name '{host.Host}' of proxy '{proxy.Name}'", out var hostPlain) ?? string.Empty;
+                        hasPlainTextSecrets |= hostPlain;
+                    }
                 }
 
                 lock (Configuration)

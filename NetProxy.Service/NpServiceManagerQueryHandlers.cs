@@ -121,7 +121,8 @@ namespace NetProxy.Service
                         IsRunning = proxy.IsRunning,
                         ListenPort = proxy.Configuration.ListenPort,
                         ListenOnAllAddresses = proxy.Configuration.ListenOnAllAddresses,
-                        Bindings = proxy.Configuration.Bindings
+                        Bindings = proxy.Configuration.Bindings,
+                        HostNames = proxy.Configuration.HostNames.Select(o => new NpHostName { Enabled = o.Enabled, Host = o.Host }).ToList()
                     });
                 }
             }

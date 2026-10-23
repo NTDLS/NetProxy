@@ -79,6 +79,150 @@ namespace NetProxy.Service.Proxy
         }
 
         /// <summary>
+        /// Creates and binds the UDP sockets for a proxy, one for the IP version(s) chosen when it listens on all addresses, otherwise one
+        /// for each enabled binding. Throws if an address cannot be bound (for example the port is in use), with nothing left open.
+        /// </summary>
+        public static List<Socket> CreateUdpSockets(NpProxyConfiguration configuration)
+        {
+            var sockets = new List<Socket>();
+
+            try
+            {
+                if (configuration.ListenOnAllAddresses)
+                {
+                    switch (configuration.BindingProtocol)
+                    {
+                        case BindingProtocol.IPv4:
+                            sockets.Add(BindUdp(IPAddress.Any, configuration.ListenPort, dualMode: false));
+                            break;
+
+                        case BindingProtocol.IPv6:
+                            if (Socket.OSSupportsIPv6 == false)
+                            {
+                                throw new NotSupportedException("The proxy listens on IPv6 but this machine does not have IPv6.");
+                            }
+
+                            sockets.Add(BindUdp(IPAddress.IPv6Any, configuration.ListenPort, dualMode: false));
+                            break;
+
+                        default:
+                            try
+                            {
+                                sockets.Add(Socket.OSSupportsIPv6
+                                    ? BindUdp(IPAddress.IPv6Any, configuration.ListenPort, dualMode: true)
+                                    : BindUdp(IPAddress.Any, configuration.ListenPort, dualMode: false));
+                            }
+                            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressFamilyNotSupported)
+                            {
+                                //IPv6 is installed but cannot be used. Listen on IPv4 only.
+                                sockets.Add(BindUdp(IPAddress.Any, configuration.ListenPort, dualMode: false));
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    foreach (var binding in configuration.Bindings.Where(o => o.Enabled))
+                    {
+                        sockets.Add(BindUdp(ParseAddress(binding.Address), configuration.ListenPort, dualMode: false));
+                    }
+                }
+
+                return sockets;
+            }
+            catch
+            {
+                foreach (var socket in sockets)
+                {
+                    socket.Dispose();
+                }
+
+                throw;
+            }
+        }
+
+        private static Socket BindUdp(IPAddress address, int port, bool dualMode)
+        {
+            var socket = new Socket(address.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+
+            try
+            {
+                if (address.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    socket.DualMode = dualMode;
+                }
+
+                //Datagrams that arrive in a burst wait here while the loop is busy, instead of being lost.
+                try { socket.ReceiveBufferSize = 4 * 1024 * 1024; } catch { }
+
+                DisableUdpConnectionReset(socket);
+                socket.Bind(new IPEndPoint(address, port));
+                return socket;
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Windows reports an ICMP "port unreachable" (a client that is gone) as an error of the next receive on a UDP socket, which
+        /// would end the receive loop. It is not an error of the loop: this turns it off for a socket that talks to many clients.
+        /// </summary>
+        public static void DisableUdpConnectionReset(Socket socket)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                const int SIO_UDP_CONNRESET = -1744830452;
+                try { socket.IOControl(SIO_UDP_CONNRESET, [0], null); } catch { }
+            }
+        }
+
+        /// <summary>
+        /// A UDP socket to send to one endpoint (a host name, IPv4 address or IPv6 address, which is looked up now), so that what it
+        /// receives is what that endpoint answers.
+        /// </summary>
+        public static async Task<Socket> ConnectUdpAsync(string host, int port, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutSource.CancelAfter(timeout);
+
+            //Dual-stack whenever the operating system has IPv6, like the connections to TCP endpoints.
+            var socket = Socket.OSSupportsIPv6
+                ? new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) { DualMode = true }
+                : new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+            try
+            {
+                try { socket.ReceiveBufferSize = 4 * 1024 * 1024; } catch { }
+
+                //Connecting a UDP socket only sets where it sends: it cannot find out that nothing is there, so unlike TCP there is no
+                //  trying the next address of a name. One is chosen: IPv4 first, because a name that has both is far more often a
+                //  service that listens on IPv4 only than the other way round.
+                var normalized = NormalizeHost(host);
+                var address = IPAddress.TryParse(normalized, out var literal)
+                    ? literal
+                    : (await Dns.GetHostAddressesAsync(normalized, timeoutSource.Token))
+                        .OrderBy(o => o.AddressFamily == AddressFamily.InterNetwork ? 0 : 1)
+                        .FirstOrDefault() ?? throw new SocketException((int)SocketError.HostNotFound);
+
+                await socket.ConnectAsync(address, port, timeoutSource.Token);
+                return socket;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested == false)
+            {
+                socket.Dispose();
+                throw new TimeoutException($"Timed out after {timeout.TotalSeconds:n0}s looking up {FormatHostPort(host, port)}.");
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
         /// One listener that accepts both IPv6 and IPv4 clients, or an IPv4 one when the operating system has no IPv6.
         /// </summary>
         public static TcpListener CreateDualStackListener(int port)

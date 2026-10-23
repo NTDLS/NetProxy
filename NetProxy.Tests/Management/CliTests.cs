@@ -510,6 +510,29 @@ namespace NetProxy.Tests.Management
         }
 
         [Fact]
+        public async Task A_udp_proxy_is_applied_from_a_file_listed_and_its_sessions_are_shown()
+        {
+            var backend = Host.Own(new UdpEchoBackend("echo:"));
+            var proxy = ProxyBuilder.Configuration("dns", Net.FreeUdpPort(), TrafficType.Udp, backend.Port);
+
+            var applied = Cli("proxy", "apply", "-f", WriteFile("dns.json", proxy));
+            Assert.Equal(0, applied.Exit);
+            Assert.Contains("proxy/dns: created", applied.Out);
+            Assert.Matches(@"dns\s+running\s+Udp\s+" + proxy.ListenPort, Cli("proxy", "list").Out);
+
+            using var client = new UdpTestClient(proxy.ListenPort);
+            Assert.Equal("echo:ping", await client.Ask("ping"));
+
+            Assert.Matches(@"dns\s+127\.0\.0\.1:" + client.LocalPort + @"\s+127\.0\.0\.1:" + backend.Port + @"\s+Udp", Cli("connections").Out);
+            Assert.Equal(0, Cli("connections", "close", "dns").Exit);
+
+            var refused = ProxyBuilder.Configuration("bad", Net.FreeUdpPort(), TrafficType.Udp, backend.Port, c => c.ForwardedHeaders = ForwardedHeadersMode.Replace);
+            var result = Cli("proxy", "apply", "-f", WriteFile("bad.json", refused));
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("UDP proxy cannot add forwarded headers", result.Error);
+        }
+
+        [Fact]
         public void Logs_prints_the_end_of_the_log()
         {
             Client.ApplyProxy(NewProxy("logged"));

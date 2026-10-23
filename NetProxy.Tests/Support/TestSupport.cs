@@ -53,7 +53,40 @@ namespace NetProxy.Tests.Support
     public static class Net
     {
         /// <summary>
-        /// A port that nothing is listening on, for the moment.
+        /// A UDP port that nothing has bound, for the moment.
+        /// </summary>
+        public static int FreePortForTcpAndUdp()
+        {
+            for (var attempt = 0; attempt < 50; attempt++)
+            {
+                var port = FreePort();
+
+                try
+                {
+                    using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket.Bind(new IPEndPoint(IPAddress.Loopback, port));
+                    return port;
+                }
+                catch (SocketException)
+                {
+                }
+            }
+
+            throw new InvalidOperationException("No port is free for both TCP and UDP.");
+        }
+
+        /// <summary>
+        /// A UDP port that nothing has bound, for the moment.
+        /// </summary>
+        public static int FreeUdpPort()
+        {
+            using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            return ((IPEndPoint)socket.LocalEndPoint!).Port;
+        }
+
+        /// <summary>
+        /// A TCP port that nothing is listening on, for the moment.
         /// </summary>
         public static int FreePort()
         {

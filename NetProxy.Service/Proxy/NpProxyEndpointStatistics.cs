@@ -60,6 +60,12 @@
             Interlocked.Exchange(ref _lastFailureTicks, 0);
         }
 
+        /// <summary>
+        /// The endpoint refused or did not answer an established connection (UDP: an ICMP port unreachable came back), so that new
+        /// connections are sent to the other endpoints first for a while.
+        /// </summary>
+        internal void MarkFailed() => Interlocked.Exchange(ref _lastFailureTicks, DateTime.UtcNow.Ticks);
+
         internal void ConnectionClosed() => Interlocked.Decrement(ref _currentConnections);
         internal void AddBytesRead(long bytes) => Interlocked.Add(ref _bytesRead, bytes);
         internal void AddBytesWritten(long bytes) => Interlocked.Add(ref _bytesWritten, bytes);

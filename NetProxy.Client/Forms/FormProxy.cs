@@ -42,6 +42,7 @@ namespace NetProxy.Client.Forms
             InitializeHostNamesTab();
             InitializePluginsTab();
             InitializeForwardedHeadersControl();
+            InitializeDatagramLimitControl();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -74,7 +75,8 @@ namespace NetProxy.Client.Forms
             {
                 new (Localize("Raw"), TrafficType.Raw),
                 new ("HTTP", TrafficType.Http),
-                new ("HTTPS", TrafficType.Https)
+                new ("HTTPS", TrafficType.Https),
+                new ("UDP", TrafficType.Udp)
             };
 
             comboBoxTrafficType.DisplayMember = "Display";
@@ -105,6 +107,7 @@ namespace NetProxy.Client.Forms
 
             ColumnBindingsEnabled.DefaultCellStyle.NullValue = true;
             ColumnEndpointsEnabled.DefaultCellStyle.NullValue = true;
+            ColumnEndpointsTrafficType.Items.Add("Udp");
             ColumnHTTPHeadersEnabled.DefaultCellStyle.NullValue = true;
 
             //A new endpoint starts with the traffic type of the listener, which is usually what it needs.
@@ -125,6 +128,7 @@ namespace NetProxy.Client.Forms
             textBoxMaxConnections.Text = "0";
             textBoxMaxConnectionsPerClient.Text = "0";
             textBoxIdleTimeout.Text = "0";
+            _maxDatagrams.Text = "0";
             checkBoxListenAutoStart.Checked = true;
             //----------------------------------------------------------------------------
 
@@ -366,12 +370,32 @@ namespace NetProxy.Client.Forms
                 Localize("The most connections that one client address has open at once. Further connections from it are closed. 0 is no limit."));
 
             toolTips.AddControls([labelIdleTimeout, textBoxIdleTimeout],
-                Localize("A connection that has carried no data in either direction for this many seconds is closed. 0 is no timeout."));
+                Localize("A connection that has carried no data in either direction for this many seconds is closed. 0 is no timeout."
+                + " For UDP it is how long a client's session is kept without datagrams, and 0 is 60 seconds."));
 
             toolTips.AddControls([label15, textBoxStickySessionCacheExpiration],
                 Localize("How long, in seconds, a client is remembered by sticky sessions after it was last connected."));
 
             #endregion
+        }
+
+        private TextBox _maxDatagrams = null!;
+        private Label _maxDatagramsLabel = null!;
+
+        /// <summary>
+        /// UDP only: below the idle timeout, the most datagrams per second one client may send.
+        /// </summary>
+        private void InitializeDatagramLimitControl()
+        {
+            _maxDatagramsLabel = new Label { Text = Localize("Max datagrams/s per client (UDP)"), Location = new Point(8, 157), AutoSize = true };
+            _maxDatagrams = new TextBox { Location = new Point(10, 175), Size = new Size(116, 23) };
+
+            groupBoxLimits.Height += 42;
+            groupBoxLimits.Controls.Add(_maxDatagramsLabel);
+            groupBoxLimits.Controls.Add(_maxDatagrams);
+
+            new ToolTip().SetToolTip(_maxDatagrams,
+                Localize("UDP only. The most datagrams per second that one client (address and port) may send. The ones above that are dropped. 0 is no limit."));
         }
 
         private ComboBox _forwardedHeaders = null!;
@@ -497,6 +521,7 @@ namespace NetProxy.Client.Forms
             textBoxMaxConnections.Text = $"{proxy.MaxConnections}";
             textBoxMaxConnectionsPerClient.Text = $"{proxy.MaxConnectionsPerClient}";
             textBoxIdleTimeout.Text = $"{proxy.IdleTimeoutSeconds}";
+            _maxDatagrams.Text = $"{proxy.MaxDatagramsPerSecondPerClient}";
             checkBoxAllowHttp2.Checked = proxy.AllowHttp2;
             _forwardedHeaders.SelectedValue = proxy.ForwardedHeaders;
             textBoxCertificatePath.Text = proxy.TlsCertificatePath;
@@ -599,6 +624,9 @@ namespace NetProxy.Client.Forms
 
                 textBoxIdleTimeout.GetAndValidateNumeric(0, 31536000,
                     Localize("The idle timeout (s) must be between [min] and [max] (0 is no timeout)."));
+
+                _maxDatagrams.GetAndValidateNumeric(0, 100000000,
+                    Localize("The most datagrams per second must be between [min] and [max] (0 is no limit)."));
             }
             catch (Exception ex)
             {
@@ -623,6 +651,7 @@ namespace NetProxy.Client.Forms
             proxy.MaxConnections = int.Parse(textBoxMaxConnections.Text);
             proxy.MaxConnectionsPerClient = int.Parse(textBoxMaxConnectionsPerClient.Text);
             proxy.IdleTimeoutSeconds = int.Parse(textBoxIdleTimeout.Text);
+            proxy.MaxDatagramsPerSecondPerClient = int.Parse(_maxDatagrams.Text);
             proxy.AllowHttp2 = checkBoxAllowHttp2.Checked;
             proxy.ForwardedHeaders = _forwardedHeaders.SelectedValue is ForwardedHeadersMode forwarded ? forwarded : ForwardedHeadersMode.Off;
             proxy.TlsCertificatePath = textBoxCertificatePath.Text.Trim();
@@ -869,17 +898,23 @@ namespace NetProxy.Client.Forms
             var trafficType = SelectedTrafficType;
 
             //Header rules apply to HTTP, and to HTTPS where the proxy terminates TLS.
-            dataGridViewHTTPHeaders.ReadOnly = trafficType == TrafficType.Raw;
+            var isHttp = trafficType is TrafficType.Http or TrafficType.Https;
+            dataGridViewHTTPHeaders.ReadOnly = isHttp == false;
 
             textBoxCertificatePath.Enabled = trafficType == TrafficType.Https;
             textBoxCertificatePassword.Enabled = trafficType == TrafficType.Https;
             buttonBrowseCertificate.Enabled = trafficType == TrafficType.Https;
 
-            //Raw traffic has no host name to tell proxies apart by, so it cannot share a port.
-            _forwardedHeaders.Enabled = trafficType != TrafficType.Raw;
-            _hostNamesGrid.ReadOnly = trafficType == TrafficType.Raw;
+            //Raw and UDP traffic have no host name to tell proxies apart by, so they cannot share a port. HTTP/2 is HTTP.
+            _forwardedHeaders.Enabled = isHttp;
+            checkBoxAllowHttp2.Enabled = isHttp;
+            _hostNamesGrid.ReadOnly = isHttp == false;
             _hostNamesCertificate.ReadOnly = trafficType != TrafficType.Https;
             _hostNamesPassword.ReadOnly = trafficType != TrafficType.Https;
+
+            //Only UDP has sessions made of datagrams.
+            _maxDatagrams.Enabled = trafficType == TrafficType.Udp;
+            _maxDatagramsLabel.Enabled = trafficType == TrafficType.Udp;
         }
 
         private void CheckBoxListenOnAllAddresses_CheckedChanged(object? sender, EventArgs e)
@@ -892,7 +927,7 @@ namespace NetProxy.Client.Forms
         {
             if (dataGridViewHTTPHeaders.ReadOnly)
             {
-                MessageBox.Show(Localize("HTTP header rules cannot be added because the traffic type is Raw. Use HTTP, or HTTPS with a certificate."),
+                MessageBox.Show(Localize("HTTP header rules cannot be added because the traffic type is Raw or UDP. Use HTTP, or HTTPS with a certificate."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
         }

@@ -60,6 +60,13 @@ namespace NetProxy.Library.Payloads.Routing
         public int IdleTimeoutSeconds { get; set; }
 
         /// <summary>
+        /// UDP only: the most datagrams per second that one client (address and port) may send. The ones above that are dropped.
+        /// 0 is no limit. For UDP the idle timeout above is how long a client's session is kept without datagrams, and 0 there means
+        /// <see cref="Constants.DefaultUdpIdleTimeoutSeconds"/>, because a UDP session has no end of its own.
+        /// </summary>
+        public int MaxDatagramsPerSecondPerClient { get; set; }
+
+        /// <summary>
         /// Path (on the machine running the service) of the PFX/PKCS#12 certificate the listener presents to clients (Https traffic type).
         /// </summary>
         public string TlsCertificatePath { get; set; } = string.Empty;

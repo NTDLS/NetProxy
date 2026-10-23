@@ -60,6 +60,35 @@ namespace NetProxy.Service
                 }
             }
 
+            if (configuration.TrafficType == TrafficType.Udp)
+            {
+                //A datagram has no host name, no TLS, and no HTTP header: what is only for those would silently do nothing.
+                if (configuration.HostNames.Any(o => string.IsNullOrWhiteSpace(o.Host) == false))
+                {
+                    problems.Add($"Proxy '{label}': a UDP proxy cannot have host names (a datagram does not say which host it is for).");
+                }
+
+                if (string.IsNullOrWhiteSpace(configuration.TlsCertificatePath) == false)
+                {
+                    problems.Add($"Proxy '{label}': a UDP proxy cannot have a TLS certificate.");
+                }
+
+                if (configuration.ForwardedHeaders != ForwardedHeadersMode.Off)
+                {
+                    problems.Add($"Proxy '{label}': a UDP proxy cannot add forwarded headers.");
+                }
+
+                if (configuration.HttpHeaderRules.Collection.Count > 0)
+                {
+                    problems.Add($"Proxy '{label}': a UDP proxy cannot have HTTP header rules.");
+                }
+            }
+
+            if (configuration.MaxDatagramsPerSecondPerClient < 0)
+            {
+                problems.Add($"Proxy '{label}': the most datagrams per second cannot be negative (0 is no limit).");
+            }
+
             var hostProblem = NpHostRouter.NormalizeAndValidate(configuration);
             if (hostProblem != null)
             {

@@ -91,6 +91,19 @@ namespace NetProxy.Service.Proxy
                     continue;
                 }
 
+                //TCP and UDP are different sockets: a UDP proxy and a TCP proxy can have the same port number.
+                var candidateIsUdp = candidate.TrafficType == TrafficType.Udp;
+                if (candidateIsUdp != (other.TrafficType == TrafficType.Udp))
+                {
+                    continue;
+                }
+
+                if (candidateIsUdp)
+                {
+                    return $"UDP port {candidate.ListenPort} is already used by proxy '{other.Name}'."
+                        + " A UDP port cannot be shared: a datagram has no host name to tell proxies apart by.";
+                }
+
                 var inUse = $"Port {candidate.ListenPort} is already used by proxy '{other.Name}'.";
 
                 if (candidate.TrafficType == TrafficType.Raw || other.TrafficType == TrafficType.Raw)

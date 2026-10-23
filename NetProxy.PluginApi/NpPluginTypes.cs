@@ -54,7 +54,7 @@ namespace NetProxy.PluginApi
         void Log(NpPluginLogLevel level, string message);
     }
 
-    public enum NpTrafficKind { Raw, Http, Https }
+    public enum NpTrafficKind { Raw, Http, Https, Udp }
 
     public enum NpChangeKind { Added, Changed, Deleted }
 

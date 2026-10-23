@@ -46,6 +46,18 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 * **Renewed certificates are picked up by themselves.** The PFX files (of the proxy and of its host names) are watched. When one is replaced, for example by a renewal with win-acme or certbot, new connections use the new certificate a few seconds later; connections that are open keep the one they started with, and nothing is restarted. A file that cannot be read (still being written, or broken) is retried for a minute and then left alone, and the previous certificate stays in use; the service logs it. Files on network shares are also checked every 30 seconds.
 * Certificate passwords and the password hashes of the management users are stored encrypted in the configuration files (DPAPI on Windows, a key file next to the configuration on Linux).
 
+### UDP (DNS, WireGuard, game servers, syslog...)
+
+Choose the **UDP** traffic type to relay datagrams. UDP has no connections, so the proxy keeps a **session** for each client (address and port): the first datagram creates it, it gets a socket of its own to its endpoint (so what the endpoint answers can be told from the answers to other clients), and it ends when the client has sent nothing for the **idle timeout**.
+
+* **Datagrams are relayed whole** (up to 65,535 bytes) and in order. The endpoint answers the session's socket, and the answer goes back to the client from the port it sent to.
+* **Idle timeout:** the setting of the proxy. For UDP `0` means 60 seconds, because a UDP session has no end of its own. Use a few seconds for DNS and minutes for a VPN or a game.
+* **Limits:** *max connections* and *max connections per client* count sessions. *Max datagrams/s per client* drops what a client sends above that rate. It is off (0) by default because a VPN tunnel is one client sending tens of thousands of datagrams a second; set it for services where a client sends little (DNS, syslog). A client's queue is limited, so a flood from one address cannot use up memory, and a client that a plugin or the endpoints turned away is ignored for a few seconds instead of costing a lookup per datagram.
+* **Endpoints:** round-robin, balanced and sticky sessions work per session (sticky is by client address). Fail-over is best effort: UDP cannot tell that an endpoint is down until it answers a datagram with "port unreachable", which ends the session, so that datagram is lost and the **next** client session goes to another endpoint. An endpoint given as a name that has both IPv4 and IPv6 addresses is sent to over IPv4.
+* **Ports:** a UDP port belongs to one proxy (a datagram has no host name, so UDP proxies cannot share a port the way HTTP and HTTPS proxies do). A UDP proxy and a TCP proxy can use the same number.
+* **Not for UDP:** host names, TLS, HTTP header rules, forwarded headers and HTTP/2. The endpoint sees the proxy's address as the client. QUIC and HTTP/3 pass through as opaque datagrams, but cannot be routed by name.
+* **Abuse:** a spoofed source address can make a UDP service answer a victim. Keep the sessions per client and per proxy limited, and the datagram rate where the service allows it.
+
 ### Telling the endpoint who the client is (X-Forwarded-For)
 
 An endpoint sees the connection come from the proxy. Set **X-Forwarded-For / -Proto** on the *HTTP Headers* tab of an HTTP or HTTPS proxy to pass the client on:
@@ -100,6 +112,7 @@ NetProxy can be extended with .NET plugins. A plugin is an assembly with a class
   * Connection: `OnConnectionRefused`, `OnClientTlsEstablished`, `OnConnecting` (can say no), `OnEndpointConnecting` (can say no, and the next endpoint is tried), `OnEndpointConnected`, `OnEndpointConnectFailed`, `OnConnected`, `OnIdleTimeout`, `OnDisconnecting`, `OnDisconnected`.
   * Data: `OnDataReceived`, `OnDataSending` and `OnDataSent`.
 * **Data events** sit between the two sides of a connection, so for an HTTPS proxy that terminates TLS they see the **decrypted** data (`ReceivedEncrypted` says it was encrypted on the wire) before it is encrypted again for the endpoint (`WillBeSentEncrypted`). `OnDataReceived` is called with what was read, before the HTTP header rules; `OnDataSending` is called after them, right before the write. Both can `Replace` the data (any length), `Drop` it, or `CloseConnection`. A read is whatever arrived together, not a message. A Raw proxy that passes TLS through only has encrypted bytes to give to a plugin.
+* **UDP:** on a UDP proxy a client's session is a connection (it is "connecting" when its first datagram arrives and "disconnected" when the session ends), and every datagram is a data event, so `OnDataReceived` and `OnDataSending` get whole datagrams: a datagram is a message, unlike a read. Nothing is encrypted by the proxy, so `ReceivedEncrypted` and `WillBeSentEncrypted` are false.
 * **Order and safety:** the plugins of a proxy are called in order, and each gets the data as the one before left it. An event that can say no stops at the first plugin that does. A plugin that throws, or takes longer than its time limit, is logged and skipped for that event; the connection carries on.
 * Not in this version: events for individual HTTP requests and responses (use the data events), and for certificates that are about to expire.
 
@@ -148,7 +161,7 @@ The configuration is stored in the common application data folder: `C:\ProgramDa
 dotnet test NetProxy.slnx
 ```
 
-`NetProxy.Tests` (xUnit) covers the service, the plugin system, the management API and `netproxyctl` with about 400 tests. Most of them run real proxies on the loopback address with real traffic (HTTP, HTTPS with generated certificates, raw TCP), and the management tests run the service in the test process and talk to it the way a console does. The whole run takes about three minutes, most of it the 4096 bit key exchange of every management connection and tests that wait for files to be picked up.
+`NetProxy.Tests` (xUnit) covers the service, the plugin system, the management API and `netproxyctl` with about 450 tests. Most of them run real proxies on the loopback address with real traffic (HTTP, HTTPS with generated certificates, raw TCP, UDP), and the management tests run the service in the test process and talk to it the way a console does. The whole run takes about three minutes, most of it the 4096 bit key exchange of every management connection and tests that wait for files to be picked up.
 
 The tests keep their configuration under their own name (`NetProxyTests`, via `NETPROXY_CONFIG_NAME`) and a credentials file of their own, so they never touch an installed NetProxy. They use free ports on 127.0.0.1. The management console (WinForms) has no tests.
 

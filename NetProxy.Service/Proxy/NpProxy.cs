@@ -19,6 +19,7 @@ namespace NetProxy.Service.Proxy
 
         private readonly object _lifecycleLock = new();
         private List<NpProxyListener> _listeners = [];
+        private List<NpUdpListener> _udpListeners = [];
         private CancellationTokenSource? _stopSource;
         private MemoryCache? _stickySessions;
         private long _roundRobinCounter;
@@ -33,7 +34,7 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         internal ConcurrentDictionary<Guid, NpProxyEndpointStatistics> EndpointStatistics { get; } = new();
 
-        internal ConcurrentDictionary<Guid, NpProxyConnection> ActiveConnections { get; } = new();
+        internal ConcurrentDictionary<Guid, INpActiveConnection> ActiveConnections { get; } = new();
 
         /// <summary>
         /// The certificates that the listener presents to clients, when it terminates TLS. They are reloaded when their files change.
@@ -89,6 +90,7 @@ namespace NetProxy.Service.Proxy
         {
             TrafficType.Http => NpTrafficKind.Http,
             TrafficType.Https => NpTrafficKind.Https,
+            TrafficType.Udp => NpTrafficKind.Udp,
             _ => NpTrafficKind.Raw
         });
 
@@ -114,6 +116,7 @@ namespace NetProxy.Service.Proxy
                 }
 
                 var started = new List<NpProxyListener>();
+                var startedUdp = new List<NpUdpListener>();
                 var plugins = Plugins;
 
                 try
@@ -145,21 +148,30 @@ namespace NetProxy.Service.Proxy
                         EndpointStatistics.TryAdd(endpointId, new NpProxyEndpointStatistics());
                     }
 
-                    foreach (var tcpListener in NpNetwork.CreateListeners(Configuration))
+                    if (Configuration.TrafficType == TrafficType.Udp)
                     {
-                        //Joins the listener of the port when another proxy already has it, if they can share it.
-                        started.Add(NpProxyListener.Attach(this, tcpListener));
+                        //A UDP port belongs to one proxy. The sockets are bound here, so a port in use is reported to whoever started it.
+                        startedUdp = NpUdpListener.StartAll(this);
+                    }
+                    else
+                    {
+                        foreach (var tcpListener in NpNetwork.CreateListeners(Configuration))
+                        {
+                            //Joins the listener of the port when another proxy already has it, if they can share it.
+                            started.Add(NpProxyListener.Attach(this, tcpListener));
+                        }
                     }
 
-                    if (started.Count == 0)
+                    if (started.Count == 0 && startedUdp.Count == 0)
                     {
                         throw new InvalidOperationException("The proxy has no enabled bindings.");
                     }
 
                     _listeners = started;
+                    _udpListeners = startedUdp;
                     Volatile.Write(ref _isRunning, 1);
 
-                    var listeningOn = started.Select(o => o.Description).ToList();
+                    var listeningOn = started.Select(o => o.Description).Concat(startedUdp.Select(o => o.Description)).ToList();
 
                     Singletons.Logging.Write(NpLogging.Severity.Information,
                         $"Proxy '{Configuration.Name}' is listening on {string.Join(", ", listeningOn)} ({EffectiveTrafficType}).");
@@ -173,6 +185,11 @@ namespace NetProxy.Service.Proxy
                     foreach (var listener in started)
                     {
                         listener.Detach(this);
+                    }
+
+                    foreach (var listener in startedUdp)
+                    {
+                        listener.Stop();
                     }
 
                     ReleaseResources();
@@ -189,6 +206,7 @@ namespace NetProxy.Service.Proxy
         public void Stop()
         {
             List<NpProxyListener> listeners;
+            List<NpUdpListener> udpListeners;
             CancellationTokenSource? stopSource;
 
             lock (_lifecycleLock)
@@ -201,6 +219,8 @@ namespace NetProxy.Service.Proxy
                 Volatile.Write(ref _isRunning, 0);
                 listeners = _listeners;
                 _listeners = [];
+                udpListeners = _udpListeners;
+                _udpListeners = [];
                 stopSource = _stopSource;
             }
 
@@ -208,6 +228,11 @@ namespace NetProxy.Service.Proxy
             plugins.ProxyStoppingAsync(Info).AsTask().GetAwaiter().GetResult();
 
             stopSource?.Cancel();
+
+            foreach (var listener in udpListeners)
+            {
+                listener.Stop();
+            }
 
             //The port stays open for the other proxies that share it.
             foreach (var listener in listeners)
@@ -343,10 +368,10 @@ namespace NetProxy.Service.Proxy
             }
         }
 
-        internal void AddConnection(NpProxyConnection connection)
+        internal void AddConnection(INpActiveConnection connection)
             => ActiveConnections[connection.Id] = connection;
 
-        internal void RemoveConnection(NpProxyConnection connection)
+        internal void RemoveConnection(INpActiveConnection connection)
             => ActiveConnections.TryRemove(connection.Id, out _);
 
         private bool IsFailing(NpEndpoint endpoint)

@@ -15,6 +15,10 @@ namespace NetProxy.Library
         public const int DefaultMaxBufferSize = 64 * 1024;
         public const int DefaultStickySessionExpiration = 60 * 60;
         public const int DefaultPluginTimeoutMilliseconds = 5000;
+        /// <summary>How long a UDP session is kept without datagrams when the proxy has no idle timeout of its own (seconds).</summary>
+        public const int DefaultUdpIdleTimeoutSeconds = 60;
+        /// <summary>The most a UDP datagram can carry (the largest the protocol allows).</summary>
+        public const int UdpMaxDatagramSize = 65535;
         public const int MinAcceptBacklogSize = 128;
         public const int DefaultAcceptBacklogSize = MinAcceptBacklogSize;
         public const int DefaultLogFileMaxSizeMB = 10;
@@ -62,7 +66,9 @@ namespace NetProxy.Library
     {
         Raw,
         Http,
-        Https
+        Https,
+        /// <summary>UDP datagrams, relayed between sessions that are kept for each client address and port.</summary>
+        Udp
     }
 
     public enum ConnectionPattern

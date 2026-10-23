@@ -18,7 +18,7 @@ namespace NetProxy.Service.Proxy
     /// are finished. When the client connected over TLS (the listener terminates it) the connection to the endpoint can be
     /// plain or its own TLS session, depending on the endpoint.
     /// </summary>
-    internal sealed class NpProxyConnection : INpConnection
+    internal sealed class NpProxyConnection : INpConnection, INpActiveConnection
     {
         /// <summary>
         /// A TLS handshake must complete within this time, so that a client that connects and goes quiet does not hold the connection.

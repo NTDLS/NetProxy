@@ -129,6 +129,24 @@ namespace NetProxy.Service
             SaveConfiguration();
         }
 
+        /// <summary>
+        /// A plug-in was deleted: the proxies stop using it.
+        /// </summary>
+        public void RemovePluginFromProxies(Guid pluginId)
+        {
+            var changed = false;
+
+            foreach (var proxy in GetProxies())
+            {
+                changed |= proxy.Configuration.PluginIds.RemoveAll(o => o == pluginId) > 0;
+            }
+
+            if (changed)
+            {
+                SaveConfiguration();
+            }
+        }
+
         public void SaveConfiguration()
         {
             lock (_saveLock)
@@ -281,6 +299,9 @@ namespace NetProxy.Service
 
                 server.Start(Configuration.ManagementPort);
 
+                //Before the proxies, so that the plug-ins are there for their start.
+                Singletons.Plugins.StartAsync().GetAwaiter().GetResult();
+
                 Singletons.Logging.Write(NpLogging.Severity.Information, "Starting the proxies.");
 
                 _proxies.Start();
@@ -298,6 +319,7 @@ namespace NetProxy.Service
                 _messageServer?.Stop();
                 _proxies.Stop();
                 SaveConfiguration();
+                Singletons.Plugins.StopAsync().GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

@@ -14,6 +14,7 @@ namespace NetProxy.Library
         public const int DefaultInitialBufferSize = 10 * 1024;
         public const int DefaultMaxBufferSize = 64 * 1024;
         public const int DefaultStickySessionExpiration = 60 * 60;
+        public const int DefaultPluginTimeoutMilliseconds = 5000;
         public const int MinAcceptBacklogSize = 128;
         public const int DefaultAcceptBacklogSize = MinAcceptBacklogSize;
         public const int DefaultLogFileMaxSizeMB = 10;

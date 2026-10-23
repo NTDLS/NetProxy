@@ -2,8 +2,10 @@
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.PluginApi;
 using NetProxy.Service.Http;
 using NetProxy.Service.Http.Http2;
+using NetProxy.Service.Plugins;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -16,7 +18,7 @@ namespace NetProxy.Service.Proxy
     /// are finished. When the client connected over TLS (the listener terminates it) the connection to the endpoint can be
     /// plain or its own TLS session, depending on the endpoint.
     /// </summary>
-    internal sealed class NpProxyConnection
+    internal sealed class NpProxyConnection : INpConnection
     {
         /// <summary>
         /// A TLS handshake must complete within this time, so that a client that connects and goes quiet does not hold the connection.
@@ -64,6 +66,17 @@ namespace NetProxy.Service.Proxy
         /// True once the connection is counted against the limits of its proxy.
         /// </summary>
         private bool _admitted;
+
+        /// <summary>
+        /// True once the plug-ins have been told that the connection is connecting, so they are told when it ends too.
+        /// </summary>
+        private bool _connecting;
+
+        private NpPluginSet _plugins = NpPluginSet.Empty;
+        private NpDisconnectReason _disconnectReason = NpDisconnectReason.Completed;
+        private string? _hostName;
+        private NpEndpointInfo? _endpointInfo;
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object?> _state = new();
 
         private Stream? _clientStream;
         private TcpClient? _endpointClient;
@@ -177,10 +190,15 @@ namespace NetProxy.Service.Proxy
         /// Counts the connection against the limits of its proxy and starts watching it. Returns false (and the connection is closed
         /// by the caller) when the proxy is at one of its limits, or has been stopped.
         /// </summary>
-        private bool Admit()
+        private async Task<bool> AdmitAsync()
         {
+            //From here on the plug-ins that the proxy uses hear about the connection.
+            _plugins = _proxy.Plugins;
+
             if (_proxy.TryAdmit(_clientKey) == false)
             {
+                _disconnectReason = NpDisconnectReason.Denied;
+                await _plugins.ConnectionRefusedAsync(_proxy.Info, _clientKey, "The proxy is at one of its connection limits.");
                 return false; //At a connection limit.
             }
 
@@ -190,6 +208,7 @@ namespace NetProxy.Service.Proxy
 
             if (_proxy.IsRunning == false)
             {
+                _disconnectReason = NpDisconnectReason.Aborted;
                 return false; //Stopped while the connection was being set up. It was added too late to be aborted by the stop.
             }
 
@@ -209,7 +228,7 @@ namespace NetProxy.Service.Proxy
             try
             {
                 //With one proxy on the port the limits apply before any work is done for the connection.
-                if (_proxy != null && Admit() == false)
+                if (_proxy != null && await AdmitAsync() == false)
                 {
                     return;
                 }
@@ -234,8 +253,22 @@ namespace NetProxy.Service.Proxy
                     }
                 }
 
-                if (_admitted == false && Admit() == false)
+                if (_admitted == false && await AdmitAsync() == false)
                 {
+                    return;
+                }
+
+                if (_clientStream is SslStream)
+                {
+                    await _plugins.ClientTlsEstablishedAsync(this);
+                }
+
+                _connecting = true;
+                var verdict = await _plugins.ConnectingAsync(this);
+                if (verdict.Allowed == false)
+                {
+                    _disconnectReason = NpDisconnectReason.Denied;
+                    Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} was not allowed. {verdict.Reason}");
                     return;
                 }
 
@@ -246,8 +279,14 @@ namespace NetProxy.Service.Proxy
 
                 if (await ConnectToEndpointAsync() == false)
                 {
+                    if (_disconnectReason == NpDisconnectReason.Completed)
+                    {
+                        _disconnectReason = NpDisconnectReason.EndpointUnavailable;
+                    }
                     return;
                 }
+
+                await _plugins.ConnectedAsync(this);
 
                 await Task.WhenAll(
                     PumpAsync(_clientStream!, _endpointStream!, direction: ConnectionDirection.Inbound, _initialClientBytes),
@@ -256,20 +295,76 @@ namespace NetProxy.Service.Proxy
             catch (OperationCanceledException)
             {
                 //The proxy is stopping, or the connection was aborted.
+                MarkEnded(NpDisconnectReason.Aborted);
             }
             catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or AuthenticationException)
             {
+                MarkEnded(NpDisconnectReason.Aborted);
                 Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} ended: {ex.GetBaseException().Message}");
             }
             catch (Exception ex)
             {
+                MarkEnded(NpDisconnectReason.Error);
                 Singletons.Logging.Write($"Connection {Id} from {_clientDisplay} failed", ex);
+                await _plugins.ErrorAsync(new NpPluginError($"Connection {Id} from {_clientDisplay} failed: {ex.GetBaseException().Message}", ex, _proxy?.Info, this));
             }
             finally
             {
-                Close();
+                if (_connecting)
+                {
+                    //The sockets are still open for the plug-ins to look at, and are closed once they are done.
+                    await _plugins.DisconnectingAsync(this, _disconnectReason);
+                }
+
+                CloseSockets();
+
+                if (_connecting)
+                {
+                    var info = new NpDisconnectInfo(_disconnectReason, DateTime.UtcNow - StartDateTime,
+                        Interlocked.Read(ref _bytesIn), Interlocked.Read(ref _bytesOut));
+                    await _plugins.DisconnectedAsync(this, info);
+                }
+
+                Finish();
             }
         }
+
+        /// <summary>
+        /// Remembers why the connection ended, unless something more telling has already said.
+        /// </summary>
+        private void MarkEnded(NpDisconnectReason reason)
+        {
+            if (_disconnectReason == NpDisconnectReason.Completed)
+            {
+                _disconnectReason = reason;
+            }
+        }
+
+        //---------------------------------------------------------------- INpConnection (what plug-ins see)
+
+        NpProxyInfo INpConnection.Proxy => _proxy.Info;
+        DateTime INpConnection.StartedUtc => StartDateTime;
+        string INpConnection.ClientAddress => _clientKey;
+        int INpConnection.ClientPort => _clientPort;
+        string INpConnection.ListenAddress => _listenAddress;
+        int INpConnection.ListenPort => _listenPort;
+        string? INpConnection.HostName => _hostName;
+        string? INpConnection.ClientTls => NullIfEmpty(FormatTls((_clientStream as SslStream)?.SslProtocol));
+        string? INpConnection.EndpointTls => NullIfEmpty(FormatTls((_endpointStream as SslStream)?.SslProtocol));
+        bool INpConnection.IsHttp2 => _clientIsHttp2;
+        NpEndpointInfo? INpConnection.Endpoint => _endpointInfo;
+        long INpConnection.BytesFromClient => Interlocked.Read(ref _bytesIn);
+        long INpConnection.BytesFromEndpoint => Interlocked.Read(ref _bytesOut);
+        IDictionary<string, object?> INpConnection.State => _state;
+
+        void INpConnection.Close(string reason)
+        {
+            _disconnectReason = NpDisconnectReason.ClosedByPlugin;
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} was closed by a plugin: {reason}");
+            Abort();
+        }
+
+        private static string? NullIfEmpty(string value) => value.Length == 0 ? null : value;
 
         /// <summary>
         /// When the listener terminates TLS, completes the handshake with the client. Returns false (after logging why) if it fails.
@@ -327,6 +422,7 @@ namespace NetProxy.Service.Proxy
                 ?? throw new AuthenticationException($"Proxy '{proxy.Configuration.Name}' has no certificate for the host name '{serverName}'.");
 
             _proxy = proxy;
+            _hostName = NpHostMatcher.Normalize(serverName);
 
             return new SslServerAuthenticationOptions
             {
@@ -422,6 +518,7 @@ namespace NetProxy.Service.Proxy
             }
 
             _proxy = proxy;
+            _hostName = host;
             _initialClientBytes = held.ToArray();
             _clientIsHttp2 = isHttp2 && proxy.Configuration.AllowHttp2;
             _peeked = true;
@@ -452,6 +549,8 @@ namespace NetProxy.Service.Proxy
                     {
                         Singletons.Logging.Write(NpLogging.Severity.Verbose,
                             $"Connection {Id} from {_clientDisplay} on proxy '{_proxy.Configuration.Name}' was idle for {seconds} seconds and is closed.");
+                        _disconnectReason = NpDisconnectReason.IdleTimeout;
+                        await _plugins.IdleTimeoutAsync(this);
                         Abort();
                         return;
                     }
@@ -519,6 +618,15 @@ namespace NetProxy.Service.Proxy
             {
                 _abort.Token.ThrowIfCancellationRequested();
 
+                var endpointInfo = new NpEndpointInfo(endpoint.Id, endpoint.Address, endpoint.Port, endpoint.TrafficType == TrafficType.Https);
+
+                var verdict = await _plugins.EndpointConnectingAsync(this, endpointInfo);
+                if (verdict.Allowed == false)
+                {
+                    failures.Add($"{NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}: skipped. {verdict.Reason}");
+                    continue;
+                }
+
                 var statistics = _proxy.EndpointStatistics.GetOrAdd(endpoint.Id, _ => new NpProxyEndpointStatistics());
                 statistics.Reserve();
 
@@ -546,6 +654,9 @@ namespace NetProxy.Service.Proxy
                     statistics.Established();
                     _proxy.RememberStickySession(_clientKey, endpoint);
 
+                    _endpointInfo = endpointInfo;
+                    await _plugins.EndpointConnectedAsync(this, endpointInfo);
+
                     Singletons.Logging.Write(NpLogging.Severity.Verbose,
                         $"Connection {Id} from {_clientDisplay} is connected to endpoint {NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}.");
 
@@ -565,6 +676,8 @@ namespace NetProxy.Service.Proxy
 
                     var description = $"{NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}: {ex.GetBaseException().Message}";
                     failures.Add(description);
+
+                    await _plugins.EndpointConnectFailedAsync(this, endpointInfo, ex.GetBaseException().Message);
 
                     //Say so once when an endpoint goes down, not for every connection that finds it down.
                     Singletons.Logging.Write(wasFailing ? NpLogging.Severity.Verbose : NpLogging.Severity.Warning,
@@ -644,6 +757,7 @@ namespace NetProxy.Service.Proxy
             var configuration = _proxy.Configuration;
             var buffer = new PumpBuffer(Math.Max(configuration.InitialBufferSize, initialBytes?.Length ?? 0));
             var parser = CreateHttpParser(direction);
+            var dataDirection = direction == ConnectionDirection.Inbound ? NpDataDirection.ClientToEndpoint : NpDataDirection.EndpointToClient;
 
             try
             {
@@ -671,8 +785,6 @@ namespace NetProxy.Service.Proxy
                     buffer.Length = read;
                     Touch();
 
-                    var (bytes, length) = parser != null ? parser.Process(buffer.Bytes, read) : (buffer.Bytes, read);
-
                     if (direction == ConnectionDirection.Inbound)
                     {
                         Interlocked.Add(ref _bytesIn, read);
@@ -682,6 +794,62 @@ namespace NetProxy.Service.Proxy
                     {
                         Interlocked.Add(ref _bytesOut, read);
                         _endpointStatistics?.AddBytesRead(read);
+                    }
+
+                    var processable = read;
+
+                    //The plug-ins see the data as it is between the two sides: what was read from a TLS side is decrypted already.
+                    if (_plugins.HasDataHooks)
+                    {
+                        var received = new NpDataEventArgs(this, dataDirection, buffer.Bytes.AsMemory(0, read), from is SslStream, to is SslStream);
+                        await _plugins.DataReceivedAsync(received);
+
+                        if (received.CloseReason != null)
+                        {
+                            ClosedByPlugin(received.CloseReason);
+                            return;
+                        }
+
+                        if (received.IsDropped || (received.IsModified && received.Data.Length == 0))
+                        {
+                            buffer.AutoResize(configuration.MaxBufferSize);
+                            continue;
+                        }
+
+                        if (received.IsModified)
+                        {
+                            if (received.Data.Length > buffer.Bytes.Length)
+                            {
+                                buffer.Bytes = new byte[received.Data.Length];
+                            }
+
+                            received.Data.CopyTo(buffer.Bytes);
+                            processable = received.Data.Length;
+                        }
+                    }
+
+                    var (bytes, length) = parser != null ? parser.Process(buffer.Bytes, processable) : (buffer.Bytes, processable);
+
+                    if (length > 0 && _plugins.HasDataHooks)
+                    {
+                        var sending = new NpDataEventArgs(this, dataDirection, bytes.AsMemory(0, length), from is SslStream, to is SslStream);
+                        await _plugins.DataSendingAsync(sending);
+
+                        if (sending.CloseReason != null)
+                        {
+                            ClosedByPlugin(sending.CloseReason);
+                            return;
+                        }
+
+                        if (sending.IsDropped)
+                        {
+                            length = 0;
+                        }
+                        else if (sending.IsModified)
+                        {
+                            bytes = sending.Data.ToArray();
+                            length = bytes.Length;
+                        }
                     }
 
                     if (length > 0) //Nothing to send while a partial HTTP header is held.
@@ -697,6 +865,11 @@ namespace NetProxy.Service.Proxy
                         {
                             _proxy.Statistics.AddBytesWritten(length);
                         }
+
+                        if (_plugins.HasDataSentHook)
+                        {
+                            await _plugins.DataSentAsync(this, dataDirection, length);
+                        }
                     }
 
                     buffer.AutoResize(configuration.MaxBufferSize);
@@ -705,18 +878,32 @@ namespace NetProxy.Service.Proxy
             catch (OperationCanceledException)
             {
                 //Aborted.
+                MarkEnded(NpDisconnectReason.Aborted);
             }
             catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
             {
+                MarkEnded(NpDisconnectReason.Aborted);
                 Singletons.Logging.Write(NpLogging.Severity.Verbose,
                     $"Connection {Id} from {_clientDisplay} ({(direction == ConnectionDirection.Inbound ? "client to endpoint" : "endpoint to client")}) ended: {ex.GetBaseException().Message}");
                 Abort();
             }
             catch (Exception ex)
             {
+                MarkEnded(NpDisconnectReason.Error);
                 Singletons.Logging.Write($"Connection {Id} from {_clientDisplay} failed", ex);
+                await _plugins.ErrorAsync(new NpPluginError($"Connection {Id} from {_clientDisplay} failed: {ex.GetBaseException().Message}", ex, _proxy.Info, this));
                 Abort();
             }
+        }
+
+        /// <summary>
+        /// A plug-in asked for the connection to be closed from a data event.
+        /// </summary>
+        private void ClosedByPlugin(string reason)
+        {
+            _disconnectReason = NpDisconnectReason.ClosedByPlugin;
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} was closed by a plugin: {reason}");
+            Abort();
         }
 
         /// <summary>
@@ -775,7 +962,7 @@ namespace NetProxy.Service.Proxy
             return hasRules ? new HttpStreamParser(_proxy.Configuration, direction) : null;
         }
 
-        private void Close()
+        private void CloseSockets()
         {
             try { _abort.Cancel(); } catch (ObjectDisposedException) { }
 
@@ -783,7 +970,13 @@ namespace NetProxy.Service.Proxy
             try { _client.Dispose(); } catch { }
             try { _endpointStream?.Dispose(); } catch { }
             try { _endpointClient?.Dispose(); } catch { }
+        }
 
+        /// <summary>
+        /// The connection is over: it no longer counts against the proxy.
+        /// </summary>
+        private void Finish()
+        {
             _endpointStatistics?.ConnectionClosed();
 
             if (_admitted)

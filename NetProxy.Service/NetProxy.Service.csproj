@@ -25,6 +25,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\NetProxy.Library\NetProxy.Library.csproj" />
+		<ProjectReference Include="..\NetProxy.PluginApi\NetProxy.PluginApi.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -2,6 +2,8 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.PluginApi;
+using NetProxy.Service.Plugins;
 using System.Collections.Concurrent;
 using System.Security.Cryptography.X509Certificates;
 
@@ -90,6 +92,21 @@ namespace NetProxy.Service.Proxy
             HostPatterns = NpHostRouter.Patterns(configuration);
         }
 
+        /// <summary>
+        /// The proxy, as the plug-ins see it.
+        /// </summary>
+        internal NpProxyInfo Info => new(Configuration.Id, Configuration.Name, Configuration.ListenPort, Configuration.TrafficType switch
+        {
+            TrafficType.Http => NpTrafficKind.Http,
+            TrafficType.Https => NpTrafficKind.Https,
+            _ => NpTrafficKind.Raw
+        });
+
+        /// <summary>
+        /// The plug-ins that are loaded and that this proxy has opted in to.
+        /// </summary>
+        internal NpPluginSet Plugins => Singletons.Plugins.ForProxy(Configuration);
+
         public bool Start() => Start(out _);
 
         /// <summary>
@@ -107,12 +124,19 @@ namespace NetProxy.Service.Proxy
                 }
 
                 var started = new List<NpProxyListener>();
+                var plugins = Plugins;
 
                 try
                 {
                     if (Configuration.Endpoints.Collection.Any(o => o.Enabled) == false)
                     {
                         throw new InvalidOperationException("The proxy has no enabled endpoints.");
+                    }
+
+                    var verdict = plugins.ProxyStartingAsync(Info).AsTask().GetAwaiter().GetResult();
+                    if (verdict.Allowed == false)
+                    {
+                        throw new InvalidOperationException($"{verdict.Reason}");
                     }
 
                     LoadCertificate();
@@ -145,8 +169,12 @@ namespace NetProxy.Service.Proxy
                     _listeners = started;
                     Volatile.Write(ref _isRunning, 1);
 
+                    var listeningOn = started.Select(o => o.Description).ToList();
+
                     Singletons.Logging.Write(NpLogging.Severity.Information,
-                        $"Proxy '{Configuration.Name}' is listening on {string.Join(", ", started.Select(o => o.Description))} ({EffectiveTrafficType}).");
+                        $"Proxy '{Configuration.Name}' is listening on {string.Join(", ", listeningOn)} ({EffectiveTrafficType}).");
+
+                    plugins.ProxyStartedAsync(Info, listeningOn).AsTask().GetAwaiter().GetResult();
 
                     return true;
                 }
@@ -161,6 +189,8 @@ namespace NetProxy.Service.Proxy
 
                     error = ex.Message;
                     Singletons.Logging.Write(NpLogging.Severity.Warning, $"Failed to start proxy '{Configuration.Name}': {ex.Message}");
+
+                    plugins.ProxyStartFailedAsync(Info, ex.Message).AsTask().GetAwaiter().GetResult();
                     return false;
                 }
             }
@@ -183,6 +213,9 @@ namespace NetProxy.Service.Proxy
                 _listeners = [];
                 stopSource = _stopSource;
             }
+
+            var plugins = Plugins;
+            plugins.ProxyStoppingAsync(Info).AsTask().GetAwaiter().GetResult();
 
             stopSource?.Cancel();
 
@@ -207,6 +240,8 @@ namespace NetProxy.Service.Proxy
             }
 
             Singletons.Logging.Write(NpLogging.Severity.Information, $"Proxy '{Configuration.Name}' has stopped.");
+
+            plugins.ProxyStoppedAsync(Info).AsTask().GetAwaiter().GetResult();
         }
 
         private void LoadCertificate()

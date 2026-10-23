@@ -63,6 +63,8 @@ namespace NetProxy.Service
                         && AreHashesEqual(o.PasswordHash, query.PasswordHash));
                 }
 
+                Singletons.Plugins.ForService().ManagementLoginAsync(new NetProxy.PluginApi.NpLoginInfo(query.UserName, isValid)).AsTask().GetAwaiter().GetResult();
+
                 if (isValid)
                 {
                     serviceManager.AddAuthenticated(context.ConnectionId);
@@ -129,6 +131,25 @@ namespace NetProxy.Service
             catch (Exception ex)
             {
                 Singletons.Logging.Write("Failed to get the proxy list", ex);
+                reply.Message = ex.Message;
+            }
+
+            return reply;
+        }
+
+        public QueryPluginListReply OnQueryPluginList(RmContext context, QueryPluginList query)
+        {
+            EnforceLoginAndGetServiceManager(context);
+
+            var reply = new QueryPluginListReply();
+
+            try
+            {
+                reply.Collection = Singletons.Plugins.GetGridItems();
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to get the plugin list", ex);
                 reply.Message = ex.Message;
             }
 

@@ -1,6 +1,7 @@
 ﻿using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.PluginApi;
 using NetProxy.Service.Proxy;
 using NTDLS.ReliableMessaging;
 
@@ -123,6 +124,9 @@ namespace NetProxy.Service
                 Singletons.Logging.Write(NpLogging.Severity.Information,
                     $"Proxy '{newProxy.Configuration.Name}' was {(existingProxy != null ? "changed" : "added")} by connection {context.ConnectionId}.");
 
+                newProxy.Plugins.ProxyConfigurationChangedAsync(newProxy.Info, existingProxy != null ? NpChangeKind.Changed : NpChangeKind.Added)
+                    .AsTask().GetAwaiter().GetResult();
+
                 if (newProxy.Configuration.AutoStart && newProxy.Start(out var error) == false)
                 {
                     serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The proxy was saved but could not be started: {error}"));
@@ -149,6 +153,8 @@ namespace NetProxy.Service
                     serviceManager.RemoveProxy(existingProxy);
                     Singletons.Logging.Write(NpLogging.Severity.Information,
                         $"Proxy '{existingProxy.Configuration.Name}' was deleted by connection {context.ConnectionId}.");
+
+                    existingProxy.Plugins.ProxyConfigurationChangedAsync(existingProxy.Info, NpChangeKind.Deleted).AsTask().GetAwaiter().GetResult();
                 }
 
                 serviceManager.SaveConfiguration();
@@ -156,6 +162,87 @@ namespace NetProxy.Service
             catch (Exception ex)
             {
                 Singletons.Logging.Write("Failed to delete the proxy", ex);
+            }
+        }
+
+        public void OnNotificationUpsertPlugin(RmContext context, NotificationUpsertPlugin notification)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+
+            try
+            {
+                var problem = Singletons.Plugins.UpsertAsync(notification.Plugin).GetAwaiter().GetResult();
+                if (problem != null)
+                {
+                    serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The plugin was not saved. {problem}"));
+                    return;
+                }
+
+                Singletons.Logging.Write(NpLogging.Severity.Information,
+                    $"Plugin '{notification.Plugin.Name}' was saved by connection {context.ConnectionId}.");
+
+                var loadError = Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == notification.Plugin.Id)?.LoadError;
+                if (string.IsNullOrEmpty(loadError) == false)
+                {
+                    serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The plugin was saved but could not be loaded: {loadError}"));
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to save the plugin", ex);
+                serviceManager.Notify(context.ConnectionId, new NotificationMessage($"Failed to save the plugin: {ex.Message}"));
+            }
+        }
+
+        public void OnNotificationDeletePlugin(RmContext context, NotificationDeletePlugin notification)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+
+            try
+            {
+                if (Singletons.Plugins.DeleteAsync(notification.Id).GetAwaiter().GetResult())
+                {
+                    serviceManager.RemovePluginFromProxies(notification.Id);
+                    Singletons.Logging.Write(NpLogging.Severity.Information, $"A plugin was deleted by connection {context.ConnectionId}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to delete the plugin", ex);
+            }
+        }
+
+        public void OnNotificationMovePlugin(RmContext context, NotificationMovePlugin notification)
+        {
+            EnforceLoginAndGetServiceManager(context);
+
+            try
+            {
+                Singletons.Plugins.MoveAsync(notification.Id, notification.Direction).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to move the plugin", ex);
+            }
+        }
+
+        public void OnNotificationReloadPlugin(RmContext context, NotificationReloadPlugin notification)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+
+            try
+            {
+                Singletons.Plugins.ReloadAsync(notification.Id).GetAwaiter().GetResult();
+
+                var loadError = Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == notification.Id)?.LoadError;
+                if (string.IsNullOrEmpty(loadError) == false)
+                {
+                    serviceManager.Notify(context.ConnectionId, new NotificationMessage($"The plugin could not be loaded: {loadError}"));
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to reload the plugin", ex);
             }
         }
 

@@ -40,6 +40,7 @@ namespace NetProxy.Client.Forms
             FormLocalizer.Apply(this);
             LocalizeGrids();
             InitializeHostNamesTab();
+            InitializePluginsTab();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -372,8 +373,66 @@ namespace NetProxy.Client.Forms
             #endregion
         }
 
+        private CheckedListBox _pluginsList = null!;
+        private TabPage _tabPagePlugins = null!;
+        private List<NpPluginGridItem> _servicePlugins = new();
+
+        /// <summary>
+        /// The plugins tab: the plugins of the service, ticked for the ones that this proxy uses. They are called in the order shown.
+        /// </summary>
+        private void InitializePluginsTab()
+        {
+            _pluginsList = new CheckedListBox
+            {
+                Location = new Point(9, 52),
+                Size = new Size(579, 267),
+                CheckOnClick = true,
+                IntegralHeight = false,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            var info = new Label
+            {
+                Location = new Point(9, 9),
+                Size = new Size(579, 40),
+                Text = Localize("Tick the plugins that this proxy uses. They are set up for the whole service (Settings, Plugins) and are called in the order shown."
+                    + " A plugin that is not ticked is not called for this proxy.")
+            };
+
+            _tabPagePlugins = new TabPage { Text = Localize("Plugins"), BackColor = SystemColors.Control, Padding = new Padding(3) };
+            _tabPagePlugins.Controls.Add(info);
+            _tabPagePlugins.Controls.Add(_pluginsList);
+            tabControl.TabPages.Add(_tabPagePlugins);
+        }
+
+        private void LoadServicePlugins()
+        {
+            try
+            {
+                _servicePlugins = _messageClient.EnsureNotNull().Query<QueryPluginListReply>(new QueryPluginList()).Collection;
+            }
+            catch
+            {
+                _servicePlugins = new();
+            }
+
+            _pluginsList.Items.Clear();
+            foreach (var plugin in _servicePlugins)
+            {
+                var note = plugin.Enabled == false ? $" ({Localize("disabled")})" : (plugin.IsLoaded ? "" : $" ({Localize("not loaded")})");
+                _pluginsList.Items.Add(new PluginItem(plugin.Id, plugin.Name + note));
+            }
+        }
+
+        private sealed record PluginItem(Guid Id, string Text)
+        {
+            public override string ToString() => Text;
+        }
+
         private void FormProxy_Shown(object? sender, EventArgs e)
         {
+            LoadServicePlugins();
+
             if (_isNewProxy == false && _proxyId != null)
             {
                 var result = _messageClient.EnsureNotNull().Query(new QueryProxyConfiguration((Guid)_proxyId));
@@ -412,6 +471,11 @@ namespace NetProxy.Client.Forms
                 dataGridViewEndpoints.Rows.Add(
                     [$"{endpoint.Enabled}", endpoint.Address, $"{endpoint.Port}", $"{endpoint.TrafficType}", $"{endpoint.TlsValidateSSLCertificate}", endpoint.Description]
                 );
+            }
+
+            for (var i = 0; i < _pluginsList.Items.Count; i++)
+            {
+                _pluginsList.SetItemChecked(i, proxy.PluginIds.Contains(((PluginItem)_pluginsList.Items[i]).Id));
             }
 
             foreach (var host in proxy.HostNames)
@@ -568,6 +632,11 @@ namespace NetProxy.Client.Forms
                     TlsCertificatePassword = row.Cells[_hostNamesPassword.Index].Value?.ToString() ?? "",
                     Description = row.Cells[_hostNamesDescription.Index].Value?.ToString() ?? ""
                 });
+            }
+
+            foreach (PluginItem item in _pluginsList.CheckedItems)
+            {
+                proxy.PluginIds.Add(item.Id);
             }
 
             if (proxy.TrafficType == TrafficType.Https && string.IsNullOrWhiteSpace(proxy.TlsCertificatePath)

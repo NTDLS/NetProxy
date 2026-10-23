@@ -45,6 +45,10 @@ namespace NetProxy.Client.Forms
             FormLocalizer.Apply(this);
             Theming.InitializeForm(this);
 
+            var pluginsMenuItem = new ToolStripMenuItem(Localize("Plugins..."));
+            pluginsMenuItem.Click += PluginsToolStripMenuItem_Click;
+            settingsToolStripMenuItem.DropDownItems.Insert(1, pluginsMenuItem);
+
             statusStripMain.Items.AddRange([_statusConnection, _statusProxies, _statusConnections, _statusTraffic]);
 
             _performanceChart = new PerformanceChart(chartPerformance);
@@ -749,6 +753,12 @@ namespace NetProxy.Client.Forms
             {
                 RefreshProxyList();
             }
+        }
+
+        private void PluginsToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            using var form = new FormPlugins(_connectionInfo.EnsureNotNull()) { Icon = Icon };
+            form.ShowDialog(this);
         }
 
         private void ConfigurationToolStripMenuItem_Click(object? sender, EventArgs e)

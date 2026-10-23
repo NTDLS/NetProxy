@@ -57,6 +57,21 @@ Several **HTTP** or **HTTPS** proxies can listen on the same port, if each answe
 * The proxy is chosen once per connection: the first request decides, so later requests on a keep-alive connection go to the same proxy. For the same reason HTTP/2 connections go to the proxy of the first host name (HTTPS) or to the default proxy (HTTP/2 without TLS, where the host is compressed), so clients that reuse one HTTP/2 connection for several host names can reach the wrong proxy.
 * A proxy that is alone on its port answers to every host name, whatever it lists.
 
+### Plugins
+
+NetProxy can be extended with .NET plugins. A plugin is an assembly with a class that derives from `NpPlugin` (the `NetProxy.PluginApi` project, which has no dependencies). `NetProxy.SamplePlugin` is a small working example: it logs connections, can block clients, and can find and replace text in the traffic.
+
+* **Setting up:** plugins belong to the service. Add them in the console under *Settings, Plugins* (assembly path on the service machine, optional class name, settings as `name=value` lines, a time limit per event), and put them in the order they are called in. A proxy then **opts in** on its *Plugins* tab: a proxy uses no plugins unless it ticks them.
+* **Writing one:** derive from `NpPlugin`, mark the class with `[NpPlugin("Name")]`, and override the events you want. Events you do not override cost nothing. Reference `NetProxy.PluginApi` without copying it next to your assembly (`Private=false`), because the service supplies it. Plugins are loaded in their own load context, so a new build can be loaded with *Reload* without restarting the service.
+* **Events:**
+  * Service: `OnServiceStarting`, `OnServiceStopping`, `OnTick` (when `TickInterval` is set), `OnManagementLogin`, `OnError`.
+  * Proxy: `OnProxyStarting` (can say no), `OnProxyStarted`, `OnProxyStartFailed`, `OnProxyStopping`, `OnProxyStopped`, `OnProxyConfigurationChanged`.
+  * Connection: `OnConnectionRefused`, `OnClientTlsEstablished`, `OnConnecting` (can say no), `OnEndpointConnecting` (can say no, and the next endpoint is tried), `OnEndpointConnected`, `OnEndpointConnectFailed`, `OnConnected`, `OnIdleTimeout`, `OnDisconnecting`, `OnDisconnected`.
+  * Data: `OnDataReceived`, `OnDataSending` and `OnDataSent`.
+* **Data events** sit between the two sides of a connection, so for an HTTPS proxy that terminates TLS they see the **decrypted** data (`ReceivedEncrypted` says it was encrypted on the wire) before it is encrypted again for the endpoint (`WillBeSentEncrypted`). `OnDataReceived` is called with what was read, before the HTTP header rules; `OnDataSending` is called after them, right before the write. Both can `Replace` the data (any length), `Drop` it, or `CloseConnection`. A read is whatever arrived together, not a message. A Raw proxy that passes TLS through only has encrypted bytes to give to a plugin.
+* **Order and safety:** the plugins of a proxy are called in order, and each gets the data as the one before left it. An event that can say no stops at the first plugin that does. A plugin that throws, or takes longer than its time limit, is logged and skipped for that event; the connection carries on.
+* Not in this version: events for individual HTTP requests and responses (use the data events), and for certificates that are about to expire.
+
 ### IPv6
 
 Proxies listen on IPv4, IPv6, or both (one dual-stack listener) when they listen on all addresses, and a binding can be an IPv4 or IPv6 address (`::1` or `[::1]`). An endpoint can be an IPv6 address or a host name that has one. The management port accepts IPv6 too (*Settings > Configuration > Service*). Check the firewall for both IP versions: IPv6 addresses are often directly reachable from the internet.

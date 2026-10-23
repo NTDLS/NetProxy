@@ -68,6 +68,12 @@ namespace NetProxy.Library.Payloads.Routing
         /// </summary>
         public List<NpHostName> HostNames { get; set; } = new();
 
+        /// <summary>
+        /// The plug-ins (set up for the service) that this proxy uses. A proxy uses none unless it is listed here. The plug-ins are
+        /// called in the order they have in the service configuration.
+        /// </summary>
+        public List<Guid> PluginIds { get; set; } = new();
+
         public NpProxyConfiguration()
         {
             Id = Guid.NewGuid();

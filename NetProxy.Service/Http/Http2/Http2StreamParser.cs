@@ -83,6 +83,11 @@ namespace NetProxy.Service.Http.Http2
         /// </summary>
         public string? RequestScheme { get; init; }
 
+        /// <summary>
+        /// Adds X-Forwarded-For and X-Forwarded-Proto to the requests, when set.
+        /// </summary>
+        public NpForwardedHeaders? Forwarded { get; init; }
+
         /// <param name="configuration">The proxy, for its header rules.</param>
         /// <param name="fromClient">True when the bytes are from the client (requests), false when they are from the server (responses).</param>
         public Http2StreamParser(NpProxyConfiguration configuration, bool fromClient)
@@ -373,6 +378,8 @@ namespace NetProxy.Service.Http.Http2
                         field.Value = Encoding.ASCII.GetBytes(RequestScheme);
                     }
                 }
+
+                Forwarded?.ApplyToHttp2Request(fields);
 
                 var method = fields.FirstOrDefault(f => f.NameText == ":method")?.ValueText ?? string.Empty;
                 var rules = HttpUtility.GetApplicableRules(_configuration, HttpHeaderType.Request, method);

@@ -36,14 +36,14 @@ namespace NetProxy.Service.Proxy
         internal ConcurrentDictionary<Guid, NpProxyConnection> ActiveConnections { get; } = new();
 
         /// <summary>
-        /// The certificate that the listener presents to clients, when it terminates TLS.
+        /// The certificates that the listener presents to clients, when it terminates TLS. They are reloaded when their files change.
         /// </summary>
-        internal X509Certificate2? Certificate { get; private set; }
+        private NpCertificateStore? _certificates;
 
         /// <summary>
-        /// The certificates of the host names that have their own, by host name (as configured, normalized).
+        /// The certificate of the proxy, when it terminates TLS.
         /// </summary>
-        private Dictionary<string, X509Certificate2> _hostCertificates = new();
+        internal X509Certificate2? Certificate => _certificates?.Default;
 
         /// <summary>
         /// The (normalized) host names that this proxy answers to. Empty for a proxy that is the default for its port.
@@ -54,22 +54,7 @@ namespace NetProxy.Service.Proxy
         /// The certificate to present to a client that asks for a host name: the one of the most specific host name that matches
         /// and has its own, otherwise the certificate of the proxy. Null if there is none.
         /// </summary>
-        internal X509Certificate2? GetCertificate(string? host)
-        {
-            var normalized = NpHostMatcher.Normalize(host);
-            var certificates = _hostCertificates;
-
-            if (normalized != null && certificates.Count > 0)
-            {
-                var pattern = NpHostMatcher.FindBest(certificates.Keys, normalized);
-                if (pattern != null)
-                {
-                    return certificates[pattern];
-                }
-            }
-
-            return Certificate;
-        }
+        internal X509Certificate2? GetCertificate(string? host) => _certificates?.Get(host);
 
         /// <summary>
         /// What the listener does with the traffic while the proxy is running. This is the configured traffic type, except that an
@@ -266,46 +251,15 @@ namespace NetProxy.Service.Proxy
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath) == false)
-            {
-                Certificate = LoadPfx(Configuration.TlsCertificatePath, Configuration.TlsCertificatePassword);
-            }
-
-            var hostCertificates = new Dictionary<string, X509Certificate2>();
-            foreach (var host in hostsWithCertificate)
-            {
-                var pattern = NpHostMatcher.Normalize(host.Host);
-                if (pattern != null)
-                {
-                    hostCertificates[pattern] = LoadPfx(host.TlsCertificatePath, host.TlsCertificatePassword);
-                }
-            }
-            _hostCertificates = hostCertificates;
-        }
-
-        private static X509Certificate2 LoadPfx(string path, string password)
-        {
-            try
-            {
-                return X509CertificateLoader.LoadPkcs12FromFile(path, string.IsNullOrEmpty(password) ? null : password);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    $"The TLS certificate '{path}' could not be loaded: {ex.GetBaseException().Message}", ex);
-            }
+            //Throws, with the reason, if a certificate cannot be loaded. Renewed certificates are picked up while the proxy runs.
+            _certificates = NpCertificateStore.Create(Configuration);
+            _certificates?.StartWatching();
         }
 
         private void ReleaseResources()
         {
-            Certificate?.Dispose();
-            Certificate = null;
-
-            foreach (var certificate in _hostCertificates.Values)
-            {
-                certificate.Dispose();
-            }
-            _hostCertificates = new();
+            _certificates?.Dispose();
+            _certificates = null;
 
             _stickySessions?.Dispose();
             _stickySessions = null;

@@ -41,6 +41,7 @@ namespace NetProxy.Client.Forms
             LocalizeGrids();
             InitializeHostNamesTab();
             InitializePluginsTab();
+            InitializeForwardedHeadersControl();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -373,6 +374,40 @@ namespace NetProxy.Client.Forms
             #endregion
         }
 
+        private ComboBox _forwardedHeaders = null!;
+
+        /// <summary>
+        /// At the bottom of the HTTP headers tab: whether the endpoint is told who the client is.
+        /// </summary>
+        private void InitializeForwardedHeadersControl()
+        {
+            _forwardedHeaders = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Location = new Point(190, 5),
+                Width = 220,
+                DisplayMember = "Display",
+                ValueMember = "Value",
+                DataSource = new List<ComboItem>
+                {
+                    new (Localize("Off"), ForwardedHeadersMode.Off),
+                    new (Localize("Set (replace what the client sent)"), ForwardedHeadersMode.Replace),
+                    new (Localize("Append (behind another proxy)"), ForwardedHeadersMode.Append)
+                }
+            };
+
+            var panel = new Panel { Dock = DockStyle.Bottom, Height = 34 };
+            panel.Controls.Add(new Label { Text = Localize("X-Forwarded-For / -Proto"), Location = new Point(6, 9), AutoSize = true });
+            panel.Controls.Add(_forwardedHeaders);
+
+            tabPageHTTPHeaders.Controls.Add(panel);
+            dataGridViewHTTPHeaders.BringToFront();
+
+            new ToolTip().SetToolTip(_forwardedHeaders,
+                Localize("Tell the endpoint who the client is, which it cannot see when the connection comes from the proxy. Set: X-Forwarded-For is the client address"
+                + " and X-Forwarded-Proto is http or https, replacing anything the client sent. Append: for a proxy behind another proxy, the client is added to the end of X-Forwarded-For."));
+        }
+
         private CheckedListBox _pluginsList = null!;
         private TabPage _tabPagePlugins = null!;
         private List<NpPluginGridItem> _servicePlugins = new();
@@ -463,6 +498,7 @@ namespace NetProxy.Client.Forms
             textBoxMaxConnectionsPerClient.Text = $"{proxy.MaxConnectionsPerClient}";
             textBoxIdleTimeout.Text = $"{proxy.IdleTimeoutSeconds}";
             checkBoxAllowHttp2.Checked = proxy.AllowHttp2;
+            _forwardedHeaders.SelectedValue = proxy.ForwardedHeaders;
             textBoxCertificatePath.Text = proxy.TlsCertificatePath;
             textBoxCertificatePassword.Text = proxy.TlsCertificatePassword;
 
@@ -588,6 +624,7 @@ namespace NetProxy.Client.Forms
             proxy.MaxConnectionsPerClient = int.Parse(textBoxMaxConnectionsPerClient.Text);
             proxy.IdleTimeoutSeconds = int.Parse(textBoxIdleTimeout.Text);
             proxy.AllowHttp2 = checkBoxAllowHttp2.Checked;
+            proxy.ForwardedHeaders = _forwardedHeaders.SelectedValue is ForwardedHeadersMode forwarded ? forwarded : ForwardedHeadersMode.Off;
             proxy.TlsCertificatePath = textBoxCertificatePath.Text.Trim();
             proxy.TlsCertificatePassword = textBoxCertificatePassword.Text;
 
@@ -839,6 +876,7 @@ namespace NetProxy.Client.Forms
             buttonBrowseCertificate.Enabled = trafficType == TrafficType.Https;
 
             //Raw traffic has no host name to tell proxies apart by, so it cannot share a port.
+            _forwardedHeaders.Enabled = trafficType != TrafficType.Raw;
             _hostNamesGrid.ReadOnly = trafficType == TrafficType.Raw;
             _hostNamesCertificate.ReadOnly = trafficType != TrafficType.Https;
             _hostNamesPassword.ReadOnly = trafficType != TrafficType.Https;

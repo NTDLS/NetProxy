@@ -72,6 +72,15 @@ namespace NetProxy.Library
         Balanced //AKA: Least connections.
     }
 
+    public enum ForwardedHeadersMode
+    {
+        Off,
+        /// <summary>X-Forwarded-For and X-Forwarded-Proto are set to the client, replacing what the client sent.</summary>
+        Replace,
+        /// <summary>The client is added to the end of X-Forwarded-For. For a proxy behind another proxy.</summary>
+        Append
+    }
+
     public enum HttpHeaderAction
     {
         Insert,

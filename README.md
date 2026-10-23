@@ -43,7 +43,16 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 * **Each endpoint** chooses its own traffic type. An **HTTPS** endpoint makes the proxy start TLS with it, checking its certificate against the endpoint address (use the host name, not an IP address; tick *Ignore cert errors* for a self signed certificate). A new endpoint starts with the traffic type of the listener, which is HTTPS to HTTPS (re-encrypt) when the listener is HTTPS, and plain to plain otherwise. Any combination is allowed, for example a plain HTTP listener in front of an HTTPS endpoint.
 * To pass TLS through **untouched** (the proxy cannot read it, and header rules do not apply), use the **Raw** traffic type.
 * Proxies saved by an earlier version as HTTPS without a certificate are passed through as Raw, and the service logs a warning.
+* **Renewed certificates are picked up by themselves.** The PFX files (of the proxy and of its host names) are watched. When one is replaced, for example by a renewal with win-acme or certbot, new connections use the new certificate a few seconds later; connections that are open keep the one they started with, and nothing is restarted. A file that cannot be read (still being written, or broken) is retried for a minute and then left alone, and the previous certificate stays in use; the service logs it. Files on network shares are also checked every 30 seconds.
 * Certificate passwords and the password hashes of the management users are stored encrypted in the configuration files (DPAPI on Windows, a key file next to the configuration on Linux).
+
+### Telling the endpoint who the client is (X-Forwarded-For)
+
+An endpoint sees the connection come from the proxy. Set **X-Forwarded-For / -Proto** on the *HTTP Headers* tab of an HTTP or HTTPS proxy to pass the client on:
+
+* **Set** (for a proxy that clients connect to directly): `X-Forwarded-For` is the address of the client and `X-Forwarded-Proto` is `http` or `https` (what the client used to reach the proxy). What the client sent for these is dropped, because anybody can send them.
+* **Append** (for a proxy behind another proxy that sets them): the client is added to the end of `X-Forwarded-For`, and `X-Forwarded-Proto` is kept if it is there.
+* Done for every request on a keep-alive connection, for HTTP/1.x and HTTP/2. Your own header rules are applied afterwards, so a rule can still change them. In a proxy file it is `"ForwardedHeaders": "Off" | "Replace" | "Append"`.
 
 ### Sharing a port (host names)
 

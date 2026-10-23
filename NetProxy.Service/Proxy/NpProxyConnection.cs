@@ -946,6 +946,11 @@ namespace NetProxy.Service.Proxy
             var hasRules = _proxy.Configuration.HttpHeaderRules.Collection
                 .Any(o => o.Enabled && (o.HeaderType == wanted || o.HeaderType == HttpHeaderType.Any));
 
+            //Tells the endpoint who the client is: the address it connected from and whether it used TLS.
+            var forwarded = direction == ConnectionDirection.Inbound && _proxy.Configuration.ForwardedHeaders != ForwardedHeadersMode.Off
+                ? new NpForwardedHeaders(_proxy.Configuration.ForwardedHeaders, _clientKey, _proxy.TerminatesTls ? "https" : "http")
+                : null;
+
             if (_clientIsHttp2)
             {
                 //The scheme of a request has to match what the endpoint connection is, which is not always what the client's was.
@@ -953,13 +958,13 @@ namespace NetProxy.Service.Proxy
                 var endpointScheme = _endpointStream is SslStream ? "https" : "http";
                 var fixScheme = direction == ConnectionDirection.Inbound && clientScheme != endpointScheme;
 
-                return hasRules || fixScheme
+                return hasRules || fixScheme || forwarded != null
                     ? new Http2StreamParser(_proxy.Configuration, fromClient: direction == ConnectionDirection.Inbound)
-                    { RequestScheme = fixScheme ? endpointScheme : null }
+                    { RequestScheme = fixScheme ? endpointScheme : null, Forwarded = forwarded }
                     : null;
             }
 
-            return hasRules ? new HttpStreamParser(_proxy.Configuration, direction) : null;
+            return hasRules || forwarded != null ? new HttpStreamParser(_proxy.Configuration, direction, forwarded) : null;
         }
 
         private void CloseSockets()

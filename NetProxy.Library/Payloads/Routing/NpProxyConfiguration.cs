@@ -31,6 +31,13 @@ namespace NetProxy.Library.Payloads.Routing
         public NpHTTPHeaderRules HttpHeaderRules { get; set; } = new();
 
         /// <summary>
+        /// Tell the endpoint who the client is (X-Forwarded-For) and whether it used HTTPS (X-Forwarded-Proto), which it cannot tell
+        /// for itself when the connection comes from the proxy. Applies to the HTTP and HTTPS traffic types.
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ForwardedHeadersMode ForwardedHeaders { get; set; } = ForwardedHeadersMode.Off;
+
+        /// <summary>
         /// Offer HTTP/2 to clients (and so gRPC). With the Https traffic type it is negotiated with the client (ALPN) and the endpoint
         /// has to speak it too; with the Http traffic type a client that starts with the HTTP/2 preface (h2c) is detected.
         /// Header rules are applied to HTTP/2 requests and responses as well.

@@ -17,7 +17,6 @@ namespace NetProxy.Client.Forms
         private readonly bool _isNewProxy = false;
         private readonly RmClient? _messageClient = null;
         private readonly Guid? _proxyId = null;
-        private readonly List<string> _serviceMessages = new();
         private delegate void PopulateProxyInformation(NpProxyConfiguration proxy);
         private PopulateProxyInformation? _populateProxyInformation;
 
@@ -59,17 +58,6 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            //The service answers a change that it cannot carry out (such as a port that is in use) with a message.
-            _messageClient.OnNotificationReceived += (RmContext context, IRmNotification payload) =>
-            {
-                if (payload is NotificationMessage message)
-                {
-                    lock (_serviceMessages)
-                    {
-                        _serviceMessages.Add(message.Text);
-                    }
-                }
-            };
 
             var trafficTypes = new List<ComboItem>
             {
@@ -837,25 +825,31 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            lock (_serviceMessages)
+            QueryUpsertProxyReply reply;
+
+            try
             {
-                _serviceMessages.Clear();
+                reply = _messageClient.EnsureNotNull().Query<QueryUpsertProxyReply>(new QueryUpsertProxy { Proxy = proxy, MatchByName = false });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(Localize("The proxy was not saved: {0}", ex.GetBaseException().Message),
+                    Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                return;
             }
 
-            _messageClient.EnsureNotNull().Notify(new NotificationUpsertProxy(proxy));
-
-            //Give the service a moment to save, and to say if it could not do what was asked.
-            Thread.Sleep(600);
-
-            string? message;
-            lock (_serviceMessages)
+            if (reply.Success == false)
             {
-                message = _serviceMessages.FirstOrDefault();
+                //Nothing was saved, and the form stays as it is, so that the mistake can be fixed without starting over.
+                MessageBox.Show(Localize("The proxy was not saved. {0}", reply.Message ?? string.Empty),
+                    Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                return;
             }
 
-            if (message != null)
+            if (string.IsNullOrEmpty(reply.StartError) == false)
             {
-                MessageBox.Show(message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                MessageBox.Show(Localize("The proxy was saved but could not be started: {0}", reply.StartError),
+                    Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
 
             DialogResult = DialogResult.OK;

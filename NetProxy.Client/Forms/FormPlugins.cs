@@ -162,12 +162,50 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Add()
+        private void Add() => EditAndSave(null);
+
+        /// <summary>
+        /// Shows the editor and saves what is entered. If the service does not accept it (for example the name is taken) it says why and
+        /// the editor comes back with what was entered, so that nothing has to be typed again. Cancelling ends it.
+        /// </summary>
+        private void EditAndSave(NpPluginConfiguration? plugin)
         {
-            using var form = new FormPlugin(null);
-            if (form.ShowDialog(this) == DialogResult.OK)
+            while (true)
             {
-                SendAndRefresh(new NotificationUpsertPlugin(form.Result), form.Result.Id);
+                using var form = new FormPlugin(plugin);
+                if (form.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+
+                QueryUpsertPluginReply reply;
+
+                try
+                {
+                    reply = _messageClient.EnsureNotNull().Query<QueryUpsertPluginReply>(new QueryUpsertPlugin { Plugin = form.Result, MatchByName = false });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(Localize("The plugin was not saved: {0}", ex.GetBaseException().Message), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    plugin = form.Result;
+                    continue;
+                }
+
+                if (reply.Success == false)
+                {
+                    MessageBox.Show(Localize("The plugin was not saved. {0}", reply.Message ?? string.Empty), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    plugin = form.Result;
+                    continue;
+                }
+
+                RefreshList(form.Result.Id);
+
+                if (string.IsNullOrEmpty(reply.LoadError) == false)
+                {
+                    MessageBox.Show(Localize("The plugin was saved but could not be loaded: {0}", reply.LoadError), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                }
+
+                return;
             }
         }
 
@@ -179,7 +217,7 @@ namespace NetProxy.Client.Forms
             }
 
             //A copy, so that cancelling leaves the list as it was.
-            using var form = new FormPlugin(new NpPluginConfiguration
+            EditAndSave(new NpPluginConfiguration
             {
                 Id = selected.Id,
                 Name = selected.Name,
@@ -190,11 +228,6 @@ namespace NetProxy.Client.Forms
                 TimeoutMilliseconds = selected.TimeoutMilliseconds,
                 Settings = new Dictionary<string, string>(selected.Settings)
             });
-
-            if (form.ShowDialog(this) == DialogResult.OK)
-            {
-                SendAndRefresh(new NotificationUpsertPlugin(form.Result), form.Result.Id);
-            }
         }
 
         private void Delete()

@@ -411,7 +411,7 @@ namespace NetProxy.Tests.Management
             using var open = new TcpClient();
             await open.ConnectAsync("127.0.0.1", proxy.ListenPort);
             await open.GetStream().WriteAsync(new byte[100]);
-            await open.GetStream().ReadAsync(new byte[100]);
+            await NetProxy.Tests.Support.Client.ReadExactly(open.GetStream(), 100);
 
             var connection = Assert.Single(Client.GetConnections(id));
             Assert.Equal("127.0.0.1", connection.SourceAddress);
@@ -443,7 +443,7 @@ namespace NetProxy.Tests.Management
                 var client = new TcpClient();
                 await client.ConnectAsync("127.0.0.1", proxy.ListenPort);
                 await client.GetStream().WriteAsync(new byte[1]);
-                await client.GetStream().ReadAsync(new byte[1]);
+                await NetProxy.Tests.Support.Client.ReadExactly(client.GetStream(), 1);
                 clients.Add(client);
             }
 

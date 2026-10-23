@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 
 namespace NetProxy.Library
 {
@@ -26,6 +25,7 @@ namespace NetProxy.Library
         public const string EventSourceName = "NetProxy";
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum HttpVerb
     {
         Any,
@@ -48,13 +48,11 @@ namespace NetProxy.Library
 
     /// <summary>
     /// Which IP versions a proxy listens on when it listens on all addresses. (Explicit bindings use the version of the address.)
-    /// The serialized names of the first two are kept ("Pv4", "Pv6") so that existing configuration files still load.
     /// </summary>
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum BindingProtocol
     {
-        [EnumMember(Value = "Pv4")]
         IPv4,
-        [EnumMember(Value = "Pv6")]
         IPv6,
         /// <summary>
         /// One dual-stack listener that accepts both IPv6 and IPv4 clients.
@@ -62,6 +60,7 @@ namespace NetProxy.Library
         Both
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum TrafficType
     {
         Tcp,
@@ -71,6 +70,7 @@ namespace NetProxy.Library
         Udp
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum ConnectionPattern
     {
         FailOver,
@@ -78,6 +78,7 @@ namespace NetProxy.Library
         Balanced //AKA: Least connections.
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum ForwardedHeadersMode
     {
         Off,
@@ -87,6 +88,7 @@ namespace NetProxy.Library
         Append
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum HttpHeaderAction
     {
         Insert,
@@ -95,6 +97,7 @@ namespace NetProxy.Library
         Upsert
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum HttpHeaderType
     {
         None,

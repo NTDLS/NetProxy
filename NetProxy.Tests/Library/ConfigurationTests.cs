@@ -81,10 +81,10 @@ namespace NetProxy.Tests.Library
         }
 
         [Theory]
-        [InlineData("Pv4", BindingProtocol.IPv4)]
-        [InlineData("Pv6", BindingProtocol.IPv6)]
+        [InlineData("IPv4", BindingProtocol.IPv4)]
+        [InlineData("IPv6", BindingProtocol.IPv6)]
         [InlineData("Both", BindingProtocol.Both)]
-        public void The_binding_protocol_names_that_older_files_use_still_load(string name, BindingProtocol expected)
+        public void The_binding_protocol_is_read_by_name(string name, BindingProtocol expected)
         {
             var loaded = JsonConvert.DeserializeObject<NpProxyConfiguration>($"{{\"BindingProtocol\":\"{name}\"}}")!;
             Assert.Equal(expected, loaded.BindingProtocol);

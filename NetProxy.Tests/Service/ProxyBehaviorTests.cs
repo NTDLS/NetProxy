@@ -444,7 +444,7 @@ namespace NetProxy.Tests.Service
 
             using var client = new TcpClient(); await client.ConnectAsync("127.0.0.1", port);
             await client.GetStream().WriteAsync("x"u8.ToArray());
-            await client.GetStream().ReadAsync(new byte[1]);
+            await Client.ReadExactly(client.GetStream(), 1);
 
             proxy.Stop();
 

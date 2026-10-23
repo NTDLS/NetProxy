@@ -13,6 +13,7 @@ namespace NetProxy.Library.Utilities
         /// <summary>
         /// From the most detailed to the most important. The level of a logger is the lowest severity that is written.
         /// </summary>
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
         public enum Severity
         {
             Verbose = 0,

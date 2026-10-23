@@ -284,6 +284,15 @@ namespace NetProxy.Tests.Support
         }
 
         /// <summary>
+        /// Reads exactly this many bytes (failing if they do not come in five seconds), for when the bytes themselves do not matter.
+        /// </summary>
+        public static async Task ReadExactly(Stream stream, int count)
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await stream.ReadExactlyAsync(new byte[count], timeout.Token);
+        }
+
+        /// <summary>
         /// Waits until what the check returns is what is wanted, for up to <paramref name="seconds"/>. Returns the last thing it saw.
         /// </summary>
         public static async Task<T> Eventually<T>(Func<Task<T>> check, Func<T, bool> wanted, double seconds = 15)

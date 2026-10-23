@@ -56,7 +56,7 @@ namespace NetProxy.Client.Forms
             var buttons = new (string Text, Action Click)[]
             {
                 (Localize("Add..."), Add), (Localize("Edit..."), Edit), (Localize("Delete"), Delete),
-                (Localize("Move up"), () => Move(-1)), (Localize("Move down"), () => Move(1)), (Localize("Reload"), Reload)
+                (Localize("Move up"), () => MoveSelected(-1)), (Localize("Move down"), () => MoveSelected(1)), (Localize("Reload"), Reload)
             };
 
             var x = 12;
@@ -211,7 +211,7 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void Move(int direction)
+        private void MoveSelected(int direction)
         {
             if (Selected is { } selected)
             {

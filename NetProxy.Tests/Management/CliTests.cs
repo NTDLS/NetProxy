@@ -190,7 +190,7 @@ namespace NetProxy.Tests.Management
             var saved = File.ReadAllText(file);
             Assert.DoesNotContain(ManagementFixture.Password, saved); //The hash, never the password.
             Assert.Contains(NetProxy.Library.Utilities.NpUtility.Sha256(ManagementFixture.Password), saved, StringComparison.OrdinalIgnoreCase);
-            if (OperatingSystem.IsWindows() == false)
+            if (!OperatingSystem.IsWindows())
             {
                 Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(file));
             }

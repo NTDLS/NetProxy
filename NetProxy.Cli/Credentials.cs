@@ -44,7 +44,7 @@ namespace NetProxy.Cli
             if (File.Exists(FilePath) == false)
             {
                 File.WriteAllText(FilePath, string.Empty);
-                if (OperatingSystem.IsWindows() == false)
+                if (!OperatingSystem.IsWindows())
                 {
                     File.SetUnixFileMode(FilePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
                 }

@@ -65,7 +65,7 @@ namespace NetProxy.Tests.Management
             using var connection = new TcpClient();
             await connection.ConnectAsync("127.0.0.1", untouched.ListenPort);
             await connection.GetStream().WriteAsync("before"u8.ToArray());
-            await connection.GetStream().ReadAsync(new byte[6]);
+            await NetProxy.Tests.Support.Client.ReadExactly(connection.GetStream(), 6);
 
             var proxies = ReadProxies();
             Find(proxies, "edited")["Endpoints"]!["Collection"]![0]!["Port"] = Host.Backend("NEW").Port;

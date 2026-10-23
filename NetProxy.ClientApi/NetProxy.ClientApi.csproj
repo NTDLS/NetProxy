@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 
 		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
-		<Version>2.6.0</Version>
+		<Version>3.0.0</Version>
 		<Company>NetworkDLS</Company>
 		<Product>NetProxy</Product>
 		<Description>Manages a NetProxy service from code: connect, log in, and use the same operations as the console.</Description>

@@ -51,6 +51,11 @@ namespace NetProxy.Service.Proxy
         internal IReadOnlyCollection<string> HostPatterns { get; }
 
         /// <summary>
+        /// True for a proxy without host names: it gets the requests that no other proxy on its port claims.
+        /// </summary>
+        internal bool IsDefaultForPort => NpHostRouter.IsDefault(Configuration);
+
+        /// <summary>
         /// The certificate to present to a client that asks for a host name: the one of the most specific host name that matches
         /// and has its own, otherwise the certificate of the proxy. Null if there is none.
         /// </summary>

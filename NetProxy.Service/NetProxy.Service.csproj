@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<Content Include="AppIcon.ico" />
+		<InternalsVisibleTo Include="NetProxy.Tests" />
 	</ItemGroup>
 
 	<ItemGroup>

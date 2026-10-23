@@ -47,8 +47,10 @@ namespace NetProxy.Cli
     /// </summary>
     internal static class Input
     {
-        public static string? ReadLine() => Console.In.ReadLine()?.TrimStart('﻿');
+        private const char Bom = (char)0xFEFF;
 
-        public static string ReadAll() => Console.In.ReadToEnd().TrimStart('﻿');
+        public static string? ReadLine() => Console.In.ReadLine()?.TrimStart(Bom);
+
+        public static string ReadAll() => Console.In.ReadToEnd().TrimStart(Bom);
     }
 }

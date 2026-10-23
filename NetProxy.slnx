@@ -15,5 +15,6 @@
   <Project Path="NetProxy.Library/NetProxy.Library.csproj" />
   <Project Path="NetProxy.PluginApi/NetProxy.PluginApi.csproj" />
   <Project Path="NetProxy.SamplePlugin/NetProxy.SamplePlugin.csproj" />
+  <Project Path="NetProxy.Tests/NetProxy.Tests.csproj" />
   <Project Path="NetProxy.Service/NetProxy.Service.csproj" />
 </Solution>

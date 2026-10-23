@@ -147,7 +147,7 @@ namespace NetProxy.Service.Proxy
 
             foreach (var route in current)
             {
-                if (route.HostPatterns.Count == 0 && proxy.HostPatterns.Count == 0)
+                if (route.IsDefaultForPort && proxy.IsDefaultForPort)
                 {
                     return $"{inUse} To share a port, give each proxy host names (only one can have none, and be the default).";
                 }
@@ -245,9 +245,10 @@ namespace NetProxy.Service.Proxy
                         continue;
                     }
 
-                    //With one proxy on the port every connection is its own, whatever host name it asks for. With several, the
-                    //  connection works out which one it is for.
-                    _ = new NpProxyConnection(this, client, routes.Count == 1 ? routes[0] : null).RunAsync(); //Never throws: the connection handles and logs its own failures.
+                    //A proxy with no host names that is alone on its port gets every connection, whatever host name it asks for. Otherwise
+                    //  the connection works out which proxy it is for. That includes a proxy with host names that is alone: when a proxy
+                    //  of another site is stopped, its requests must not end up at this one.
+                    _ = new NpProxyConnection(this, client, routes.Count == 1 && routes[0].IsDefaultForPort ? routes[0] : null).RunAsync(); //Never throws: the connection handles and logs its own failures.
                 }
                 catch (Exception ex)
                 {

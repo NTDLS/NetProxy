@@ -64,7 +64,7 @@ Several **HTTP** or **HTTPS** proxies can listen on the same port, if each answe
 * **HTTPS:** each host name can have its own PFX certificate (and password), for example one for `www.example.com` and another for `example.com`. A host name without one uses the certificate of the proxy. Proxies that share a port must all be HTTP or all be HTTPS.
 * **Raw** proxies cannot share a port, because there is nothing to tell them apart by. The service refuses to save a proxy that conflicts with another one on the same port (and addresses).
 * The proxy is chosen once per connection: the first request decides, so later requests on a keep-alive connection go to the same proxy. For the same reason HTTP/2 connections go to the proxy of the first host name (HTTPS) or to the default proxy (HTTP/2 without TLS, where the host is compressed), so clients that reuse one HTTP/2 connection for several host names can reach the wrong proxy.
-* A proxy that is alone on its port answers to every host name, whatever it lists.
+* A proxy with host names answers only to them, even when it is the only one on its port (so when the proxy of another site is stopped, that site gets a 404 and its requests do not end up at a different site). A proxy without host names answers every host name.
 
 ### Managing the service without the console (`netproxyctl`)
 
@@ -141,6 +141,16 @@ The configuration is stored in the common application data folder: `C:\ProgramDa
 
 * A new installation has one management user, `administrator`, with an **empty password**. Set a password first. The service logs a warning while any user has none.
 * The management connection between the console and the service is **encrypted**: on connecting, the two agree on a key (NTDLS.SecureKeyExchange) and everything after that, including the login and every setting, is encrypted (NTDLS.Permafrost). The service refuses a login over a connection that is not encrypted, so the console and the service have to be the same version. The connection is encrypted but the service is not authenticated to the console, so on an untrusted network still limit who can reach the management port (5854), for example with a VPN or [NetTunnel](https://github.com/NTDLS/NetTunnel).
+
+## Tests
+
+```
+dotnet test NetProxy.slnx
+```
+
+`NetProxy.Tests` (xUnit) covers the service, the plugin system, the management API and `netproxyctl` with about 400 tests. Most of them run real proxies on the loopback address with real traffic (HTTP, HTTPS with generated certificates, raw TCP), and the management tests run the service in the test process and talk to it the way a console does. The whole run takes about three minutes, most of it the 4096 bit key exchange of every management connection and tests that wait for files to be picked up.
+
+The tests keep their configuration under their own name (`NetProxyTests`, via `NETPROXY_CONFIG_NAME`) and a credentials file of their own, so they never touch an installed NetProxy. They use free ports on 127.0.0.1. The management console (WinForms) has no tests.
 
 ## Screenshots
 

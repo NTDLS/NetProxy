@@ -45,7 +45,7 @@ namespace NetProxy.Service.Proxy
                 }
             }
 
-            return candidates.FirstOrDefault(o => o.HostPatterns.Count == 0);
+            return candidates.FirstOrDefault(o => o.IsDefaultForPort);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace NetProxy.Service.Proxy
                 var mine = Patterns(candidate);
                 var theirs = Patterns(other);
 
-                if (mine.Count == 0 && theirs.Count == 0)
+                if (IsDefault(candidate) && IsDefault(other))
                 {
                     return $"{inUse} To share a port, give each proxy host names (at most one proxy per port can have none, and be the default).";
                 }
@@ -120,6 +120,13 @@ namespace NetProxy.Service.Proxy
 
             return null;
         }
+
+        /// <summary>
+        /// A proxy with no host names at all is the default for its port: it gets what no other proxy claims. A proxy whose host names
+        /// are all switched off is not: it answers to nothing, rather than to everything.
+        /// </summary>
+        public static bool IsDefault(NpProxyConfiguration configuration)
+            => configuration.HostNames.All(o => string.IsNullOrWhiteSpace(o.Host));
 
         /// <summary>
         /// The normalized names of the enabled host names of a proxy.

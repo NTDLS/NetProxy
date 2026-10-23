@@ -16,7 +16,13 @@ namespace NetProxy.Cli
         public string UserName { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
 
-        public static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".netproxy", "credentials.json");
+        /// <summary>
+        /// Where the login is kept: in the profile of the user, unless NETPROXY_CREDENTIALS names another file.
+        /// </summary>
+        public static string FilePath
+            => Environment.GetEnvironmentVariable("NETPROXY_CREDENTIALS") is { Length: > 0 } path
+                ? path
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".netproxy", "credentials.json");
 
         public static Credentials? Load()
         {

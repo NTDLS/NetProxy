@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\NetProxy.ClientApi\NetProxy.ClientApi.csproj" />
+		<InternalsVisibleTo Include="NetProxy.Tests" />
 	</ItemGroup>
 
 </Project>

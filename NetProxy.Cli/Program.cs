@@ -59,7 +59,12 @@ namespace NetProxy.Cli
             Options: --json for machine readable output. Exit codes: 0 done, 1 not done, 2 wrong command line, 3 cannot connect or log in.
             """;
 
-        private static int Main(string[] argv)
+        private static int Main(string[] argv) => Execute(argv);
+
+        /// <summary>
+        /// Runs a command line and returns the exit code. Everything it prints goes to Console.Out and Console.Error.
+        /// </summary>
+        internal static int Execute(string[] argv)
         {
             try
             {

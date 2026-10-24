@@ -153,10 +153,6 @@ A connection over a limit is closed as soon as it is accepted. The service logs 
 
 The service writes to a rolling log file (`Logs/NetProxy.log` in its installation folder by default, rolled over at a size you choose), to the Windows event log (warnings and exceptions), and to the console when it is run by hand. The level, the file and the roll-over can be changed in *Settings > Configuration > Service* and take effect immediately.
 
-### Language
-
-The console is localized with [NTDLS.Localization](https://github.com/NTDLS/NTDLS.Localization). Choose the language with *Settings > Language...* or the **Language** button on the connect window; the choice is remembered per user. The translations are in `NetProxy.Client\Translations\Translations.db`, which is created by `Localization.bat` (it runs [LocalizationScan](https://github.com/NTDLS/LocalizationScan), which needs an API key). Run it after adding or changing a user-visible string. The service itself is not localized.
-
 ### Where things are kept
 
 The configuration is stored in the common application data folder: `C:\ProgramData\NetProxy` on Windows, `/usr/share/NetProxy` on Linux (see the Linux install notes in `@Installers`). The `NETPROXY_CONFIG_NAME` environment variable names a different folder, so a test instance does not touch the real configuration.
@@ -165,16 +161,6 @@ The configuration is stored in the common application data folder: `C:\ProgramDa
 
 * A new installation has one management user, `administrator`, with an **empty password**. Set a password first. The service logs a warning while any user has none.
 * The management connection between the console and the service is **encrypted**: on connecting, the two agree on a key (NTDLS.SecureKeyExchange) and everything after that, including the login and every setting, is encrypted (NTDLS.Permafrost). The service refuses a login over a connection that is not encrypted, so the console and the service have to be the same version. The connection is encrypted but the service is not authenticated to the console, so on an untrusted network still limit who can reach the management port (5854), for example with a VPN or [NetTunnel](https://github.com/NTDLS/NetTunnel).
-
-## Tests
-
-```
-dotnet test NetProxy.slnx
-```
-
-`NetProxy.Tests` (xUnit) covers the service, the plugin system, the management API and `netproxyctl` with about 450 tests. Most of them run real proxies on the loopback address with real traffic (HTTP, HTTPS with generated certificates, raw TCP, UDP), and the management tests run the service in the test process and talk to it the way a console does. The whole run takes about three minutes, most of it the 4096 bit key exchange of every management connection and tests that wait for files to be picked up.
-
-The tests keep their configuration under their own name (`NetProxyTests`, via `NETPROXY_CONFIG_NAME`) and a credentials file of their own, so they never touch an installed NetProxy. They use free ports on 127.0.0.1. The management console (WinForms) has no tests.
 
 ## Screenshots
 

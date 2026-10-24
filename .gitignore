@@ -23,3 +23,13 @@ NetProxy.Client/bin/
 \@Installers/publish/
 
 \@Installers/output/
+NetProxy.PluginApi/bin/
+NetProxy.PluginApi/obj/
+NetProxy.SamplePlugin/bin/
+NetProxy.SamplePlugin/obj/
+NetProxy.ClientApi/bin/
+NetProxy.ClientApi/obj/
+NetProxy.Cli/bin/
+NetProxy.Cli/obj/
+NetProxy.Tests/bin/
+NetProxy.Tests/obj/

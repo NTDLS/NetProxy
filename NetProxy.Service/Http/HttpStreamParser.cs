@@ -61,10 +61,13 @@ namespace NetProxy.Service.Http
 
         /// <param name="configuration">The proxy, for its header rules.</param>
         /// <param name="direction">Inbound when the bytes come from the client (requests), Outbound when they come from an endpoint (responses).</param>
-        public HttpStreamParser(NpProxyConfiguration configuration, ConnectionDirection direction)
+        private readonly NpForwardedHeaders? _forwarded;
+
+        public HttpStreamParser(NpProxyConfiguration configuration, ConnectionDirection direction, NpForwardedHeaders? forwarded = null)
         {
             _configuration = configuration;
             _direction = direction;
+            _forwarded = forwarded;
         }
 
         /// <summary>
@@ -189,6 +192,12 @@ namespace NetProxy.Service.Http
             else if (_direction == ConnectionDirection.Outbound && headerType == HttpHeaderType.Request)
             {
                 Singletons.Logging.Write(NpLogging.Severity.Warning, "A HTTP request header was detected on an endpoint.");
+            }
+
+            //Before the rules, so that a rule can still change what these say.
+            if (_direction == ConnectionDirection.Inbound && headerType == HttpHeaderType.Request && _forwarded != null)
+            {
+                header = _forwarded.ApplyToHttp1Request(header, delimiter);
             }
 
             header = HttpUtility.ApplyHttpHeaderRules(_configuration, header, headerType, verb, delimiter);

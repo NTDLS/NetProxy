@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 
 namespace NetProxy.Library
 {
@@ -14,6 +13,11 @@ namespace NetProxy.Library
         public const int DefaultInitialBufferSize = 10 * 1024;
         public const int DefaultMaxBufferSize = 64 * 1024;
         public const int DefaultStickySessionExpiration = 60 * 60;
+        public const int DefaultPluginTimeoutMilliseconds = 5000;
+        /// <summary>How long a UDP session is kept without datagrams when the proxy has no idle timeout of its own (seconds).</summary>
+        public const int DefaultUdpIdleTimeoutSeconds = 60;
+        /// <summary>The most a UDP datagram can carry (the largest the protocol allows).</summary>
+        public const int UdpMaxDatagramSize = 65535;
         public const int MinAcceptBacklogSize = 128;
         public const int DefaultAcceptBacklogSize = MinAcceptBacklogSize;
         public const int DefaultLogFileMaxSizeMB = 10;
@@ -21,6 +25,7 @@ namespace NetProxy.Library
         public const string EventSourceName = "NetProxy";
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum HttpVerb
     {
         Any,
@@ -43,13 +48,11 @@ namespace NetProxy.Library
 
     /// <summary>
     /// Which IP versions a proxy listens on when it listens on all addresses. (Explicit bindings use the version of the address.)
-    /// The serialized names of the first two are kept ("Pv4", "Pv6") so that existing configuration files still load.
     /// </summary>
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum BindingProtocol
     {
-        [EnumMember(Value = "Pv4")]
         IPv4,
-        [EnumMember(Value = "Pv6")]
         IPv6,
         /// <summary>
         /// One dual-stack listener that accepts both IPv6 and IPv4 clients.
@@ -57,13 +60,17 @@ namespace NetProxy.Library
         Both
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum TrafficType
     {
-        Raw,
+        Tcp,
         Http,
-        Https
+        Https,
+        /// <summary>UDP datagrams, relayed between sessions that are kept for each client address and port.</summary>
+        Udp
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum ConnectionPattern
     {
         FailOver,
@@ -71,6 +78,17 @@ namespace NetProxy.Library
         Balanced //AKA: Least connections.
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+    public enum ForwardedHeadersMode
+    {
+        Off,
+        /// <summary>X-Forwarded-For and X-Forwarded-Proto are set to the client, replacing what the client sent.</summary>
+        Replace,
+        /// <summary>The client is added to the end of X-Forwarded-For. For a proxy behind another proxy.</summary>
+        Append
+    }
+
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum HttpHeaderAction
     {
         Insert,
@@ -79,6 +97,7 @@ namespace NetProxy.Library
         Upsert
     }
 
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
     public enum HttpHeaderType
     {
         None,

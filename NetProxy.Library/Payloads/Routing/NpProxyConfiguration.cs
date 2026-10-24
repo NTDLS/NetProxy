@@ -31,6 +31,13 @@ namespace NetProxy.Library.Payloads.Routing
         public NpHTTPHeaderRules HttpHeaderRules { get; set; } = new();
 
         /// <summary>
+        /// Tell the endpoint who the client is (X-Forwarded-For) and whether it used HTTPS (X-Forwarded-Proto), which it cannot tell
+        /// for itself when the connection comes from the proxy. Applies to the HTTP and HTTPS traffic types.
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ForwardedHeadersMode ForwardedHeaders { get; set; } = ForwardedHeadersMode.Off;
+
+        /// <summary>
         /// Offer HTTP/2 to clients (and so gRPC). With the Https traffic type it is negotiated with the client (ALPN) and the endpoint
         /// has to speak it too; with the Http traffic type a client that starts with the HTTP/2 preface (h2c) is detected.
         /// Header rules are applied to HTTP/2 requests and responses as well.
@@ -53,6 +60,13 @@ namespace NetProxy.Library.Payloads.Routing
         public int IdleTimeoutSeconds { get; set; }
 
         /// <summary>
+        /// UDP only: the most datagrams per second that one client (address and port) may send. The ones above that are dropped.
+        /// 0 is no limit. For UDP the idle timeout above is how long a client's session is kept without datagrams, and 0 there means
+        /// <see cref="Constants.DefaultUdpIdleTimeoutSeconds"/>, because a UDP session has no end of its own.
+        /// </summary>
+        public int MaxDatagramsPerSecondPerClient { get; set; }
+
+        /// <summary>
         /// Path (on the machine running the service) of the PFX/PKCS#12 certificate the listener presents to clients (Https traffic type).
         /// </summary>
         public string TlsCertificatePath { get; set; } = string.Empty;
@@ -62,6 +76,18 @@ namespace NetProxy.Library.Payloads.Routing
         /// </summary>
         public string TlsCertificatePassword { get; set; } = string.Empty;
 
+        /// <summary>
+        /// The host names that this proxy answers to. Proxies (of the HTTP or HTTPS traffic type) that listen on the same port tell
+        /// the requests apart by these. A proxy with none is the default for the port: it gets the requests that no other proxy claims.
+        /// </summary>
+        public List<NpHostName> HostNames { get; set; } = new();
+
+        /// <summary>
+        /// The plug-ins (set up for the service) that this proxy uses. A proxy uses none unless it is listed here. The plug-ins are
+        /// called in the order they have in the service configuration.
+        /// </summary>
+        public List<Guid> PluginIds { get; set; } = new();
+
         public NpProxyConfiguration()
         {
             Id = Guid.NewGuid();
@@ -70,6 +96,28 @@ namespace NetProxy.Library.Payloads.Routing
             MaxBufferSize = Constants.DefaultMaxBufferSize;
             StickySessionCacheExpiration = Constants.DefaultStickySessionExpiration;
             Bindings = new List<NpBinding>();
+        }
+
+        /// <summary>
+        /// For a configuration that was written by hand (its endpoints have no ids of their own): the endpoints that are the same as
+        /// ones of the proxy that this replaces (same address and port) keep their ids, so that they keep their statistics and a
+        /// configuration that has not changed is seen as not changed.
+        /// </summary>
+        public void AdoptEndpointIds(NpProxyConfiguration existing)
+        {
+            var available = existing.Endpoints.Collection.ToList();
+
+            foreach (var endpoint in Endpoints.Collection)
+            {
+                var match = available.FirstOrDefault(o => o.Port == endpoint.Port
+                    && string.Equals(o.Address, endpoint.Address, StringComparison.OrdinalIgnoreCase));
+
+                if (match != null)
+                {
+                    endpoint.Id = match.Id;
+                    available.Remove(match);
+                }
+            }
         }
 
         /// <summary>

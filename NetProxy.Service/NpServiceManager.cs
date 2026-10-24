@@ -9,7 +9,7 @@ using System.Collections.Concurrent;
 
 namespace NetProxy.Service
 {
-    public class NpServiceManager
+    public partial class NpServiceManager
     {
         private readonly object _proxiesLock = new();
         private readonly object _saveLock = new();
@@ -129,6 +129,24 @@ namespace NetProxy.Service
             SaveConfiguration();
         }
 
+        /// <summary>
+        /// A plug-in was deleted: the proxies stop using it.
+        /// </summary>
+        public void RemovePluginFromProxies(Guid pluginId)
+        {
+            var changed = false;
+
+            foreach (var proxy in GetProxies())
+            {
+                changed |= proxy.Configuration.PluginIds.RemoveAll(o => o == pluginId) > 0;
+            }
+
+            if (changed)
+            {
+                SaveConfiguration();
+            }
+        }
+
         public void SaveConfiguration()
         {
             lock (_saveLock)
@@ -162,6 +180,10 @@ namespace NetProxy.Service
                     {
                         var copy = o.Configuration.Clone();
                         copy.TlsCertificatePassword = SecretProtector.Protect(copy.TlsCertificatePassword) ?? string.Empty;
+                        foreach (var host in copy.HostNames)
+                        {
+                            host.TlsCertificatePassword = SecretProtector.Protect(host.TlsCertificatePassword) ?? string.Empty;
+                        }
                         return copy;
                     }).ToList();
 
@@ -175,38 +197,54 @@ namespace NetProxy.Service
             }
         }
 
+        /// <summary>
+        /// Reads the configuration files, with the secrets in them decrypted. Files from an older version (or values typed in by hand)
+        /// hold plain text secrets: they are read as they are, and <paramref name="hasPlainTextSecrets"/> says there were some, so that
+        /// they can be saved encrypted.
+        /// </summary>
+        private static void ReadConfigurationFromDisk(out NpConfiguration configuration, out List<NpProxyConfiguration> proxies, out bool hasPlainTextSecrets)
+        {
+            var defaultConfiguration = new NpConfiguration()
+            {
+                ManagementPort = Constants.DefaultManagementPort
+            };
+            defaultConfiguration.Users.Add(new NpUser()
+            {
+                UserName = "administrator",
+                PasswordHash = NpUtility.Sha256(string.Empty)
+            });
+
+            configuration = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, defaultConfiguration);
+
+            proxies = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, new List<NpProxyConfiguration>());
+            hasPlainTextSecrets = false;
+
+            foreach (var user in configuration.Users.Collection)
+            {
+                user.PasswordHash = SecretProtector.Unprotect(user.PasswordHash, $"the password of user '{user.UserName}'", out var plain) ?? string.Empty;
+                hasPlainTextSecrets |= plain;
+            }
+
+            foreach (var proxy in proxies)
+            {
+                proxy.TlsCertificatePassword = SecretProtector.Unprotect(proxy.TlsCertificatePassword,
+                    $"the certificate password of proxy '{proxy.Name}'", out var plain) ?? string.Empty;
+                hasPlainTextSecrets |= plain;
+
+                foreach (var host in proxy.HostNames)
+                {
+                    host.TlsCertificatePassword = SecretProtector.Unprotect(host.TlsCertificatePassword,
+                        $"the certificate password of host name '{host.Host}' of proxy '{proxy.Name}'", out var hostPlain) ?? string.Empty;
+                    hasPlainTextSecrets |= hostPlain;
+                }
+            }
+        }
+
         public void LoadConfiguration()
         {
             try
             {
-                var defaultConfiguration = new NpConfiguration()
-                {
-                    ManagementPort = Constants.DefaultManagementPort
-                };
-                defaultConfiguration.Users.Add(new NpUser()
-                {
-                    UserName = "administrator",
-                    PasswordHash = NpUtility.Sha256(string.Empty)
-                });
-
-                var loaded = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, defaultConfiguration);
-                var proxyConfigurations = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, new List<NpProxyConfiguration>());
-
-                //Files from an older version (or values typed in by hand) hold plain text secrets: read them, then save them encrypted.
-                bool hasPlainTextSecrets = false;
-
-                foreach (var user in loaded.Users.Collection)
-                {
-                    user.PasswordHash = SecretProtector.Unprotect(user.PasswordHash, $"the password of user '{user.UserName}'", out var plain) ?? string.Empty;
-                    hasPlainTextSecrets |= plain;
-                }
-
-                foreach (var proxy in proxyConfigurations)
-                {
-                    proxy.TlsCertificatePassword = SecretProtector.Unprotect(proxy.TlsCertificatePassword,
-                        $"the certificate password of proxy '{proxy.Name}'", out var plain) ?? string.Empty;
-                    hasPlainTextSecrets |= plain;
-                }
+                ReadConfigurationFromDisk(out var loaded, out var proxyConfigurations, out var hasPlainTextSecrets);
 
                 lock (Configuration)
                 {
@@ -270,6 +308,11 @@ namespace NetProxy.Service
 
                 server.Start(Configuration.ManagementPort);
 
+                RegisterReloadSignal();
+
+                //Before the proxies, so that the plug-ins are there for their start.
+                Singletons.Plugins.StartAsync().GetAwaiter().GetResult();
+
                 Singletons.Logging.Write(NpLogging.Severity.Information, "Starting the proxies.");
 
                 _proxies.Start();
@@ -287,6 +330,7 @@ namespace NetProxy.Service
                 _messageServer?.Stop();
                 _proxies.Stop();
                 SaveConfiguration();
+                Singletons.Plugins.StopAsync().GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

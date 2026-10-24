@@ -89,8 +89,6 @@ namespace NetProxy.Client.Forms
         {
             var toolTips = ToolTipHelpers.CreateToolTipControl(this);
 
-            ColumnUsername.ToolTipText = Localize("The name the user logs in with. A name that was saved cannot be changed: delete the user and add another.");
-            ColumnSetPassword.ToolTipText = Localize("Set the password of this user. A new user needs one.");
             ColumnDescription.ToolTipText = Localize("Notes about this user.");
 
             toolTips.AddControls([labelLogLevel, comboBoxLogLevel],

@@ -2,6 +2,8 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
+using NetProxy.PluginApi;
+using NetProxy.Service.Plugins;
 using System.Collections.Concurrent;
 using System.Security.Cryptography.X509Certificates;
 
@@ -17,6 +19,7 @@ namespace NetProxy.Service.Proxy
 
         private readonly object _lifecycleLock = new();
         private List<NpProxyListener> _listeners = [];
+        private List<NpUdpListener> _udpListeners = [];
         private CancellationTokenSource? _stopSource;
         private MemoryCache? _stickySessions;
         private long _roundRobinCounter;
@@ -31,17 +34,38 @@ namespace NetProxy.Service.Proxy
         /// </summary>
         internal ConcurrentDictionary<Guid, NpProxyEndpointStatistics> EndpointStatistics { get; } = new();
 
-        internal ConcurrentDictionary<Guid, NpProxyConnection> ActiveConnections { get; } = new();
+        internal ConcurrentDictionary<Guid, INpActiveConnection> ActiveConnections { get; } = new();
 
         /// <summary>
-        /// The certificate that the listener presents to clients, when it terminates TLS.
+        /// The certificates that the listener presents to clients, when it terminates TLS. They are reloaded when their files change.
         /// </summary>
-        internal X509Certificate2? Certificate { get; private set; }
+        private NpCertificateStore? _certificates;
+
+        /// <summary>
+        /// The certificate of the proxy, when it terminates TLS.
+        /// </summary>
+        internal X509Certificate2? Certificate => _certificates?.Default;
+
+        /// <summary>
+        /// The (normalized) host names that this proxy answers to. Empty for a proxy that is the default for its port.
+        /// </summary>
+        internal IReadOnlyCollection<string> HostPatterns { get; }
+
+        /// <summary>
+        /// True for a proxy without host names: it gets the requests that no other proxy on its port claims.
+        /// </summary>
+        internal bool IsDefaultForPort => NpHostRouter.IsDefault(Configuration);
+
+        /// <summary>
+        /// The certificate to present to a client that asks for a host name: the one of the most specific host name that matches
+        /// and has its own, otherwise the certificate of the proxy. Null if there is none.
+        /// </summary>
+        internal X509Certificate2? GetCertificate(string? host) => _certificates?.Get(host);
 
         /// <summary>
         /// What the listener does with the traffic while the proxy is running. This is the configured traffic type, except that an
         /// Https listener without a certificate (the way HTTPS was configured before TLS could be terminated) passes the
-        /// encrypted traffic through untouched, which is Raw.
+        /// encrypted traffic through untouched, which is Tcp.
         /// </summary>
         internal TrafficType EffectiveTrafficType { get; private set; }
 
@@ -56,7 +80,24 @@ namespace NetProxy.Service.Proxy
         {
             Configuration = configuration;
             EffectiveTrafficType = configuration.TrafficType;
+            HostPatterns = NpHostRouter.Patterns(configuration);
         }
+
+        /// <summary>
+        /// The proxy, as the plug-ins see it.
+        /// </summary>
+        internal NpProxyInfo Info => new(Configuration.Id, Configuration.Name, Configuration.ListenPort, Configuration.TrafficType switch
+        {
+            TrafficType.Http => NpTrafficKind.Http,
+            TrafficType.Https => NpTrafficKind.Https,
+            TrafficType.Udp => NpTrafficKind.Udp,
+            _ => NpTrafficKind.Tcp
+        });
+
+        /// <summary>
+        /// The plug-ins that are loaded and that this proxy has opted in to.
+        /// </summary>
+        internal NpPluginSet Plugins => Singletons.Plugins.ForProxy(Configuration);
 
         public bool Start() => Start(out _);
 
@@ -75,12 +116,20 @@ namespace NetProxy.Service.Proxy
                 }
 
                 var started = new List<NpProxyListener>();
+                var startedUdp = new List<NpUdpListener>();
+                var plugins = Plugins;
 
                 try
                 {
                     if (Configuration.Endpoints.Collection.Any(o => o.Enabled) == false)
                     {
                         throw new InvalidOperationException("The proxy has no enabled endpoints.");
+                    }
+
+                    var verdict = plugins.ProxyStartingAsync(Info).AsTask().GetAwaiter().GetResult();
+                    if (verdict.Allowed == false)
+                    {
+                        throw new InvalidOperationException($"{verdict.Reason}");
                     }
 
                     LoadCertificate();
@@ -99,29 +148,46 @@ namespace NetProxy.Service.Proxy
                         EndpointStatistics.TryAdd(endpointId, new NpProxyEndpointStatistics());
                     }
 
-                    foreach (var tcpListener in NpNetwork.CreateListeners(Configuration))
+                    if (Configuration.TrafficType == TrafficType.Udp)
                     {
-                        var listener = new NpProxyListener(this, tcpListener);
-                        listener.Start();
-                        started.Add(listener);
+                        //A UDP port belongs to one proxy. The sockets are bound here, so a port in use is reported to whoever started it.
+                        startedUdp = NpUdpListener.StartAll(this);
+                    }
+                    else
+                    {
+                        foreach (var tcpListener in NpNetwork.CreateListeners(Configuration))
+                        {
+                            //Joins the listener of the port when another proxy already has it, if they can share it.
+                            started.Add(NpProxyListener.Attach(this, tcpListener));
+                        }
                     }
 
-                    if (started.Count == 0)
+                    if (started.Count == 0 && startedUdp.Count == 0)
                     {
                         throw new InvalidOperationException("The proxy has no enabled bindings.");
                     }
 
                     _listeners = started;
+                    _udpListeners = startedUdp;
                     Volatile.Write(ref _isRunning, 1);
 
+                    var listeningOn = started.Select(o => o.Description).Concat(startedUdp.Select(o => o.Description)).ToList();
+
                     Singletons.Logging.Write(NpLogging.Severity.Information,
-                        $"Proxy '{Configuration.Name}' is listening on {string.Join(", ", started.Select(o => o.Description))} ({EffectiveTrafficType}).");
+                        $"Proxy '{Configuration.Name}' is listening on {string.Join(", ", listeningOn)} ({EffectiveTrafficType}).");
+
+                    plugins.ProxyStartedAsync(Info, listeningOn).AsTask().GetAwaiter().GetResult();
 
                     return true;
                 }
                 catch (Exception ex)
                 {
                     foreach (var listener in started)
+                    {
+                        listener.Detach(this);
+                    }
+
+                    foreach (var listener in startedUdp)
                     {
                         listener.Stop();
                     }
@@ -130,6 +196,8 @@ namespace NetProxy.Service.Proxy
 
                     error = ex.Message;
                     Singletons.Logging.Write(NpLogging.Severity.Warning, $"Failed to start proxy '{Configuration.Name}': {ex.Message}");
+
+                    plugins.ProxyStartFailedAsync(Info, ex.Message).AsTask().GetAwaiter().GetResult();
                     return false;
                 }
             }
@@ -138,6 +206,7 @@ namespace NetProxy.Service.Proxy
         public void Stop()
         {
             List<NpProxyListener> listeners;
+            List<NpUdpListener> udpListeners;
             CancellationTokenSource? stopSource;
 
             lock (_lifecycleLock)
@@ -150,14 +219,25 @@ namespace NetProxy.Service.Proxy
                 Volatile.Write(ref _isRunning, 0);
                 listeners = _listeners;
                 _listeners = [];
+                udpListeners = _udpListeners;
+                _udpListeners = [];
                 stopSource = _stopSource;
             }
 
+            var plugins = Plugins;
+            plugins.ProxyStoppingAsync(Info).AsTask().GetAwaiter().GetResult();
+
             stopSource?.Cancel();
 
-            foreach (var listener in listeners)
+            foreach (var listener in udpListeners)
             {
                 listener.Stop();
+            }
+
+            //The port stays open for the other proxies that share it.
+            foreach (var listener in listeners)
+            {
+                listener.Detach(this);
             }
 
             var connections = ActiveConnections.Values.ToList();
@@ -175,6 +255,8 @@ namespace NetProxy.Service.Proxy
             }
 
             Singletons.Logging.Write(NpLogging.Severity.Information, $"Proxy '{Configuration.Name}' has stopped.");
+
+            plugins.ProxyStoppedAsync(Info).AsTask().GetAwaiter().GetResult();
         }
 
         private void LoadCertificate()
@@ -186,32 +268,28 @@ namespace NetProxy.Service.Proxy
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath))
+            var hostsWithCertificate = Configuration.HostNames
+                .Where(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false).ToList();
+
+            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath) && hostsWithCertificate.Count == 0)
             {
                 //How HTTPS was configured before TLS could be terminated: the encrypted traffic is passed through.
-                EffectiveTrafficType = TrafficType.Raw;
+                EffectiveTrafficType = TrafficType.Tcp;
                 Singletons.Logging.Write(NpLogging.Severity.Warning,
                     $"Proxy '{Configuration.Name}' is set to HTTPS but has no certificate, so the encrypted traffic is passed through untouched"
                     + " (header rules do not apply). Choose a certificate (PFX) to terminate TLS at the proxy.");
                 return;
             }
 
-            try
-            {
-                Certificate = X509CertificateLoader.LoadPkcs12FromFile(Configuration.TlsCertificatePath,
-                    string.IsNullOrEmpty(Configuration.TlsCertificatePassword) ? null : Configuration.TlsCertificatePassword);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    $"The TLS certificate '{Configuration.TlsCertificatePath}' could not be loaded: {ex.GetBaseException().Message}", ex);
-            }
+            //Throws, with the reason, if a certificate cannot be loaded. Renewed certificates are picked up while the proxy runs.
+            _certificates = NpCertificateStore.Create(Configuration);
+            _certificates?.StartWatching();
         }
 
         private void ReleaseResources()
         {
-            Certificate?.Dispose();
-            Certificate = null;
+            _certificates?.Dispose();
+            _certificates = null;
 
             _stickySessions?.Dispose();
             _stickySessions = null;
@@ -290,10 +368,10 @@ namespace NetProxy.Service.Proxy
             }
         }
 
-        internal void AddConnection(NpProxyConnection connection)
+        internal void AddConnection(INpActiveConnection connection)
             => ActiveConnections[connection.Id] = connection;
 
-        internal void RemoveConnection(NpProxyConnection connection)
+        internal void RemoveConnection(INpActiveConnection connection)
             => ActiveConnections.TryRemove(connection.Id, out _);
 
         private bool IsFailing(NpEndpoint endpoint)

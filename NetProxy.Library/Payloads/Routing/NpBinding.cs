@@ -2,7 +2,7 @@
 {
     public class NpBinding
     {
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = true;
         public string Address { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
     }

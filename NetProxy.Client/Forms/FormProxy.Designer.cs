@@ -38,10 +38,11 @@ namespace NetProxy.Client.Forms
         private void InitializeComponent()
         {
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProxy));
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormProxy));
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
@@ -66,6 +67,14 @@ namespace NetProxy.Client.Forms
             ColumnBindingsIPAddress = new DataGridViewTextBoxColumn();
             ColumnBindingsDescription = new DataGridViewTextBoxColumn();
             textBoxListenPort = new TextBox();
+            tabPageHostNames = new TabPage();
+            labelHostNamesInfo = new Label();
+            dataGridViewHostNames = new DataGridView();
+            ColumnHostNamesEnabled = new DataGridViewCheckBoxColumn();
+            ColumnHostNamesHost = new DataGridViewTextBoxColumn();
+            ColumnHostNamesCertificate = new DataGridViewTextBoxColumn();
+            ColumnHostNamesPassword = new DataGridViewTextBoxColumn();
+            ColumnHostNamesDescription = new DataGridViewTextBoxColumn();
             tabPageTls = new TabPage();
             labelTlsInfo = new Label();
             labelCertificatePath = new Label();
@@ -82,6 +91,9 @@ namespace NetProxy.Client.Forms
             ColumnHTTPHeadersAction = new DataGridViewComboBoxColumn();
             ColumnHTTPHeadersValue = new DataGridViewTextBoxColumn();
             ColumnHTTPHeadersDescription = new DataGridViewTextBoxColumn();
+            panelForwardedHeaders = new Panel();
+            labelForwardedHeaders = new Label();
+            comboBoxForwardedHeaders = new ComboBox();
             tabPageEndpoints = new TabPage();
             checkBoxUseStickySessions = new CheckBox();
             dataGridViewEndpoints = new DataGridView();
@@ -102,6 +114,8 @@ namespace NetProxy.Client.Forms
             groupBoxLimits = new GroupBox();
             textBoxIdleTimeout = new TextBox();
             labelIdleTimeout = new Label();
+            textBoxMaxDatagrams = new TextBox();
+            labelMaxDatagrams = new Label();
             textBoxMaxConnectionsPerClient = new TextBox();
             labelMaxConnectionsPerClient = new Label();
             textBoxMaxConnections = new TextBox();
@@ -109,21 +123,28 @@ namespace NetProxy.Client.Forms
             groupBox1 = new GroupBox();
             textBoxMaxBufferSize = new TextBox();
             textBoxInitialBufferSize = new TextBox();
+            tabPagePlugins = new TabPage();
+            labelPluginsInfo = new Label();
+            checkedListBoxPlugins = new CheckedListBox();
             buttonCancel = new Button();
             buttonSave = new Button();
             tabControl.SuspendLayout();
             tabPageGeneral.SuspendLayout();
             tabPageBindings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewBindings).BeginInit();
+            tabPageHostNames.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewHostNames).BeginInit();
             tabPageTls.SuspendLayout();
             tabPageHTTPHeaders.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewHTTPHeaders).BeginInit();
+            panelForwardedHeaders.SuspendLayout();
             tabPageEndpoints.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewEndpoints).BeginInit();
             tabPageAdvanced.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBoxLimits.SuspendLayout();
             groupBox1.SuspendLayout();
+            tabPagePlugins.SuspendLayout();
             SuspendLayout();
             // 
             // label1
@@ -214,10 +235,12 @@ namespace NetProxy.Client.Forms
             // 
             tabControl.Controls.Add(tabPageGeneral);
             tabControl.Controls.Add(tabPageBindings);
+            tabControl.Controls.Add(tabPageHostNames);
             tabControl.Controls.Add(tabPageTls);
             tabControl.Controls.Add(tabPageHTTPHeaders);
             tabControl.Controls.Add(tabPageEndpoints);
             tabControl.Controls.Add(tabPageAdvanced);
+            tabControl.Controls.Add(tabPagePlugins);
             tabControl.Location = new Point(14, 14);
             tabControl.Margin = new Padding(0);
             tabControl.Name = "tabControl";
@@ -385,6 +408,76 @@ namespace NetProxy.Client.Forms
             textBoxListenPort.Size = new Size(140, 23);
             textBoxListenPort.TabIndex = 5;
             // 
+            // tabPageHostNames
+            // 
+            tabPageHostNames.BackColor = SystemColors.Control;
+            tabPageHostNames.Controls.Add(labelHostNamesInfo);
+            tabPageHostNames.Controls.Add(dataGridViewHostNames);
+            tabPageHostNames.Location = new Point(4, 24);
+            tabPageHostNames.Name = "tabPageHostNames";
+            tabPageHostNames.Padding = new Padding(3);
+            tabPageHostNames.Size = new Size(595, 328);
+            tabPageHostNames.TabIndex = 6;
+            tabPageHostNames.Text = "Host names";
+            // 
+            // labelHostNamesInfo
+            // 
+            labelHostNamesInfo.Location = new Point(9, 9);
+            labelHostNamesInfo.Name = "labelHostNamesInfo";
+            labelHostNamesInfo.Size = new Size(579, 73);
+            labelHostNamesInfo.TabIndex = 0;
+            labelHostNamesInfo.Text = "Proxies can share a port if they have different host names. A request goes to the proxy that has its host name; a proxy with no host names gets the rest. Only HTTP and HTTPS proxies can share a port.";
+            // 
+            // dataGridViewHostNames
+            // 
+            dataGridViewHostNames.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridViewHostNames.BackgroundColor = SystemColors.ButtonFace;
+            dataGridViewHostNames.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewHostNames.Columns.AddRange(new DataGridViewColumn[] { ColumnHostNamesEnabled, ColumnHostNamesHost, ColumnHostNamesCertificate, ColumnHostNamesPassword, ColumnHostNamesDescription });
+            dataGridViewHostNames.Location = new Point(9, 85);
+            dataGridViewHostNames.Margin = new Padding(4, 3, 4, 3);
+            dataGridViewHostNames.Name = "dataGridViewHostNames";
+            dataGridViewHostNames.Size = new Size(579, 234);
+            dataGridViewHostNames.TabIndex = 1;
+            dataGridViewHostNames.CellDoubleClick += DataGridViewHostNames_CellDoubleClick;
+            dataGridViewHostNames.CellFormatting += DataGridViewHostNames_CellFormatting;
+            dataGridViewHostNames.DataError += DataGridViewHostNames_DataError;
+            dataGridViewHostNames.EditingControlShowing += DataGridViewHostNames_EditingControlShowing;
+            // 
+            // ColumnHostNamesEnabled
+            // 
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.NullValue = true;
+            ColumnHostNamesEnabled.DefaultCellStyle = dataGridViewCellStyle2;
+            ColumnHostNamesEnabled.Frozen = true;
+            ColumnHostNamesEnabled.HeaderText = "Enabled";
+            ColumnHostNamesEnabled.Name = "ColumnHostNamesEnabled";
+            ColumnHostNamesEnabled.Width = 55;
+            // 
+            // ColumnHostNamesHost
+            // 
+            ColumnHostNamesHost.HeaderText = "Host name";
+            ColumnHostNamesHost.Name = "ColumnHostNamesHost";
+            ColumnHostNamesHost.Width = 170;
+            // 
+            // ColumnHostNamesCertificate
+            // 
+            ColumnHostNamesCertificate.HeaderText = "Certificate (PFX)";
+            ColumnHostNamesCertificate.Name = "ColumnHostNamesCertificate";
+            ColumnHostNamesCertificate.Width = 170;
+            // 
+            // ColumnHostNamesPassword
+            // 
+            ColumnHostNamesPassword.HeaderText = "Password";
+            ColumnHostNamesPassword.Name = "ColumnHostNamesPassword";
+            ColumnHostNamesPassword.Width = 80;
+            // 
+            // ColumnHostNamesDescription
+            // 
+            ColumnHostNamesDescription.HeaderText = "Description";
+            ColumnHostNamesDescription.Name = "ColumnHostNamesDescription";
+            ColumnHostNamesDescription.Width = 120;
+            // 
             // tabPageTls
             // 
             tabPageTls.BackColor = SystemColors.Control;
@@ -456,6 +549,7 @@ namespace NetProxy.Client.Forms
             // 
             tabPageHTTPHeaders.BackColor = SystemColors.Control;
             tabPageHTTPHeaders.Controls.Add(dataGridViewHTTPHeaders);
+            tabPageHTTPHeaders.Controls.Add(panelForwardedHeaders);
             tabPageHTTPHeaders.Location = new Point(4, 24);
             tabPageHTTPHeaders.Name = "tabPageHTTPHeaders";
             tabPageHTTPHeaders.Padding = new Padding(3);
@@ -472,14 +566,14 @@ namespace NetProxy.Client.Forms
             dataGridViewHTTPHeaders.Location = new Point(3, 3);
             dataGridViewHTTPHeaders.Margin = new Padding(4, 3, 4, 3);
             dataGridViewHTTPHeaders.Name = "dataGridViewHTTPHeaders";
-            dataGridViewHTTPHeaders.Size = new Size(589, 322);
+            dataGridViewHTTPHeaders.Size = new Size(589, 288);
             dataGridViewHTTPHeaders.TabIndex = 9;
             dataGridViewHTTPHeaders.Click += DataGridViewHTTPHeaders_Click;
             // 
             // ColumnHTTPHeadersEnabled
             // 
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            ColumnHTTPHeadersEnabled.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnHTTPHeadersEnabled.DefaultCellStyle = dataGridViewCellStyle3;
             ColumnHTTPHeadersEnabled.HeaderText = "Enabled";
             ColumnHTTPHeadersEnabled.Name = "ColumnHTTPHeadersEnabled";
             ColumnHTTPHeadersEnabled.Width = 55;
@@ -527,6 +621,34 @@ namespace NetProxy.Client.Forms
             ColumnHTTPHeadersDescription.Name = "ColumnHTTPHeadersDescription";
             ColumnHTTPHeadersDescription.Width = 250;
             // 
+            // panelForwardedHeaders
+            // 
+            panelForwardedHeaders.Controls.Add(labelForwardedHeaders);
+            panelForwardedHeaders.Controls.Add(comboBoxForwardedHeaders);
+            panelForwardedHeaders.Dock = DockStyle.Bottom;
+            panelForwardedHeaders.Location = new Point(3, 291);
+            panelForwardedHeaders.Name = "panelForwardedHeaders";
+            panelForwardedHeaders.Size = new Size(589, 34);
+            panelForwardedHeaders.TabIndex = 10;
+            // 
+            // labelForwardedHeaders
+            // 
+            labelForwardedHeaders.AutoSize = true;
+            labelForwardedHeaders.Location = new Point(6, 9);
+            labelForwardedHeaders.Name = "labelForwardedHeaders";
+            labelForwardedHeaders.Size = new Size(142, 15);
+            labelForwardedHeaders.TabIndex = 0;
+            labelForwardedHeaders.Text = "X-Forwarded-For / -Proto";
+            // 
+            // comboBoxForwardedHeaders
+            // 
+            comboBoxForwardedHeaders.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxForwardedHeaders.FormattingEnabled = true;
+            comboBoxForwardedHeaders.Location = new Point(190, 5);
+            comboBoxForwardedHeaders.Name = "comboBoxForwardedHeaders";
+            comboBoxForwardedHeaders.Size = new Size(220, 23);
+            comboBoxForwardedHeaders.TabIndex = 1;
+            // 
             // tabPageEndpoints
             // 
             tabPageEndpoints.BackColor = SystemColors.Control;
@@ -566,8 +688,8 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnEndpointsEnabled
             // 
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            ColumnEndpointsEnabled.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnEndpointsEnabled.DefaultCellStyle = dataGridViewCellStyle4;
             ColumnEndpointsEnabled.HeaderText = "Enabled";
             ColumnEndpointsEnabled.Name = "ColumnEndpointsEnabled";
             ColumnEndpointsEnabled.Width = 55;
@@ -587,7 +709,7 @@ namespace NetProxy.Client.Forms
             // ColumnEndpointsTrafficType
             // 
             ColumnEndpointsTrafficType.HeaderText = "Traffic";
-            ColumnEndpointsTrafficType.Items.AddRange(new object[] { "Raw", "Http", "Https" });
+            ColumnEndpointsTrafficType.Items.AddRange(new object[] { "Tcp", "Http", "Https", "Udp" });
             ColumnEndpointsTrafficType.Name = "ColumnEndpointsTrafficType";
             ColumnEndpointsTrafficType.Resizable = DataGridViewTriState.True;
             ColumnEndpointsTrafficType.SortMode = DataGridViewColumnSortMode.Automatic;
@@ -595,8 +717,8 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnEndpointsValidateSSLCertificate
             // 
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            ColumnEndpointsValidateSSLCertificate.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnEndpointsValidateSSLCertificate.DefaultCellStyle = dataGridViewCellStyle5;
             ColumnEndpointsValidateSSLCertificate.HeaderText = "Validate Certificate";
             ColumnEndpointsValidateSSLCertificate.Name = "ColumnEndpointsValidateSSLCertificate";
             ColumnEndpointsValidateSSLCertificate.ToolTipText = "Ignore errors when validating the SSL certificate.";
@@ -696,6 +818,8 @@ namespace NetProxy.Client.Forms
             // 
             groupBoxLimits.Controls.Add(textBoxIdleTimeout);
             groupBoxLimits.Controls.Add(labelIdleTimeout);
+            groupBoxLimits.Controls.Add(textBoxMaxDatagrams);
+            groupBoxLimits.Controls.Add(labelMaxDatagrams);
             groupBoxLimits.Controls.Add(textBoxMaxConnectionsPerClient);
             groupBoxLimits.Controls.Add(labelMaxConnectionsPerClient);
             groupBoxLimits.Controls.Add(textBoxMaxConnections);
@@ -704,7 +828,7 @@ namespace NetProxy.Client.Forms
             groupBoxLimits.Margin = new Padding(4, 3, 4, 3);
             groupBoxLimits.Name = "groupBoxLimits";
             groupBoxLimits.Padding = new Padding(4, 3, 4, 3);
-            groupBoxLimits.Size = new Size(252, 170);
+            groupBoxLimits.Size = new Size(252, 212);
             groupBoxLimits.TabIndex = 1;
             groupBoxLimits.TabStop = false;
             groupBoxLimits.Text = "Limits (0 is no limit)";
@@ -726,6 +850,24 @@ namespace NetProxy.Client.Forms
             labelIdleTimeout.Size = new Size(87, 15);
             labelIdleTimeout.TabIndex = 24;
             labelIdleTimeout.Text = "Idle timeout (s)";
+            // 
+            // textBoxMaxDatagrams
+            // 
+            textBoxMaxDatagrams.Location = new Point(10, 175);
+            textBoxMaxDatagrams.Margin = new Padding(4, 3, 4, 3);
+            textBoxMaxDatagrams.Name = "textBoxMaxDatagrams";
+            textBoxMaxDatagrams.Size = new Size(116, 23);
+            textBoxMaxDatagrams.TabIndex = 27;
+            // 
+            // labelMaxDatagrams
+            // 
+            labelMaxDatagrams.AutoSize = true;
+            labelMaxDatagrams.Location = new Point(8, 157);
+            labelMaxDatagrams.Margin = new Padding(4, 0, 4, 0);
+            labelMaxDatagrams.Name = "labelMaxDatagrams";
+            labelMaxDatagrams.Size = new Size(184, 15);
+            labelMaxDatagrams.TabIndex = 26;
+            labelMaxDatagrams.Text = "Max datagrams/s per client (UDP)";
             // 
             // textBoxMaxConnectionsPerClient
             // 
@@ -794,6 +936,37 @@ namespace NetProxy.Client.Forms
             textBoxInitialBufferSize.Size = new Size(116, 23);
             textBoxInitialBufferSize.TabIndex = 10;
             // 
+            // tabPagePlugins
+            // 
+            tabPagePlugins.BackColor = SystemColors.Control;
+            tabPagePlugins.Controls.Add(labelPluginsInfo);
+            tabPagePlugins.Controls.Add(checkedListBoxPlugins);
+            tabPagePlugins.Location = new Point(4, 24);
+            tabPagePlugins.Name = "tabPagePlugins";
+            tabPagePlugins.Padding = new Padding(3);
+            tabPagePlugins.Size = new Size(595, 328);
+            tabPagePlugins.TabIndex = 7;
+            tabPagePlugins.Text = "Plugins";
+            // 
+            // labelPluginsInfo
+            // 
+            labelPluginsInfo.Location = new Point(9, 9);
+            labelPluginsInfo.Name = "labelPluginsInfo";
+            labelPluginsInfo.Size = new Size(579, 40);
+            labelPluginsInfo.TabIndex = 0;
+            labelPluginsInfo.Text = "Tick the plugins that this proxy uses. They are set up for the whole service (Settings, Plugins) and are called in the order shown. A plugin that is not ticked is not called for this proxy.";
+            // 
+            // checkedListBoxPlugins
+            // 
+            checkedListBoxPlugins.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            checkedListBoxPlugins.CheckOnClick = true;
+            checkedListBoxPlugins.FormattingEnabled = true;
+            checkedListBoxPlugins.IntegralHeight = false;
+            checkedListBoxPlugins.Location = new Point(9, 85);
+            checkedListBoxPlugins.Name = "checkedListBoxPlugins";
+            checkedListBoxPlugins.Size = new Size(579, 234);
+            checkedListBoxPlugins.TabIndex = 1;
+            // 
             // buttonCancel
             // 
             buttonCancel.Location = new Point(506, 373);
@@ -841,10 +1014,14 @@ namespace NetProxy.Client.Forms
             tabPageBindings.ResumeLayout(false);
             tabPageBindings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewBindings).EndInit();
+            tabPageHostNames.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridViewHostNames).EndInit();
             tabPageTls.ResumeLayout(false);
             tabPageTls.PerformLayout();
             tabPageHTTPHeaders.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridViewHTTPHeaders).EndInit();
+            panelForwardedHeaders.ResumeLayout(false);
+            panelForwardedHeaders.PerformLayout();
             tabPageEndpoints.ResumeLayout(false);
             tabPageEndpoints.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewEndpoints).EndInit();
@@ -855,6 +1032,7 @@ namespace NetProxy.Client.Forms
             groupBoxLimits.PerformLayout();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
+            tabPagePlugins.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -873,6 +1051,22 @@ namespace NetProxy.Client.Forms
         private ComboBox comboBoxTrafficType;
         private TextBox textBoxProxyName;
         private TabPage tabPageBindings;
+        private TabPage tabPageHostNames;
+        private Label labelHostNamesInfo;
+        private DataGridView dataGridViewHostNames;
+        private TabPage tabPagePlugins;
+        private Label labelPluginsInfo;
+        private CheckedListBox checkedListBoxPlugins;
+        private Panel panelForwardedHeaders;
+        private Label labelForwardedHeaders;
+        private ComboBox comboBoxForwardedHeaders;
+        private Label labelMaxDatagrams;
+        private TextBox textBoxMaxDatagrams;
+        private DataGridViewCheckBoxColumn ColumnHostNamesEnabled;
+        private DataGridViewTextBoxColumn ColumnHostNamesHost;
+        private DataGridViewTextBoxColumn ColumnHostNamesCertificate;
+        private DataGridViewTextBoxColumn ColumnHostNamesPassword;
+        private DataGridViewTextBoxColumn ColumnHostNamesDescription;
         private TextBox textBoxListenPort;
         private TabPage tabPageHTTPHeaders;
         private TabPage tabPageAdvanced;

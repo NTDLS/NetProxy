@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>netproxyctl</AssemblyName>
+		<RootNamespace>NetProxy.Cli</RootNamespace>
+
+		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
+		<Version>3.0.0</Version>
+		<Company>NetworkDLS</Company>
+		<Product>NetProxy</Product>
+		<Description>Manages a NetProxy service from the command line.</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\NetProxy.ClientApi\NetProxy.ClientApi.csproj" />
+		<InternalsVisibleTo Include="NetProxy.Tests" />
+	</ItemGroup>
+
+</Project>

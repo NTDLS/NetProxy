@@ -15,6 +15,11 @@ namespace NetProxy.Service
         public static string ConfigurationName { get; } =
             Environment.GetEnvironmentVariable("NETPROXY_CONFIG_NAME") is { Length: > 0 } name ? name : NetProxy.Library.Constants.FriendlyName;
 
+        /// <summary>
+        /// The plug-ins of the service.
+        /// </summary>
+        internal static NetProxy.Service.Plugins.NpPluginManager Plugins { get; } = new();
+
         private static readonly object _loggingLock = new();
         private static NpLogging? _logging;
         private static RollingFileLogSink? _fileSink;

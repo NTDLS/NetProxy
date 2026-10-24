@@ -25,6 +25,9 @@ namespace NetProxy.Client.Forms
         private readonly UISettings _settings = UISettings.Load();
         private bool _timerTicking = false;
         private List<NpProxyGridStats> _lastStatistics = [];
+        private List<NpProxyGridItem> _proxies = [];
+        private DataGridViewColumn _proxySortColumn = null!;
+        private bool _proxySortAscending = true;
 
         /// <summary>
         /// The connection list shows the connections of this proxy, and the rate of each is worked out from the bytes of the previous sample.
@@ -44,6 +47,10 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
             FormLocalizer.Apply(this);
             Theming.InitializeForm(this);
+
+            //The proxies start in order of name and the connections in order of when they started.
+            _proxySortColumn = ColumnName;
+            _connectionSorter.Column = ColumnConnStarted.Index;
 
             statusStripMain.Items.AddRange([_statusConnection, _statusProxies, _statusConnections, _statusTraffic]);
 
@@ -98,6 +105,7 @@ namespace NetProxy.Client.Forms
 
             SetupToolTips();
             SetupConnectionColumnHeaders();
+            UpdateProxySortGlyphs();
 
             Text = _connectionInfo != null ? $"{Constants.FriendlyName} - {_connectionInfo.ServerName}" : Constants.FriendlyName;
             UpdateConnectionStatus();
@@ -205,7 +213,7 @@ namespace NetProxy.Client.Forms
                 _lastStatistics = [];
                 _connectionsProxyId = Guid.Empty;
                 _connectionSamples.Clear();
-                listViewEndpointConnections.Items.Clear();
+                dataGridViewConnections.Rows.Clear();
 
                 _connectionLost = OnConnectionLost;
                 client.OnNotificationReceived += MessageClient_OnNotificationReceived;
@@ -295,6 +303,18 @@ namespace NetProxy.Client.Forms
 
         private void PopulateProxyList(List<NpProxyGridItem> proxies)
         {
+            _proxies = proxies;
+            BindProxies();
+
+            //The statistics are not part of the list, so show the ones that were last received until the next ones arrive.
+            ShowStatistics();
+        }
+
+        /// <summary>
+        /// Puts the proxies in the grid in the order that was chosen, keeping the selected one selected.
+        /// </summary>
+        private void BindProxies()
+        {
             string? selectedProxyId = null;
 
             //Save the current selected row:
@@ -304,7 +324,7 @@ namespace NetProxy.Client.Forms
             }
 
             dataGridViewProxys.AutoGenerateColumns = false;
-            dataGridViewProxys.DataSource = proxies.OrderBy(o => o.Name).ToList();
+            dataGridViewProxys.DataSource = SortProxies(_proxies);
 
             //Re-select the previously selected row. With none selected the chart shows all of the proxies together.
             dataGridViewProxys.ClearSelection();
@@ -317,8 +337,83 @@ namespace NetProxy.Client.Forms
                 }
             }
 
-            //The statistics are not part of the list, so show the ones that were last received until the next ones arrive.
-            ApplyStatistics(_lastStatistics);
+            UpdateProxySortGlyphs();
+        }
+
+        /// <summary>
+        /// What a proxy sorts by in the chosen column: the value itself (numbers) rather than the text that is shown.
+        /// </summary>
+        private object ProxySortKey(NpProxyGridItem proxy, NpProxyGridStats? stat)
+        {
+            if (_proxySortColumn == ColumnStatus)
+            {
+                return stat?.IsRunning ?? proxy.IsRunning;
+            }
+            if (_proxySortColumn == ColumnProxyType)
+            {
+                return proxy.ProxyType;
+            }
+            if (_proxySortColumn == ColummListenPort)
+            {
+                return proxy.ListenPort;
+            }
+            if (_proxySortColumn == ColumnBytesTransferred)
+            {
+                return stat == null ? 0UL : stat.BytesWritten + stat.BytesRead;
+            }
+            if (_proxySortColumn == ColumnTotalConnections)
+            {
+                return stat?.TotalConnections ?? 0UL;
+            }
+            if (_proxySortColumn == ColumnCurrentConnections)
+            {
+                return stat?.CurrentConnections ?? 0;
+            }
+
+            return proxy.Name;
+        }
+
+        private List<NpProxyGridItem> SortProxies(IEnumerable<NpProxyGridItem> proxies)
+        {
+            var stats = new Dictionary<Guid, NpProxyGridStats>();
+            foreach (var stat in _lastStatistics)
+            {
+                stats[stat.Id] = stat;
+            }
+
+            var comparer = Comparer<object?>.Create(CompareKeys);
+            var keyed = proxies.Select(o => (Proxy: o, Key: ProxySortKey(o, stats.GetValueOrDefault(o.Id))));
+            var ordered = _proxySortAscending ? keyed.OrderBy(o => o.Key, comparer) : keyed.OrderByDescending(o => o.Key, comparer);
+
+            //Proxies with equal values stay in the order of their names.
+            return ordered.ThenBy(o => o.Proxy.Name, StringComparer.CurrentCultureIgnoreCase).Select(o => o.Proxy).ToList();
+        }
+
+        private void UpdateProxySortGlyphs()
+        {
+            foreach (DataGridViewColumn column in dataGridViewProxys.Columns)
+            {
+                column.HeaderCell.SortGlyphDirection = column != _proxySortColumn ? SortOrder.None
+                    : _proxySortAscending ? SortOrder.Ascending : SortOrder.Descending;
+            }
+        }
+
+        private void DataGridViewProxys_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
+        {
+            var column = dataGridViewProxys.Columns[e.ColumnIndex];
+
+            if (column == _proxySortColumn)
+            {
+                _proxySortAscending = !_proxySortAscending;
+            }
+            else
+            {
+                _proxySortColumn = column;
+                _proxySortAscending = true;
+            }
+
+            BindProxies();
+            ShowStatistics();
         }
 
         private void ApplyStatistics(List<NpProxyGridStats> stats)
@@ -326,6 +421,28 @@ namespace NetProxy.Client.Forms
             _lastStatistics = stats;
             _history.Add(stats, DateTime.Now);
 
+            ShowStatistics();
+        }
+
+        private void ShowStatistics()
+        {
+            FillProxyStatistics();
+
+            //The statistics change what the order is when it is by one of them: bind again only when the order is not the same any more.
+            var wanted = SortProxies(_proxies).Select(o => (Guid?)o.Id);
+            var shown = dataGridViewProxys.Rows.Cast<DataGridViewRow>().Select(o => (o.DataBoundItem as NpProxyGridItem)?.Id);
+            if (wanted.SequenceEqual(shown) == false)
+            {
+                BindProxies();
+                FillProxyStatistics();
+            }
+
+            UpdateStatusBar();
+            UpdateChart();
+        }
+
+        private void FillProxyStatistics()
+        {
             foreach (DataGridViewRow row in dataGridViewProxys.Rows)
             {
                 if (row.DataBoundItem is not NpProxyGridItem item)
@@ -333,7 +450,7 @@ namespace NetProxy.Client.Forms
                     continue;
                 }
 
-                var stat = stats.FirstOrDefault(o => o.Id == item.Id);
+                var stat = _lastStatistics.FirstOrDefault(o => o.Id == item.Id);
                 if (stat != null)
                 {
                     row.Cells[ColumnBytesTransferred.Index].Value = Formatting.Bytes(stat.BytesWritten + stat.BytesRead);
@@ -344,9 +461,6 @@ namespace NetProxy.Client.Forms
 
                 row.Cells[ColumnStatus.Index].Value = item.IsRunning ? Resources.StateRunning : Resources.StateStopped;
             }
-
-            UpdateStatusBar();
-            UpdateChart();
         }
 
         private void UpdateStatusBar()
@@ -396,33 +510,13 @@ namespace NetProxy.Client.Forms
             Localize("Started"), Localize("Duration"), Localize("Idle")
         ];
 
-        private static readonly int[] _connectionColumnWidths = [110, 150, 80, 110, 150, 110, 70, 70, 130, 80, 80, 80, 80, 140, 80, 70];
-
         private void SetupConnectionList()
         {
-            var list = listViewEndpointConnections;
-            list.FullRowSelect = true;
-            list.GridLines = true;
-            list.HideSelection = false;
-            list.ListViewItemSorter = _connectionSorter;
-            list.ColumnClick += ListViewEndpointConnections_ColumnClick;
-            list.MouseUp += ListViewEndpointConnections_MouseUp;
-
             //Avoids the flicker of updating the rows once a second.
-            typeof(ListView).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                ?.SetValue(list, true);
-
-            var titles = GetConnectionColumnTitles();
-
-            for (int i = 0; i < titles.Length; i++)
-            {
-                var alignRight = i is 2 or 5 or >= 9 and <= 12 or 14 or 15;
-                list.Columns.Add(new ColumnHeader
-                {
-                    Width = _connectionColumnWidths[i],
-                    TextAlign = alignRight ? HorizontalAlignment.Right : HorizontalAlignment.Left
-                });
-            }
+            typeof(DataGridView).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(dataGridViewConnections, true);
+            typeof(DataGridView).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(dataGridViewProxys, true);
 
             SetupConnectionColumnHeaders();
         }
@@ -431,10 +525,12 @@ namespace NetProxy.Client.Forms
         {
             var titles = GetConnectionColumnTitles();
 
-            for (int i = 0; i < titles.Length && i < listViewEndpointConnections.Columns.Count; i++)
+            for (int i = 0; i < titles.Length && i < dataGridViewConnections.Columns.Count; i++)
             {
-                var arrow = i != _connectionSorter.Column ? "" : _connectionSorter.Ascending ? " ▲" : " ▼";
-                listViewEndpointConnections.Columns[i].Text = titles[i] + arrow;
+                var column = dataGridViewConnections.Columns[i];
+                column.HeaderText = titles[i];
+                column.HeaderCell.SortGlyphDirection = i != _connectionSorter.Column ? SortOrder.None
+                    : _connectionSorter.Ascending ? SortOrder.Ascending : SortOrder.Descending;
             }
         }
 
@@ -454,12 +550,12 @@ namespace NetProxy.Client.Forms
 
             public int Compare(object? x, object? y)
             {
-                if (Column < 0 || (x as ListViewItem)?.Tag is not ConnectionRow a || (y as ListViewItem)?.Tag is not ConnectionRow b)
+                if (Column < 0 || (x as DataGridViewRow)?.Tag is not ConnectionRow a || (y as DataGridViewRow)?.Tag is not ConnectionRow b)
                 {
                     return 0;
                 }
 
-                var result = a.Keys[Column] is IComparable left ? left.CompareTo(b.Keys[Column]) : 0;
+                var result = CompareKeys(a.Keys[Column], b.Keys[Column]);
                 if (result == 0)
                 {
                     result = a.Id.CompareTo(b.Id); //Keeps rows with equal values from jumping around.
@@ -472,6 +568,14 @@ namespace NetProxy.Client.Forms
         private readonly ConnectionSorter _connectionSorter = new();
 
         /// <summary>
+        /// Text is compared without regard to case, everything else (numbers, times) by its value.
+        /// </summary>
+        private static int CompareKeys(object? a, object? b)
+            => a is string left && b is string right
+                ? string.Compare(left, right, StringComparison.CurrentCultureIgnoreCase)
+                : a is IComparable comparable ? comparable.CompareTo(b) : 0;
+
+        /// <summary>
         /// Addresses sort by their value, not their text ("10.0.0.9" before "10.0.0.10").
         /// </summary>
         private static string IpSortKey(string address)
@@ -480,22 +584,18 @@ namespace NetProxy.Client.Forms
         /// <summary>
         /// Right-click on a connection: copy the cell that was clicked, or the whole row.
         /// </summary>
-        private void ListViewEndpointConnections_MouseUp(object? sender, MouseEventArgs e)
+        private void DataGridViewConnections_CellMouseUp(object? sender, DataGridViewCellMouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Right)
+            if (e.Button != MouseButtons.Right || e.RowIndex < 0)
             {
                 return;
             }
 
-            var hit = listViewEndpointConnections.HitTest(e.Location);
-            if (hit.Item == null)
-            {
-                return;
-            }
+            var row = dataGridViewConnections.Rows[e.RowIndex];
+            dataGridViewConnections.CurrentCell = row.Cells[Math.Max(e.ColumnIndex, 0)];
+            row.Selected = true;
 
-            hit.Item.Selected = true;
-            var item = hit.Item;
-            var cell = hit.SubItem?.Text ?? string.Empty;
+            var cell = e.ColumnIndex >= 0 ? row.Cells[e.ColumnIndex].Value?.ToString() ?? string.Empty : string.Empty;
 
             var menu = new ContextMenuStrip();
             menu.Closed += (_, _) => menu.BeginInvoke(menu.Dispose);
@@ -503,9 +603,9 @@ namespace NetProxy.Client.Forms
             var copyValue = menu.Items.Add(Localize("Copy value"), null, (_, _) => CopyToClipboard(cell));
             copyValue.Enabled = cell.Length > 0;
             menu.Items.Add(Localize("Copy row"), null,
-                (_, _) => CopyToClipboard(string.Join('\t', item.SubItems.Cast<ListViewItem.ListViewSubItem>().Select(o => o.Text))));
+                (_, _) => CopyToClipboard(string.Join('\t', row.Cells.Cast<DataGridViewCell>().Select(o => o.Value?.ToString() ?? string.Empty))));
 
-            menu.Show(listViewEndpointConnections, e.Location);
+            menu.Show(Cursor.Position);
         }
 
         private static void CopyToClipboard(string text)
@@ -520,20 +620,20 @@ namespace NetProxy.Client.Forms
             }
         }
 
-        private void ListViewEndpointConnections_ColumnClick(object? sender, ColumnClickEventArgs e)
+        private void DataGridViewConnections_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
         {
-            if (_connectionSorter.Column == e.Column)
+            if (_connectionSorter.Column == e.ColumnIndex)
             {
                 _connectionSorter.Ascending = !_connectionSorter.Ascending;
             }
             else
             {
-                _connectionSorter.Column = e.Column;
+                _connectionSorter.Column = e.ColumnIndex;
                 _connectionSorter.Ascending = true;
             }
 
             SetupConnectionColumnHeaders();
-            listViewEndpointConnections.Sort();
+            dataGridViewConnections.Sort(_connectionSorter);
         }
 
         private Guid GetSelectedProxyId()
@@ -553,7 +653,7 @@ namespace NetProxy.Client.Forms
 
             _connectionsProxyId = proxyId;
             _connectionSamples.Clear();
-            listViewEndpointConnections.Items.Clear();
+            dataGridViewConnections.Rows.Clear();
 
             var client = _messageClient;
             if (proxyId != Guid.Empty && client != null && _timerTicking == false)
@@ -600,15 +700,15 @@ namespace NetProxy.Client.Forms
 
         private void ApplyConnections(List<NpConnectionGridItem> connections)
         {
-            var list = listViewEndpointConnections;
+            var grid = dataGridViewConnections;
             var now = DateTime.Now;
             var utcNow = DateTime.UtcNow;
             var present = new HashSet<Guid>();
 
-            list.BeginUpdate();
+            grid.SuspendLayout();
             try
             {
-                var existing = list.Items.Cast<ListViewItem>().ToDictionary(o => ((ConnectionRow)o.Tag!).Id);
+                var existing = grid.Rows.Cast<DataGridViewRow>().ToDictionary(o => ((ConnectionRow)o.Tag!).Id);
 
                 foreach (var connection in connections)
                 {
@@ -675,27 +775,28 @@ namespace NetProxy.Client.Forms
                         connection.StartDateTime, utcNow - connection.StartDateTime, utcNow - connection.LastActivityDateTime
                     ];
 
-                    if (existing.TryGetValue(connection.Id, out var item))
+                    if (existing.TryGetValue(connection.Id, out var row))
                     {
-                        ((ConnectionRow)item.Tag!).Keys = keys;
+                        ((ConnectionRow)row.Tag!).Keys = keys;
 
                         for (int i = 0; i < cells.Length; i++)
                         {
-                            if (item.SubItems[i].Text != cells[i])
+                            if (row.Cells[i].Value as string != cells[i])
                             {
-                                item.SubItems[i].Text = cells[i];
+                                row.Cells[i].Value = cells[i];
                             }
                         }
                     }
                     else
                     {
-                        list.Items.Add(new ListViewItem(cells) { Tag = new ConnectionRow(connection.Id) { Keys = keys } });
+                        var index = grid.Rows.Add((object[])cells);
+                        grid.Rows[index].Tag = new ConnectionRow(connection.Id) { Keys = keys };
                     }
                 }
 
                 foreach (var gone in existing.Where(o => present.Contains(o.Key) == false))
                 {
-                    list.Items.Remove(gone.Value);
+                    grid.Rows.Remove(gone.Value);
                 }
 
                 foreach (var staleId in _connectionSamples.Keys.Where(o => present.Contains(o) == false).ToList())
@@ -703,11 +804,18 @@ namespace NetProxy.Client.Forms
                     _connectionSamples.Remove(staleId);
                 }
 
-                list.Sort();
+                grid.Sort(_connectionSorter);
+
+                //The first row of a grid is selected when it gets its rows, and nothing was selected by the user.
+                if (existing.Count == 0)
+                {
+                    grid.ClearSelection();
+                    grid.CurrentCell = null;
+                }
             }
             finally
             {
-                list.EndUpdate();
+                grid.ResumeLayout();
             }
         }
 
@@ -749,6 +857,12 @@ namespace NetProxy.Client.Forms
             {
                 RefreshProxyList();
             }
+        }
+
+        private void PluginsToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            using var form = new FormPlugins(_connectionInfo.EnsureNotNull()) { Icon = Icon };
+            form.ShowDialog(this);
         }
 
         private void ConfigurationToolStripMenuItem_Click(object? sender, EventArgs e)
@@ -793,6 +907,13 @@ namespace NetProxy.Client.Forms
             else
             {
                 addresses.AddRange(proxy.Bindings.Where(o => o.Enabled).Select(o => o.Address));
+            }
+
+            //A proxy that shares its port is reached by its host names (a wildcard is not a name to browse to).
+            var defaultPort = (scheme == "https" && proxy.ListenPort == 443) || (scheme == "http" && proxy.ListenPort == 80);
+            foreach (var host in proxy.HostNames.Where(o => o.Enabled && o.Host.StartsWith('*') == false))
+            {
+                yield return $"{scheme}://{host.Host}{(defaultPort ? "" : $":{proxy.ListenPort}")}/";
             }
 
             foreach (var address in addresses.Select(NpUtility.NormalizeHost).Distinct())

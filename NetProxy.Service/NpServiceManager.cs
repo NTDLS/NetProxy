@@ -215,6 +215,7 @@ namespace NetProxy.Service
             });
 
             configuration = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, defaultConfiguration);
+
             proxies = CommonApplicationData.LoadFromDisk(Singletons.ConfigurationName, new List<NpProxyConfiguration>());
             hasPlainTextSecrets = false;
 

@@ -46,6 +46,22 @@ A **proxy** listens on a port and passes every connection it accepts to one of i
 * **Renewed certificates are picked up by themselves.** The PFX files (of the proxy and of its host names) are watched. When one is replaced, for example by a renewal with win-acme or certbot, new connections use the new certificate a few seconds later; connections that are open keep the one they started with, and nothing is restarted. A file that cannot be read (still being written, or broken) is retried for a minute and then left alone, and the previous certificate stays in use; the service logs it. Files on network shares are also checked every 30 seconds.
 * Certificate passwords and the password hashes of the management users are stored encrypted in the configuration files (DPAPI on Windows, a key file next to the configuration on Linux).
 
+#### Getting a free wildcard certificate (Let's Encrypt with win-acme)
+
+[win-acme](https://www.win-acme.com/) (`wacs.exe`) can make the PFX file that NetProxy needs, without IIS. One command makes a wildcard certificate and writes it to a folder:
+
+```
+wacs.exe --accepttos --emailaddress info@YOURDOMAIN.com --target manual --host *.YOURDOMAIN.com --validation manual --store centralssl --centralsslstore C:\YOUR_NEW_CERT_PATH --pfxpassword "YOUR_NEW_PASSWORD" --installation none
+```
+
+* `--target manual --host *.YOURDOMAIN.com` asks for a wildcard certificate. Use several names (`--host *.YOURDOMAIN.com,YOURDOMAIN.com`) if you also want the root domain on the same certificate: **a wildcard does not cover the root domain**, so without it `YOURDOMAIN.com` itself is not covered (see *Sharing a port*).
+* `--validation manual` is how Let's Encrypt checks that you own the domain. A wildcard can only be validated with a DNS record, so win-acme prints a `_acme-challenge.YOURDOMAIN.com` **TXT record** for you to create at your DNS provider. Create it, wait for it to be visible, then press Enter. Because you create the record by hand, this certificate does not renew by itself: run the command (or *Run renewal* in the win-acme menu) again before it expires, about every 60 days, and create the new record when asked. To renew unattended, use a win-acme DNS validation plugin for your DNS provider instead.
+* `--store centralssl --centralsslstore C:\YOUR_NEW_CERT_PATH --pfxpassword "..."` writes the certificate as a PFX file in that folder, protected by that password, and `--installation none` skips installing it anywhere (no IIS needed). The file is named after the host, with the `*` of a wildcard replaced by `_` (for example `_.YOURDOMAIN.com.pfx`).
+* In NetProxy, set the **PFX file** of the proxy (or of a host name) to that file, and the password to the one you gave. When win-acme writes a renewed file there, NetProxy picks it up by itself (see above).
+* The folder and the password are yours to choose. Keep the folder where only the service and administrators can read it.
+
+To see or stop renewals that you no longer need, run `wacs.exe`, choose **A: Manage renewals**, type the number of the one renewal (for example `13`) so that only it is selected, and choose **C: Cancel renewal**. Do not use *Cancel* while all renewals are selected. This only stops future renewals: it does not delete the PFX file or revoke the certificate.
+
 ### UDP (DNS, WireGuard, game servers, syslog...)
 
 Choose the **UDP** traffic type to relay datagrams. UDP has no connections, so the proxy keeps a **session** for each client (address and port): the first datagram creates it, it gets a socket of its own to its endpoint (so what the endpoint answers can be told from the answers to other clients), and it ends when the client has sent nothing for the **idle timeout**.
@@ -70,7 +86,8 @@ An endpoint sees the connection come from the proxy. Set **X-Forwarded-For / -Pr
 
 Several **HTTP** or **HTTPS** proxies can listen on the same port, if each answers to different **host names** (the *Host names* tab of the proxy).
 
-* A host name is exact (`www.example.com`) or a wildcard for everything below a domain (`*.example.com`, which does not include `example.com` itself, so list that too). The most specific match wins: an exact name before a wildcard, a longer wildcard before a shorter one.
+* A host name is exact (`www.example.com`) or a wildcard for everything below a domain (`*.example.com`). **A wildcard does not cover the root domain:** `*.example.com` matches `www.example.com` and `a.b.example.com`, but not `example.com` itself, so add `example.com` as its own host name (and, for HTTPS, give it a certificate that covers it; a wildcard certificate for `*.example.com` does not cover the root domain either unless it lists `example.com` as well). The most specific match wins: an exact name before a wildcard, a longer wildcard before a shorter one.
+* **Example: a general proxy and an exception.** Proxy A has the host names `*.example.com` and `example.com` and forwards to SERVER1. Proxy B has the host name `test.example.com` and forwards to SERVER2. Both listen on the same port and are both HTTP or both HTTPS. `test.example.com` goes to B, because an exact name beats a wildcard; every other name under `example.com`, and `example.com` itself, goes to A. `*.example.com` also matches deeper names such as `a.test.example.com`; to send those to B as well, add `*.test.example.com` to B, which wins because it is the longer wildcard. For HTTPS, B needs a certificate that covers `test.example.com`: a `*.example.com` wildcard certificate does, so B's host name can use the same PFX file and password as A.
 * A request goes to the proxy that has its host name: the `Host` header for HTTP, or the server name (SNI) of the TLS handshake for HTTPS.
 * A proxy with **no host names** is the default for the port and gets whatever no other proxy claims. Only one proxy per port can be the default. With no default, a plain HTTP request for an unknown host gets a `404`, and an unknown HTTPS server name fails the handshake.
 * **HTTPS:** each host name can have its own PFX certificate (and password), for example one for `www.example.com` and another for `example.com`. A host name without one uses the certificate of the proxy. Proxies that share a port must all be HTTP or all be HTTPS.

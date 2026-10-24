@@ -5,7 +5,9 @@
     <File Path="@Installers/Linux Install Readme.md" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="LICENSE" />
     <File Path="Localization.bat" />
+    <File Path="NetProxy-Guide.md" />
     <File Path="README.md" />
     <File Path="To-Do.txt" />
   </Folder>

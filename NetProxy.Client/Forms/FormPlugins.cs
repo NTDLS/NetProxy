@@ -115,7 +115,7 @@ namespace NetProxy.Client.Forms
         {
             while (true)
             {
-                using var form = new FormPlugin(plugin);
+                using var form = new FormPlugin(plugin, _messageClient);
                 if (form.ShowDialog(this) != DialogResult.OK)
                 {
                     return;

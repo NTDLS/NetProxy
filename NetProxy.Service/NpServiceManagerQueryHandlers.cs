@@ -307,6 +307,12 @@ namespace NetProxy.Service
             return reply;
         }
 
+        public QueryBrowseReply OnQueryBrowse(RmContext context, QueryBrowse query)
+        {
+            EnforceLoginAndGetServiceManager(context);
+            return NpFileBrowser.Browse(query, AppContext.BaseDirectory);
+        }
+
         public QueryCertificateStatusReply OnQueryCertificateStatus(RmContext context, QueryCertificateStatus query)
         {
             var serviceManager = EnforceLoginAndGetServiceManager(context);

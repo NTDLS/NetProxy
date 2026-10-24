@@ -44,6 +44,7 @@
             comboBoxLogLevel = new ComboBox();
             labelLogPath = new Label();
             textBoxLogPath = new TextBox();
+            buttonBrowseLogPath = new Button();
             labelLogFileMaxSizeMB = new Label();
             textBoxLogFileMaxSizeMB = new TextBox();
             labelLogFileRetainedCount = new Label();
@@ -143,6 +144,7 @@
             groupBoxLogging.Controls.Add(comboBoxLogLevel);
             groupBoxLogging.Controls.Add(labelLogPath);
             groupBoxLogging.Controls.Add(textBoxLogPath);
+            groupBoxLogging.Controls.Add(buttonBrowseLogPath);
             groupBoxLogging.Controls.Add(labelLogFileMaxSizeMB);
             groupBoxLogging.Controls.Add(textBoxLogFileMaxSizeMB);
             groupBoxLogging.Controls.Add(labelLogFileRetainedCount);
@@ -186,8 +188,18 @@
             // 
             textBoxLogPath.Location = new Point(8, 83);
             textBoxLogPath.Name = "textBoxLogPath";
-            textBoxLogPath.Size = new Size(400, 23);
+            textBoxLogPath.Size = new Size(330, 23);
             textBoxLogPath.TabIndex = 3;
+            // 
+            // buttonBrowseLogPath
+            // 
+            buttonBrowseLogPath.Location = new Point(344, 82);
+            buttonBrowseLogPath.Name = "buttonBrowseLogPath";
+            buttonBrowseLogPath.Size = new Size(76, 25);
+            buttonBrowseLogPath.TabIndex = 14;
+            buttonBrowseLogPath.Text = "Browse...";
+            buttonBrowseLogPath.UseVisualStyleBackColor = true;
+            buttonBrowseLogPath.Click += ButtonBrowseLogPath_Click;
             // 
             // labelLogFileMaxSizeMB
             // 
@@ -310,6 +322,7 @@
         private ComboBox comboBoxLogLevel;
         private Label labelLogPath;
         private TextBox textBoxLogPath;
+        private Button buttonBrowseLogPath;
         private Label labelLogFileMaxSizeMB;
         private TextBox textBoxLogFileMaxSizeMB;
         private Label labelLogFileRetainedCount;

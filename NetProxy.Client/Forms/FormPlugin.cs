@@ -1,6 +1,7 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
 using NTDLS.Localization;
+using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 
 namespace NetProxy.Client.Forms
@@ -11,6 +12,7 @@ namespace NetProxy.Client.Forms
     public partial class FormPlugin : Form
     {
         private readonly NpPluginConfiguration _plugin = new();
+        private readonly RmClient? _messageClient;
 
         /// <summary>
         /// The plug-in as it was saved in the form. Valid when the dialog result is OK.
@@ -21,8 +23,12 @@ namespace NetProxy.Client.Forms
         {
         }
 
-        public FormPlugin(NpPluginConfiguration? plugin)
+        /// <param name="plugin">The plugin to edit, or null to add one.</param>
+        /// <param name="messageClient">The connection to the service, to browse for the assembly on the machine that it runs on.</param>
+        public FormPlugin(NpPluginConfiguration? plugin, RmClient? messageClient = null)
         {
+            _messageClient = messageClient;
+
             InitializeComponent();
             FormLocalizer.Apply(this);
             Theming.InitializeForm(this);
@@ -42,17 +48,16 @@ namespace NetProxy.Client.Forms
 
         private void ButtonBrowse_Click(object? sender, EventArgs e)
         {
-            //This browses the machine that the console runs on. The service reads the path, so it only makes sense to browse
-            //  when that is the same machine; otherwise type the path on the service machine.
-            using var dialog = new OpenFileDialog
+            //The service reads the path, so this browses the machine that the service runs on.
+            if (_messageClient == null)
             {
-                Title = Localize("Select the plugin assembly"),
-                Filter = Localize("Assembly (*.dll)|*.dll|All files (*.*)|*.*")
-            };
+                return;
+            }
 
-            if (dialog.ShowDialog(this) == DialogResult.OK)
+            using var form = new FormRemoteBrowser(_messageClient, false, [".dll"], textBoxAssemblyPath.Text, Localize("Select the plugin assembly"));
+            if (form.ShowDialog(this) == DialogResult.OK)
             {
-                textBoxAssemblyPath.Text = dialog.FileName;
+                textBoxAssemblyPath.Text = form.SelectedPath;
             }
         }
 

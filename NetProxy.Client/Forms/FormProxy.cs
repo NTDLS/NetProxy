@@ -320,18 +320,20 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            //This browses the machine that the console runs on. The path is read by the service, so it only
-            //  makes sense to browse when that is the same machine; otherwise type the path on the service machine.
-            using var dialog = new OpenFileDialog
+            var certificate = BrowseForCertificate(dataGridViewHostNames.Rows[e.RowIndex].Cells[ColumnHostNamesCertificate.Index].Value?.ToString());
+            if (certificate != null)
             {
-                Title = Localize("Select the TLS certificate"),
-                Filter = Localize("PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*")
-            };
-
-            if (dialog.ShowDialog(this) == DialogResult.OK)
-            {
-                dataGridViewHostNames.Rows[e.RowIndex].Cells[ColumnHostNamesCertificate.Index].Value = dialog.FileName;
+                dataGridViewHostNames.Rows[e.RowIndex].Cells[ColumnHostNamesCertificate.Index].Value = certificate;
             }
+        }
+
+        /// <summary>
+        /// Browses the machine that the service runs on, because that is where the certificate is read from.
+        /// </summary>
+        private string? BrowseForCertificate(string? current)
+        {
+            using var form = new FormRemoteBrowser(_messageClient.EnsureNotNull(), false, [".pfx", ".p12"], current, Localize("Select the TLS certificate"));
+            return form.ShowDialog(this) == DialogResult.OK ? form.SelectedPath : null;
         }
 
         private void DataGridViewHostNames_DataError(object? sender, DataGridViewDataErrorEventArgs e)
@@ -447,17 +449,10 @@ namespace NetProxy.Client.Forms
 
         private void ButtonBrowseCertificate_Click(object? sender, EventArgs e)
         {
-            //This browses the machine that the console runs on. The path is read by the service, so it only
-            //  makes sense to browse when that is the same machine; otherwise type the path on the service machine.
-            using var dialog = new OpenFileDialog
+            var certificate = BrowseForCertificate(textBoxCertificatePath.Text);
+            if (certificate != null)
             {
-                Title = Localize("Select the TLS certificate"),
-                Filter = Localize("PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*")
-            };
-
-            if (dialog.ShowDialog(this) == DialogResult.OK)
-            {
-                textBoxCertificatePath.Text = dialog.FileName;
+                textBoxCertificatePath.Text = certificate;
             }
         }
 

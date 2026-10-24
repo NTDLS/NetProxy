@@ -111,6 +111,36 @@ namespace NetProxy.Client.Forms
                 Localize("Let the management console connect over IPv6 as well as IPv4 (one listener accepts both). It takes effect when the service restarts."));
         }
 
+        /// <summary>
+        /// Picks the folder of the log file on the machine that the service runs on. The name of the file stays what it is.
+        /// </summary>
+        private void ButtonBrowseLogPath_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient == null)
+            {
+                return;
+            }
+
+            var current = textBoxLogPath.Text.Trim();
+
+            using var form = new FormRemoteBrowser(_messageClient, true, [], current, Localize("Select the folder of the log file"));
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            //The file name of the current path is kept, and the path is built the way the service machine writes them.
+            var fileName = current.Length > 0 ? current.Split('/', '\\').Last() : string.Empty;
+            if (fileName.Length == 0 || fileName.Contains('.') == false)
+            {
+                fileName = "NetProxy.log";
+            }
+
+            var folder = form.SelectedPath;
+            var separator = folder.Contains('\\') ? '\\' : '/';
+            textBoxLogPath.Text = folder.EndsWith(separator) ? folder + fileName : folder + separator + fileName;
+        }
+
         private void FormServerSettings_Shown(object? sender, EventArgs e)
         {
             if (_messageClient == null)

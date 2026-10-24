@@ -142,6 +142,12 @@ namespace NetProxy.ClientApi
         public List<NpCertificateStatus> GetCertificates()
             => _client.Query<QueryCertificateStatusReply>(new QueryCertificateStatus()).Collection;
 
+        /// <summary>
+        /// Lists a folder on the machine that the service runs on. See <see cref="QueryBrowse"/>.
+        /// </summary>
+        public QueryBrowseReply Browse(string path, bool foldersOnly = false, params string[] extensions)
+            => _client.Query<QueryBrowseReply>(new QueryBrowse { Path = path, FoldersOnly = foldersOnly, Extensions = extensions.ToList() });
+
         public NpServiceSettings GetSettings() => _client.Query<QueryServiceSettingsReply>(new QueryServiceSettings()).Settings;
 
         /// <summary>

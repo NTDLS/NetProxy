@@ -104,6 +104,7 @@ namespace NetProxy.Tests.Management
 
                 Assert.ThrowsAny<Exception>(() => client.Query<QueryServiceInfoReply>(new QueryServiceInfo()));
                 Assert.ThrowsAny<Exception>(() => client.Query<QueryProxyConfigurationListReply>(new QueryProxyConfigurationList()));
+                Assert.ThrowsAny<Exception>(() => client.Query<QueryBrowseReply>(new QueryBrowse()));
             }
             finally
             {

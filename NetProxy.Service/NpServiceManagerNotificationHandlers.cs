@@ -2,7 +2,6 @@
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.PluginApi;
-using NetProxy.Service.Proxy;
 using NTDLS.ReliableMessaging;
 
 namespace NetProxy.Service

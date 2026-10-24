@@ -13,7 +13,12 @@ namespace NetProxy.Cli
 
         private static readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["f"] = "file", ["o"] = "output", ["n"] = "lines", ["h"] = "help", ["s"] = "server", ["u"] = "user"
+            ["f"] = "file",
+            ["o"] = "output",
+            ["n"] = "lines",
+            ["h"] = "help",
+            ["s"] = "server",
+            ["u"] = "user"
         };
 
         private readonly Dictionary<string, string> _options = new(StringComparer.OrdinalIgnoreCase);

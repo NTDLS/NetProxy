@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
 using NetProxy.ClientApi;
 using NetProxy.Library;
+using Newtonsoft.Json;
 
 namespace NetProxy.Cli
 {

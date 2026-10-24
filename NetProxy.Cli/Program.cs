@@ -1,9 +1,9 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NetProxy.ClientApi;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Text;
 
 namespace NetProxy.Cli

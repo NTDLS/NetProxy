@@ -117,7 +117,7 @@ namespace NetProxy.Client.Forms
             // checkBoxAllFiles
             // 
             checkBoxAllFiles.AutoSize = true;
-            checkBoxAllFiles.Location = new Point(12, 353);
+            checkBoxAllFiles.Location = new Point(12, 347);
             checkBoxAllFiles.Name = "checkBoxAllFiles";
             checkBoxAllFiles.Size = new Size(94, 19);
             checkBoxAllFiles.TabIndex = 3;
@@ -128,15 +128,15 @@ namespace NetProxy.Client.Forms
             // labelStatus
             // 
             labelStatus.AutoEllipsis = true;
-            labelStatus.Location = new Point(12, 379);
+            labelStatus.Location = new Point(154, 348);
             labelStatus.Name = "labelStatus";
-            labelStatus.Size = new Size(616, 18);
+            labelStatus.Size = new Size(474, 18);
             labelStatus.TabIndex = 4;
             // 
             // buttonSelect
             // 
             buttonSelect.Enabled = false;
-            buttonSelect.Location = new Point(422, 353);
+            buttonSelect.Location = new Point(422, 369);
             buttonSelect.Name = "buttonSelect";
             buttonSelect.Size = new Size(100, 27);
             buttonSelect.TabIndex = 5;
@@ -147,7 +147,7 @@ namespace NetProxy.Client.Forms
             // buttonCancel
             // 
             buttonCancel.DialogResult = DialogResult.Cancel;
-            buttonCancel.Location = new Point(528, 353);
+            buttonCancel.Location = new Point(528, 369);
             buttonCancel.Name = "buttonCancel";
             buttonCancel.Size = new Size(100, 27);
             buttonCancel.TabIndex = 6;
@@ -159,7 +159,7 @@ namespace NetProxy.Client.Forms
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = buttonCancel;
-            ClientSize = new Size(640, 391);
+            ClientSize = new Size(640, 408);
             Controls.Add(buttonCancel);
             Controls.Add(buttonSelect);
             Controls.Add(labelStatus);

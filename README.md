@@ -2,7 +2,7 @@
 Simply put, NetProxy is a genuinely full-featured reverse-proxy for Windows and Linux. On the short list, provides
 TCP, UDP, HTTP, HTTPS, TLS termination, load balancing, failover, sticky sessions, HTTP header manipulation, and more.
 
-📖 Read the **[NetProxy guide](NetProxy-Guide.md)** for what NetProxy can do, common use cases and step-by-step configuration recipes.
+📖 Read the [NetProxy guide](NetProxy-Guide.md) for what NetProxy can do, common use cases and step-by-step configuration recipes.
 
 👀 If you like NetProxy, you may also be interested in [NetTunnel](https://github.com/NTDLS/NetTunnel), it has a some similar features but is designed to tunnel traffic through a single TCP connection allowing ingress without opening ports on the firewall.
 

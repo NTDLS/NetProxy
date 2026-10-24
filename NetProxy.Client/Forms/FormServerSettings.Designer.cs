@@ -39,6 +39,7 @@
             ColumnDescription = new DataGridViewTextBoxColumn();
             ColumnPassword = new DataGridViewTextBoxColumn();
             tabPageService = new TabPage();
+            checkBoxManagementListenOnIPv6 = new CheckBox();
             groupBoxLogging = new GroupBox();
             labelLogLevel = new Label();
             comboBoxLogLevel = new ComboBox();
@@ -50,7 +51,6 @@
             labelLogFileRetainedCount = new Label();
             textBoxLogFileRetainedCount = new TextBox();
             checkBoxLogToEventLog = new CheckBox();
-            checkBoxManagementListenOnIPv6 = new CheckBox();
             buttonSave = new Button();
             buttonCancel = new Button();
             tabControl1.SuspendLayout();
@@ -138,6 +138,16 @@
             tabPageService.Text = "Service";
             tabPageService.UseVisualStyleBackColor = true;
             // 
+            // checkBoxManagementListenOnIPv6
+            // 
+            checkBoxManagementListenOnIPv6.AutoSize = true;
+            checkBoxManagementListenOnIPv6.Location = new Point(6, 202);
+            checkBoxManagementListenOnIPv6.Name = "checkBoxManagementListenOnIPv6";
+            checkBoxManagementListenOnIPv6.Size = new Size(233, 19);
+            checkBoxManagementListenOnIPv6.TabIndex = 0;
+            checkBoxManagementListenOnIPv6.Text = "Accept IPv6 connections as well as IPv4";
+            checkBoxManagementListenOnIPv6.UseVisualStyleBackColor = true;
+            // 
             // groupBoxLogging
             // 
             groupBoxLogging.Controls.Add(labelLogLevel);
@@ -188,16 +198,16 @@
             // 
             textBoxLogPath.Location = new Point(8, 83);
             textBoxLogPath.Name = "textBoxLogPath";
-            textBoxLogPath.Size = new Size(330, 23);
+            textBoxLogPath.Size = new Size(361, 23);
             textBoxLogPath.TabIndex = 3;
             // 
             // buttonBrowseLogPath
             // 
-            buttonBrowseLogPath.Location = new Point(344, 82);
+            buttonBrowseLogPath.Location = new Point(375, 82);
             buttonBrowseLogPath.Name = "buttonBrowseLogPath";
-            buttonBrowseLogPath.Size = new Size(76, 25);
+            buttonBrowseLogPath.Size = new Size(45, 25);
             buttonBrowseLogPath.TabIndex = 14;
-            buttonBrowseLogPath.Text = "Browse...";
+            buttonBrowseLogPath.Text = "...";
             buttonBrowseLogPath.UseVisualStyleBackColor = true;
             buttonBrowseLogPath.Click += ButtonBrowseLogPath_Click;
             // 
@@ -243,22 +253,12 @@
             checkBoxLogToEventLog.Text = "Also write warnings and exceptions to the Windows event log";
             checkBoxLogToEventLog.UseVisualStyleBackColor = true;
             // 
-            // checkBoxManagementListenOnIPv6
-            // 
-            checkBoxManagementListenOnIPv6.AutoSize = true;
-            checkBoxManagementListenOnIPv6.Location = new Point(6, 202);
-            checkBoxManagementListenOnIPv6.Name = "checkBoxManagementListenOnIPv6";
-            checkBoxManagementListenOnIPv6.Size = new Size(233, 19);
-            checkBoxManagementListenOnIPv6.TabIndex = 0;
-            checkBoxManagementListenOnIPv6.Text = "Accept IPv6 connections as well as IPv4";
-            checkBoxManagementListenOnIPv6.UseVisualStyleBackColor = true;
-            // 
             // buttonSave
             // 
-            buttonSave.Location = new Point(290, 429);
+            buttonSave.Location = new Point(265, 429);
             buttonSave.Margin = new Padding(4, 3, 4, 3);
             buttonSave.Name = "buttonSave";
-            buttonSave.Size = new Size(88, 27);
+            buttonSave.Size = new Size(100, 27);
             buttonSave.TabIndex = 1;
             buttonSave.Text = "Save";
             buttonSave.UseVisualStyleBackColor = true;
@@ -266,10 +266,10 @@
             // 
             // buttonCancel
             // 
-            buttonCancel.Location = new Point(385, 429);
+            buttonCancel.Location = new Point(373, 429);
             buttonCancel.Margin = new Padding(4, 3, 4, 3);
             buttonCancel.Name = "buttonCancel";
-            buttonCancel.Size = new Size(88, 27);
+            buttonCancel.Size = new Size(100, 27);
             buttonCancel.TabIndex = 2;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;

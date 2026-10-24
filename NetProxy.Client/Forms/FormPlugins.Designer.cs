@@ -28,6 +28,7 @@ namespace NetProxy.Client.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormPlugins));
             dataGridViewPlugins = new DataGridView();
             ColumnOrder = new DataGridViewTextBoxColumn();
             ColumnName = new DataGridViewTextBoxColumn();
@@ -46,9 +47,9 @@ namespace NetProxy.Client.Forms
             labelOrderInfo = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPlugins).BeginInit();
             SuspendLayout();
-            //
+            // 
             // dataGridViewPlugins
-            //
+            // 
             dataGridViewPlugins.AllowUserToAddRows = false;
             dataGridViewPlugins.AllowUserToDeleteRows = false;
             dataGridViewPlugins.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -65,58 +66,58 @@ namespace NetProxy.Client.Forms
             dataGridViewPlugins.Size = new Size(796, 330);
             dataGridViewPlugins.TabIndex = 0;
             dataGridViewPlugins.CellDoubleClick += DataGridViewPlugins_CellDoubleClick;
-            //
+            // 
             // ColumnOrder
-            //
+            // 
             ColumnOrder.FillWeight = 6F;
             ColumnOrder.HeaderText = "#";
             ColumnOrder.Name = "ColumnOrder";
             ColumnOrder.ReadOnly = true;
-            //
+            // 
             // ColumnName
-            //
+            // 
             ColumnName.FillWeight = 20F;
             ColumnName.HeaderText = "Name";
             ColumnName.Name = "ColumnName";
             ColumnName.ReadOnly = true;
-            //
+            // 
             // ColumnEnabled
-            //
+            // 
             ColumnEnabled.FillWeight = 10F;
             ColumnEnabled.HeaderText = "Enabled";
             ColumnEnabled.Name = "ColumnEnabled";
             ColumnEnabled.ReadOnly = true;
-            //
+            // 
             // ColumnStatus
-            //
+            // 
             ColumnStatus.FillWeight = 24F;
             ColumnStatus.HeaderText = "Status";
             ColumnStatus.Name = "ColumnStatus";
             ColumnStatus.ReadOnly = true;
-            //
+            // 
             // ColumnPlugin
-            //
+            // 
             ColumnPlugin.FillWeight = 16F;
             ColumnPlugin.HeaderText = "Plugin";
             ColumnPlugin.Name = "ColumnPlugin";
             ColumnPlugin.ReadOnly = true;
-            //
+            // 
             // ColumnVersion
-            //
+            // 
             ColumnVersion.FillWeight = 10F;
             ColumnVersion.HeaderText = "Version";
             ColumnVersion.Name = "ColumnVersion";
             ColumnVersion.ReadOnly = true;
-            //
+            // 
             // ColumnAssembly
-            //
+            // 
             ColumnAssembly.FillWeight = 30F;
             ColumnAssembly.HeaderText = "Assembly";
             ColumnAssembly.Name = "ColumnAssembly";
             ColumnAssembly.ReadOnly = true;
-            //
+            // 
             // buttonAdd
-            //
+            // 
             buttonAdd.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonAdd.Location = new Point(12, 354);
             buttonAdd.Name = "buttonAdd";
@@ -125,9 +126,9 @@ namespace NetProxy.Client.Forms
             buttonAdd.Text = "Add...";
             buttonAdd.UseVisualStyleBackColor = true;
             buttonAdd.Click += ButtonAdd_Click;
-            //
+            // 
             // buttonEdit
-            //
+            // 
             buttonEdit.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonEdit.Location = new Point(113, 354);
             buttonEdit.Name = "buttonEdit";
@@ -136,9 +137,9 @@ namespace NetProxy.Client.Forms
             buttonEdit.Text = "Edit...";
             buttonEdit.UseVisualStyleBackColor = true;
             buttonEdit.Click += ButtonEdit_Click;
-            //
+            // 
             // buttonDelete
-            //
+            // 
             buttonDelete.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonDelete.Location = new Point(214, 354);
             buttonDelete.Name = "buttonDelete";
@@ -147,9 +148,9 @@ namespace NetProxy.Client.Forms
             buttonDelete.Text = "Delete";
             buttonDelete.UseVisualStyleBackColor = true;
             buttonDelete.Click += ButtonDelete_Click;
-            //
+            // 
             // buttonMoveUp
-            //
+            // 
             buttonMoveUp.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonMoveUp.Location = new Point(315, 354);
             buttonMoveUp.Name = "buttonMoveUp";
@@ -158,9 +159,9 @@ namespace NetProxy.Client.Forms
             buttonMoveUp.Text = "Move up";
             buttonMoveUp.UseVisualStyleBackColor = true;
             buttonMoveUp.Click += ButtonMoveUp_Click;
-            //
+            // 
             // buttonMoveDown
-            //
+            // 
             buttonMoveDown.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonMoveDown.Location = new Point(416, 354);
             buttonMoveDown.Name = "buttonMoveDown";
@@ -169,9 +170,9 @@ namespace NetProxy.Client.Forms
             buttonMoveDown.Text = "Move down";
             buttonMoveDown.UseVisualStyleBackColor = true;
             buttonMoveDown.Click += ButtonMoveDown_Click;
-            //
+            // 
             // buttonReload
-            //
+            // 
             buttonReload.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             buttonReload.Location = new Point(517, 354);
             buttonReload.Name = "buttonReload";
@@ -180,9 +181,9 @@ namespace NetProxy.Client.Forms
             buttonReload.Text = "Reload";
             buttonReload.UseVisualStyleBackColor = true;
             buttonReload.Click += ButtonReload_Click;
-            //
+            // 
             // buttonClose
-            //
+            // 
             buttonClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             buttonClose.DialogResult = DialogResult.OK;
             buttonClose.Location = new Point(713, 382);
@@ -191,19 +192,19 @@ namespace NetProxy.Client.Forms
             buttonClose.TabIndex = 7;
             buttonClose.Text = "Close";
             buttonClose.UseVisualStyleBackColor = true;
-            //
+            // 
             // labelOrderInfo
-            //
+            // 
             labelOrderInfo.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             labelOrderInfo.AutoSize = true;
             labelOrderInfo.Location = new Point(12, 392);
             labelOrderInfo.Name = "labelOrderInfo";
-            labelOrderInfo.Size = new Size(466, 15);
+            labelOrderInfo.Size = new Size(474, 15);
             labelOrderInfo.TabIndex = 8;
             labelOrderInfo.Text = "Plugins are called in this order. A proxy uses the plugins that are ticked on its Plugins tab.";
-            //
+            // 
             // FormPlugins
-            //
+            // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = buttonClose;
@@ -217,6 +218,8 @@ namespace NetProxy.Client.Forms
             Controls.Add(buttonEdit);
             Controls.Add(buttonAdd);
             Controls.Add(dataGridViewPlugins);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(720, 360);
             Name = "FormPlugins";
             ShowInTaskbar = false;

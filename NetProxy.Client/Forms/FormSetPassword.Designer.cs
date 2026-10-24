@@ -39,17 +39,17 @@
             // 
             // textBoxPassword1
             // 
-            textBoxPassword1.Location = new Point(86, 14);
+            textBoxPassword1.Location = new Point(15, 27);
             textBoxPassword1.Margin = new Padding(4, 3, 4, 3);
             textBoxPassword1.Name = "textBoxPassword1";
             textBoxPassword1.PasswordChar = '*';
-            textBoxPassword1.Size = new Size(187, 23);
+            textBoxPassword1.Size = new Size(270, 23);
             textBoxPassword1.TabIndex = 0;
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(18, 17);
+            label3.Location = new Point(13, 9);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(57, 15);
@@ -58,10 +58,10 @@
             // 
             // buttonCancel
             // 
-            buttonCancel.Location = new Point(102, 74);
+            buttonCancel.Location = new Point(77, 111);
             buttonCancel.Margin = new Padding(4, 3, 4, 3);
             buttonCancel.Name = "buttonCancel";
-            buttonCancel.Size = new Size(83, 27);
+            buttonCancel.Size = new Size(100, 27);
             buttonCancel.TabIndex = 3;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;
@@ -69,17 +69,17 @@
             // 
             // textBoxPassword2
             // 
-            textBoxPassword2.Location = new Point(86, 44);
+            textBoxPassword2.Location = new Point(15, 73);
             textBoxPassword2.Margin = new Padding(4, 3, 4, 3);
             textBoxPassword2.Name = "textBoxPassword2";
             textBoxPassword2.PasswordChar = '*';
-            textBoxPassword2.Size = new Size(187, 23);
+            textBoxPassword2.Size = new Size(270, 23);
             textBoxPassword2.TabIndex = 1;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(30, 47);
+            label1.Location = new Point(13, 55);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(51, 15);
@@ -88,10 +88,10 @@
             // 
             // buttonSave
             // 
-            buttonSave.Location = new Point(191, 74);
+            buttonSave.Location = new Point(185, 111);
             buttonSave.Margin = new Padding(4, 3, 4, 3);
             buttonSave.Name = "buttonSave";
-            buttonSave.Size = new Size(83, 27);
+            buttonSave.Size = new Size(100, 27);
             buttonSave.TabIndex = 2;
             buttonSave.Text = "Ok";
             buttonSave.UseVisualStyleBackColor = true;
@@ -101,7 +101,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(298, 115);
+            ClientSize = new Size(298, 148);
             Controls.Add(buttonSave);
             Controls.Add(textBoxPassword2);
             Controls.Add(label1);
@@ -116,7 +116,7 @@
             Name = "FormSetPassword";
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
-            Text = "FormSetPassword";
+            Text = "Set Password";
             Load += FormSetPassword_Load;
             ResumeLayout(false);
             PerformLayout();

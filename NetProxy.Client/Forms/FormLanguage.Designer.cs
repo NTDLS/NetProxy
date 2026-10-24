@@ -28,6 +28,7 @@ namespace NetProxy.Client.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormLanguage));
             labelPrompt = new Label();
             listBoxLanguages = new ListBox();
             buttonOk = new Button();
@@ -83,7 +84,8 @@ namespace NetProxy.Client.Forms
             Controls.Add(listBoxLanguages);
             Controls.Add(buttonOk);
             Controls.Add(buttonCancel);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "FormLanguage";

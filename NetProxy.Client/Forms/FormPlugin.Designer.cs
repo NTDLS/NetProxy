@@ -28,6 +28,7 @@ namespace NetProxy.Client.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormPlugin));
             labelName = new Label();
             textBoxName = new TextBox();
             labelDescription = new Label();
@@ -46,161 +47,161 @@ namespace NetProxy.Client.Forms
             buttonSave = new Button();
             buttonCancel = new Button();
             SuspendLayout();
-            //
+            // 
             // labelName
-            //
+            // 
             labelName.AutoSize = true;
-            labelName.Location = new Point(12, 15);
+            labelName.Location = new Point(12, 9);
             labelName.Name = "labelName";
             labelName.Size = new Size(39, 15);
             labelName.TabIndex = 0;
             labelName.Text = "Name";
-            //
+            // 
             // textBoxName
-            //
-            textBoxName.Location = new Point(130, 12);
+            // 
+            textBoxName.Location = new Point(13, 27);
             textBoxName.Name = "textBoxName";
             textBoxName.Size = new Size(418, 23);
             textBoxName.TabIndex = 1;
-            //
+            // 
             // labelDescription
-            //
+            // 
             labelDescription.AutoSize = true;
-            labelDescription.Location = new Point(12, 46);
+            labelDescription.Location = new Point(12, 55);
             labelDescription.Name = "labelDescription";
             labelDescription.Size = new Size(67, 15);
             labelDescription.TabIndex = 2;
             labelDescription.Text = "Description";
-            //
+            // 
             // textBoxDescription
-            //
-            textBoxDescription.Location = new Point(130, 43);
+            // 
+            textBoxDescription.Location = new Point(13, 73);
             textBoxDescription.Name = "textBoxDescription";
             textBoxDescription.Size = new Size(418, 23);
             textBoxDescription.TabIndex = 3;
-            //
+            // 
             // checkBoxEnabled
-            //
+            // 
             checkBoxEnabled.AutoSize = true;
-            checkBoxEnabled.Location = new Point(130, 74);
+            checkBoxEnabled.Location = new Point(13, 393);
             checkBoxEnabled.Name = "checkBoxEnabled";
             checkBoxEnabled.Size = new Size(68, 19);
             checkBoxEnabled.TabIndex = 4;
             checkBoxEnabled.Text = "Enabled";
             checkBoxEnabled.UseVisualStyleBackColor = true;
-            //
+            // 
             // labelAssemblyPath
-            //
+            // 
             labelAssemblyPath.AutoSize = true;
-            labelAssemblyPath.Location = new Point(12, 107);
+            labelAssemblyPath.Location = new Point(12, 101);
             labelAssemblyPath.Name = "labelAssemblyPath";
-            labelAssemblyPath.Size = new Size(88, 15);
+            labelAssemblyPath.Size = new Size(85, 15);
             labelAssemblyPath.TabIndex = 5;
             labelAssemblyPath.Text = "Assembly (.dll)";
-            //
+            // 
             // textBoxAssemblyPath
-            //
-            textBoxAssemblyPath.Location = new Point(130, 104);
+            // 
+            textBoxAssemblyPath.Location = new Point(13, 119);
             textBoxAssemblyPath.Name = "textBoxAssemblyPath";
-            textBoxAssemblyPath.Size = new Size(330, 23);
+            textBoxAssemblyPath.Size = new Size(375, 23);
             textBoxAssemblyPath.TabIndex = 6;
-            //
+            // 
             // buttonBrowse
-            //
-            buttonBrowse.Location = new Point(468, 103);
+            // 
+            buttonBrowse.Location = new Point(394, 119);
             buttonBrowse.Name = "buttonBrowse";
-            buttonBrowse.Size = new Size(80, 25);
+            buttonBrowse.Size = new Size(37, 25);
             buttonBrowse.TabIndex = 7;
-            buttonBrowse.Text = "Browse...";
+            buttonBrowse.Text = "...";
             buttonBrowse.UseVisualStyleBackColor = true;
             buttonBrowse.Click += ButtonBrowse_Click;
-            //
+            // 
             // labelTypeName
-            //
+            // 
             labelTypeName.AutoSize = true;
-            labelTypeName.Location = new Point(12, 138);
+            labelTypeName.Location = new Point(12, 147);
             labelTypeName.Name = "labelTypeName";
-            labelTypeName.Size = new Size(94, 15);
+            labelTypeName.Size = new Size(89, 15);
             labelTypeName.TabIndex = 8;
             labelTypeName.Text = "Class (optional)";
-            //
+            // 
             // textBoxTypeName
-            //
-            textBoxTypeName.Location = new Point(130, 135);
+            // 
+            textBoxTypeName.Location = new Point(13, 165);
             textBoxTypeName.Name = "textBoxTypeName";
             textBoxTypeName.Size = new Size(418, 23);
             textBoxTypeName.TabIndex = 9;
-            //
+            // 
             // labelTimeout
-            //
+            // 
             labelTimeout.AutoSize = true;
-            labelTimeout.Location = new Point(12, 169);
+            labelTimeout.Location = new Point(12, 193);
             labelTimeout.Name = "labelTimeout";
             labelTimeout.Size = new Size(88, 15);
             labelTimeout.TabIndex = 10;
             labelTimeout.Text = "Time limit (ms)";
-            //
+            // 
             // textBoxTimeout
-            //
-            textBoxTimeout.Location = new Point(130, 166);
+            // 
+            textBoxTimeout.Location = new Point(13, 211);
             textBoxTimeout.Name = "textBoxTimeout";
             textBoxTimeout.Size = new Size(100, 23);
             textBoxTimeout.TabIndex = 11;
-            //
+            // 
             // labelSettings
-            //
+            // 
             labelSettings.AutoSize = true;
-            labelSettings.Location = new Point(12, 197);
+            labelSettings.Location = new Point(12, 239);
             labelSettings.Name = "labelSettings";
-            labelSettings.Size = new Size(209, 15);
+            labelSettings.Size = new Size(191, 15);
             labelSettings.TabIndex = 12;
             labelSettings.Text = "Settings (one name=value per line)";
-            //
+            // 
             // textBoxSettings
-            //
+            // 
             textBoxSettings.AcceptsReturn = true;
-            textBoxSettings.Location = new Point(12, 219);
+            textBoxSettings.Location = new Point(13, 257);
             textBoxSettings.Multiline = true;
             textBoxSettings.Name = "textBoxSettings";
             textBoxSettings.ScrollBars = ScrollBars.Vertical;
             textBoxSettings.Size = new Size(536, 130);
             textBoxSettings.TabIndex = 13;
-            //
+            // 
             // labelNotes
-            //
-            labelNotes.Location = new Point(12, 359);
+            // 
+            labelNotes.Location = new Point(3, 428);
             labelNotes.Name = "labelNotes";
             labelNotes.Size = new Size(536, 45);
             labelNotes.TabIndex = 14;
             labelNotes.Text = "The assembly path is on the machine that the service runs on. A relative path is relative to the folder of the service. The plugin reads its settings as typed here, so do not keep secrets in them.";
-            //
+            // 
             // buttonSave
-            //
-            buttonSave.Location = new Point(392, 412);
+            // 
+            buttonSave.Location = new Point(331, 476);
             buttonSave.Name = "buttonSave";
-            buttonSave.Size = new Size(75, 27);
+            buttonSave.Size = new Size(100, 27);
             buttonSave.TabIndex = 15;
             buttonSave.Text = "Save";
             buttonSave.UseVisualStyleBackColor = true;
             buttonSave.Click += ButtonSave_Click;
-            //
+            // 
             // buttonCancel
-            //
+            // 
             buttonCancel.DialogResult = DialogResult.Cancel;
-            buttonCancel.Location = new Point(473, 412);
+            buttonCancel.Location = new Point(448, 476);
             buttonCancel.Name = "buttonCancel";
-            buttonCancel.Size = new Size(75, 27);
+            buttonCancel.Size = new Size(100, 27);
             buttonCancel.TabIndex = 16;
             buttonCancel.Text = "Cancel";
             buttonCancel.UseVisualStyleBackColor = true;
-            //
+            // 
             // FormPlugin
-            //
+            // 
             AcceptButton = buttonSave;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = buttonCancel;
-            ClientSize = new Size(560, 450);
+            ClientSize = new Size(560, 513);
             Controls.Add(buttonCancel);
             Controls.Add(buttonSave);
             Controls.Add(labelNotes);
@@ -218,7 +219,8 @@ namespace NetProxy.Client.Forms
             Controls.Add(labelDescription);
             Controls.Add(textBoxName);
             Controls.Add(labelName);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "FormPlugin";

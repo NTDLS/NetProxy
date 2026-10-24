@@ -1,8 +1,5 @@
-using NetProxy.Library;
-using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Utilities;
 using NTDLS.ReliableMessaging;
-using NTDLS.SecureKeyExchange;
 
 namespace NetProxy.Client.Classes
 {

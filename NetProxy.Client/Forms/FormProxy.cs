@@ -1,6 +1,5 @@
 ﻿using NetProxy.Client.Classes;
 using NetProxy.Library;
-using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;

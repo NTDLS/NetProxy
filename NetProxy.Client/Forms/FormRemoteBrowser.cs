@@ -1,7 +1,5 @@
 using NetProxy.Client.Classes;
-using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
-using NetProxy.Library.Utilities;
 using NTDLS.Localization;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;

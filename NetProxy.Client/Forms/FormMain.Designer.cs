@@ -28,8 +28,8 @@ namespace NetProxy.Client.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             dataGridViewProxys = new DataGridView();
             ColumnStatus = new DataGridViewImageColumn();
             ColumnId = new DataGridViewTextBoxColumn();
@@ -49,6 +49,15 @@ namespace NetProxy.Client.Forms
             languageToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
+            proxyToolStripMenuItem = new ToolStripMenuItem();
+            addToolStripMenuItem = new ToolStripMenuItem();
+            refreshToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            startToolStripMenuItem = new ToolStripMenuItem();
+            stopToolStripMenuItem = new ToolStripMenuItem();
+            editToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            deleteToolStripMenuItem = new ToolStripMenuItem();
             statusStripMain = new StatusStrip();
             chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
             splitContainerOuter = new SplitContainer();
@@ -71,7 +80,6 @@ namespace NetProxy.Client.Forms
             ColumnConnDuration = new DataGridViewTextBoxColumn();
             ColumnConnIdle = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewConnections).BeginInit();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)chartPerformance).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerOuter).BeginInit();
@@ -82,11 +90,8 @@ namespace NetProxy.Client.Forms
             splitContainerInner.Panel1.SuspendLayout();
             splitContainerInner.Panel2.SuspendLayout();
             splitContainerInner.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewConnections).BeginInit();
             SuspendLayout();
-            // 
-            // dataGridViewCellStyle1
-            // 
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleRight;
             // 
             // dataGridViewProxys
             // 
@@ -181,7 +186,7 @@ namespace NetProxy.Client.Forms
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, settingsToolStripMenuItem, helpToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, settingsToolStripMenuItem, proxyToolStripMenuItem, helpToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Padding = new Padding(7, 2, 0, 2);
@@ -223,9 +228,9 @@ namespace NetProxy.Client.Forms
             configurationToolStripMenuItem.Size = new Size(148, 22);
             configurationToolStripMenuItem.Text = "Configuration";
             configurationToolStripMenuItem.Click += ConfigurationToolStripMenuItem_Click;
-            //
+            // 
             // pluginsToolStripMenuItem
-            //
+            // 
             pluginsToolStripMenuItem.Name = "pluginsToolStripMenuItem";
             pluginsToolStripMenuItem.Size = new Size(148, 22);
             pluginsToolStripMenuItem.Text = "Plugins...";
@@ -251,6 +256,66 @@ namespace NetProxy.Client.Forms
             aboutToolStripMenuItem.Size = new Size(107, 22);
             aboutToolStripMenuItem.Text = "About";
             aboutToolStripMenuItem.Click += AboutToolStripMenuItem_Click;
+            // 
+            // proxyToolStripMenuItem
+            // 
+            proxyToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, refreshToolStripMenuItem, toolStripSeparator1, startToolStripMenuItem, stopToolStripMenuItem, editToolStripMenuItem, toolStripSeparator2, deleteToolStripMenuItem });
+            proxyToolStripMenuItem.Name = "proxyToolStripMenuItem";
+            proxyToolStripMenuItem.Size = new Size(48, 20);
+            proxyToolStripMenuItem.Text = "Proxy";
+            proxyToolStripMenuItem.DropDownOpening += ProxyToolStripMenuItem_DropDownOpening;
+            // 
+            // addToolStripMenuItem
+            // 
+            addToolStripMenuItem.Name = "addToolStripMenuItem";
+            addToolStripMenuItem.Size = new Size(180, 22);
+            addToolStripMenuItem.Text = "Add";
+            addToolStripMenuItem.Click += AddToolStripMenuItem_Click;
+            // 
+            // refreshToolStripMenuItem
+            // 
+            refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
+            refreshToolStripMenuItem.Size = new Size(180, 22);
+            refreshToolStripMenuItem.Text = "Refresh";
+            refreshToolStripMenuItem.Click += RefreshToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(177, 6);
+            // 
+            // startToolStripMenuItem
+            // 
+            startToolStripMenuItem.Name = "startToolStripMenuItem";
+            startToolStripMenuItem.Size = new Size(180, 22);
+            startToolStripMenuItem.Text = "Start";
+            startToolStripMenuItem.Click += StartToolStripMenuItem_Click;
+            // 
+            // stopToolStripMenuItem
+            // 
+            stopToolStripMenuItem.Name = "stopToolStripMenuItem";
+            stopToolStripMenuItem.Size = new Size(180, 22);
+            stopToolStripMenuItem.Text = "Stop";
+            stopToolStripMenuItem.Click += StopToolStripMenuItem_Click;
+            // 
+            // editToolStripMenuItem
+            // 
+            editToolStripMenuItem.Name = "editToolStripMenuItem";
+            editToolStripMenuItem.Size = new Size(180, 22);
+            editToolStripMenuItem.Text = "Edit";
+            editToolStripMenuItem.Click += EditToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(177, 6);
+            // 
+            // deleteToolStripMenuItem
+            // 
+            deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            deleteToolStripMenuItem.Size = new Size(180, 22);
+            deleteToolStripMenuItem.Text = "Delete";
+            deleteToolStripMenuItem.Click += deleteToolStripMenuItem_Click;
             // 
             // statusStripMain
             // 
@@ -307,9 +372,9 @@ namespace NetProxy.Client.Forms
             splitContainerInner.Size = new Size(784, 347);
             splitContainerInner.SplitterDistance = 193;
             splitContainerInner.TabIndex = 4;
-            //
+            // 
             // dataGridViewConnections
-            //
+            // 
             dataGridViewConnections.AllowUserToAddRows = false;
             dataGridViewConnections.AllowUserToDeleteRows = false;
             dataGridViewConnections.AllowUserToResizeRows = false;
@@ -347,11 +412,12 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnConnSourcePort
             // 
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleRight;
+            ColumnConnSourcePort.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnSourcePort.HeaderText = "Source Port";
             ColumnConnSourcePort.Name = "ColumnConnSourcePort";
             ColumnConnSourcePort.ReadOnly = true;
             ColumnConnSourcePort.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnSourcePort.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnSourcePort.Width = 95;
             // 
             // ColumnConnDestinationAddress
@@ -372,11 +438,11 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnConnDestinationPort
             // 
+            ColumnConnDestinationPort.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnDestinationPort.HeaderText = "Destination Port";
             ColumnConnDestinationPort.Name = "ColumnConnDestinationPort";
             ColumnConnDestinationPort.ReadOnly = true;
             ColumnConnDestinationPort.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnDestinationPort.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnDestinationPort.Width = 125;
             // 
             // ColumnConnProtocol
@@ -405,38 +471,38 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnConnBytesIn
             // 
+            ColumnConnBytesIn.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnBytesIn.HeaderText = "Bytes In";
             ColumnConnBytesIn.Name = "ColumnConnBytesIn";
             ColumnConnBytesIn.ReadOnly = true;
             ColumnConnBytesIn.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnBytesIn.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnBytesIn.Width = 80;
             // 
             // ColumnConnBytesOut
             // 
+            ColumnConnBytesOut.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnBytesOut.HeaderText = "Bytes Out";
             ColumnConnBytesOut.Name = "ColumnConnBytesOut";
             ColumnConnBytesOut.ReadOnly = true;
             ColumnConnBytesOut.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnBytesOut.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnBytesOut.Width = 80;
             // 
             // ColumnConnInPerSecond
             // 
+            ColumnConnInPerSecond.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnInPerSecond.HeaderText = "In/s";
             ColumnConnInPerSecond.Name = "ColumnConnInPerSecond";
             ColumnConnInPerSecond.ReadOnly = true;
             ColumnConnInPerSecond.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnInPerSecond.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnInPerSecond.Width = 80;
             // 
             // ColumnConnOutPerSecond
             // 
+            ColumnConnOutPerSecond.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnOutPerSecond.HeaderText = "Out/s";
             ColumnConnOutPerSecond.Name = "ColumnConnOutPerSecond";
             ColumnConnOutPerSecond.ReadOnly = true;
             ColumnConnOutPerSecond.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnOutPerSecond.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnOutPerSecond.Width = 80;
             // 
             // ColumnConnStarted
@@ -449,20 +515,20 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnConnDuration
             // 
+            ColumnConnDuration.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnDuration.HeaderText = "Duration";
             ColumnConnDuration.Name = "ColumnConnDuration";
             ColumnConnDuration.ReadOnly = true;
             ColumnConnDuration.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnDuration.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnDuration.Width = 80;
             // 
             // ColumnConnIdle
             // 
+            ColumnConnIdle.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnIdle.HeaderText = "Idle";
             ColumnConnIdle.Name = "ColumnConnIdle";
             ColumnConnIdle.ReadOnly = true;
             ColumnConnIdle.SortMode = DataGridViewColumnSortMode.Programmatic;
-            ColumnConnIdle.DefaultCellStyle = dataGridViewCellStyle1;
             ColumnConnIdle.Width = 70;
             // 
             // FormMain
@@ -483,7 +549,6 @@ namespace NetProxy.Client.Forms
             FormClosed += FormMain_FormClosed;
             Shown += FormMain_Shown;
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewConnections).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)chartPerformance).EndInit();
@@ -495,6 +560,7 @@ namespace NetProxy.Client.Forms
             splitContainerInner.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerInner).EndInit();
             splitContainerInner.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridViewConnections).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -541,5 +607,14 @@ namespace NetProxy.Client.Forms
         private DataGridViewTextBoxColumn ColumnConnStarted;
         private DataGridViewTextBoxColumn ColumnConnDuration;
         private DataGridViewTextBoxColumn ColumnConnIdle;
+        private ToolStripMenuItem proxyToolStripMenuItem;
+        private ToolStripMenuItem addToolStripMenuItem;
+        private ToolStripMenuItem refreshToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripMenuItem startToolStripMenuItem;
+        private ToolStripMenuItem stopToolStripMenuItem;
+        private ToolStripMenuItem editToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem deleteToolStripMenuItem;
     }
 }

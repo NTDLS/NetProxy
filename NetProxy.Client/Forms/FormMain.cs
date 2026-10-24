@@ -1059,6 +1059,50 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        private void AddProxy()
+        {
+            using var formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), null);
+            if (formProxy.ShowDialog() == DialogResult.OK)
+            {
+                RefreshProxyList();
+            }
+        }
+
+        private void StartProxy(Guid proxyId)
+        {
+            _messageClient.EnsureNotNull().Notify(new NotificationStartProxy(proxyId));
+            RefreshProxyList();
+        }
+
+        private void StopProxy(Guid proxyId)
+        {
+            if (MessageBox.Show(Localize("Stop the selected proxy?"), Constants.FriendlyName, MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+            {
+                _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId));
+                RefreshProxyList();
+            }
+        }
+
+        private void EditProxy(Guid proxyId)
+        {
+            using var formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId);
+            if (formProxy.ShowDialog() == DialogResult.OK)
+            {
+                RefreshProxyList();
+            }
+        }
+
+        private void DeleteProxy(Guid proxyId)
+        {
+            if (MessageBox.Show(Localize("Delete the selected proxy?"), Constants.FriendlyName,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+            {
+                _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId));
+                RefreshProxyList();
+            }
+        }
+
         private void Browse_MenuItem_Click(object? sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem { Tag: string url })
@@ -1088,13 +1132,7 @@ namespace NetProxy.Client.Forms
             switch (key)
             {
                 case "Add":
-                    using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), null))
-                    {
-                        if (formProxy.ShowDialog() == DialogResult.OK)
-                        {
-                            RefreshProxyList();
-                        }
-                    }
+                    AddProxy();
                     break;
                 case "Chart all proxies":
                     dataGridViewProxys.ClearSelection();
@@ -1104,34 +1142,16 @@ namespace NetProxy.Client.Forms
                     RefreshProxyList();
                     break;
                 case "Start":
-                    _messageClient.EnsureNotNull().Notify(new NotificationStartProxy(proxyId));
-                    RefreshProxyList();
+                    StartProxy(proxyId);
                     break;
                 case "Stop":
-                    if (MessageBox.Show(Localize("Stop the selected proxy?"), Constants.FriendlyName, MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                    {
-                        _messageClient.EnsureNotNull().Notify(new NotificationStopProxy(proxyId));
-                        RefreshProxyList();
-                    }
-
+                    StopProxy(proxyId);
                     break;
                 case "Edit":
-                    using (FormProxy formProxy = new FormProxy(_connectionInfo.EnsureNotNull(), proxyId))
-                    {
-                        if (formProxy.ShowDialog() == DialogResult.OK)
-                        {
-                            RefreshProxyList();
-                        }
-                    }
+                    EditProxy(proxyId);
                     break;
                 case "Delete":
-                    if (MessageBox.Show(Localize("Delete the selected proxy?"), Constants.FriendlyName,
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                    {
-                        _messageClient.EnsureNotNull().Notify(new NotificationDeleteProxy(proxyId));
-                        RefreshProxyList();
-                    }
+                    DeleteProxy(proxyId);
                     break;
             }
         }
@@ -1153,6 +1173,74 @@ namespace NetProxy.Client.Forms
         private void ExitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             Close();
+        }
+
+        /// <summary>
+        /// The proxy menu works on the selected proxy, and what it can do depends on it and on whether it is running,
+        /// the same as the menu of the list.
+        /// </summary>
+        private void ProxyToolStripMenuItem_DropDownOpening(object? sender, EventArgs e)
+        {
+            var connected = _messageClient != null;
+            var proxy = GetSelectedProxy();
+
+            addToolStripMenuItem.Enabled = connected;
+            refreshToolStripMenuItem.Enabled = connected;
+            startToolStripMenuItem.Enabled = connected && proxy != null && proxy.IsRunning == false;
+            stopToolStripMenuItem.Enabled = connected && proxy != null && proxy.IsRunning;
+            editToolStripMenuItem.Enabled = connected && proxy != null;
+            deleteToolStripMenuItem.Enabled = connected && proxy != null;
+        }
+
+        private NpProxyGridItem? GetSelectedProxy()
+            => dataGridViewProxys.SelectedRows.Count > 0 ? dataGridViewProxys.SelectedRows[0].DataBoundItem as NpProxyGridItem : null;
+
+        private void AddToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null)
+            {
+                AddProxy();
+            }
+        }
+
+        private void RefreshToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null)
+            {
+                RefreshProxyList();
+            }
+        }
+
+        private void StartToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null && GetSelectedProxy() is { IsRunning: false } proxy)
+            {
+                StartProxy(proxy.Id);
+            }
+        }
+
+        private void StopToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null && GetSelectedProxy() is { IsRunning: true } proxy)
+            {
+                StopProxy(proxy.Id);
+            }
+        }
+
+        private void EditToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null && GetSelectedProxy() is { } proxy)
+            {
+                EditProxy(proxy.Id);
+            }
+        }
+
+        private void deleteToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null && GetSelectedProxy() is { } proxy)
+            {
+                DeleteProxy(proxy.Id);
+            }
         }
 
         #endregion

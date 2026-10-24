@@ -15,7 +15,7 @@
  Compression                     = zip/9
  OutputBaseFilename              = NetProxy {#AppVersion}
  ArchitecturesInstallIn64BitMode = x64os
- ArchitecturesAllowed            = x64
+ ArchitecturesAllowed            = x64os
  AppPublisher                    = NetworkDLS
  AppPublisherURL                 = http://www.NetworkDLS.com/
  AppUpdatesURL                   = http://www.NetworkDLS.com/

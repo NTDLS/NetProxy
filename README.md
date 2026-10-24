@@ -8,8 +8,7 @@ TCP, UDP, HTTP, HTTPS, TLS termination, load balancing, failover, sticky session
 
 *There are more screenshots at the bottom of this page.*
 
-<img width="982" height="625" alt="NetProxy" src="https://github.com/user-attachments/assets/d51d04d1-deab-4bb1-bff7-3c96fe1d519e" />
-
+<img width="867" height="697" alt="image" src="https://github.com/user-attachments/assets/20540f64-3437-436d-b3ba-8a598fe4ed80" />
 
 ## What it does
 

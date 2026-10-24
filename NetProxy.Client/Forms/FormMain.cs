@@ -28,6 +28,7 @@ namespace NetProxy.Client.Forms
         private List<NpProxyGridItem> _proxies = [];
         private DataGridViewColumn _proxySortColumn = null!;
         private bool _proxySortAscending = true;
+        private bool _bindingProxies = false;
 
         /// <summary>
         /// The connection list shows the connections of this proxy, and the rate of each is worked out from the bytes of the previous sample.
@@ -62,6 +63,12 @@ namespace NetProxy.Client.Forms
 
             dataGridViewProxys.SelectionChanged += (_, _) =>
             {
+                //Binding the list again selects nothing for a moment. That is not the user choosing another proxy.
+                if (_bindingProxies)
+                {
+                    return;
+                }
+
                 UpdateChart();
                 SelectedProxyChanged();
             };
@@ -315,7 +322,24 @@ namespace NetProxy.Client.Forms
         /// </summary>
         private void BindProxies()
         {
+            _bindingProxies = true;
+            try
+            {
+                BindProxiesInternal();
+            }
+            finally
+            {
+                _bindingProxies = false;
+            }
+
+            //Only does something when the selected proxy is not the one that the connections are shown for.
+            SelectedProxyChanged();
+        }
+
+        private void BindProxiesInternal()
+        {
             string? selectedProxyId = null;
+            var firstDisplayed = dataGridViewProxys.Rows.Count > 0 ? dataGridViewProxys.FirstDisplayedScrollingRowIndex : -1;
 
             //Save the current selected row:
             if (dataGridViewProxys.SelectedRows.Count > 0)
@@ -335,6 +359,11 @@ namespace NetProxy.Client.Forms
                     dataGridViewProxys.CurrentCell = row.Cells[ColumnStatus.Index];
                     row.Selected = true;
                 }
+            }
+
+            if (firstDisplayed >= 0 && firstDisplayed < dataGridViewProxys.Rows.Count)
+            {
+                dataGridViewProxys.FirstDisplayedScrollingRowIndex = firstDisplayed;
             }
 
             UpdateProxySortGlyphs();
@@ -620,6 +649,33 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        /// <summary>
+        /// Sorts the rows only when they are not in order, and keeps the scroll position, so that the list does not jump once a second.
+        /// </summary>
+        private void SortConnections()
+        {
+            var grid = dataGridViewConnections;
+
+            var inOrder = true;
+            for (int i = 1; i < grid.Rows.Count && inOrder; i++)
+            {
+                inOrder = _connectionSorter.Compare(grid.Rows[i - 1], grid.Rows[i]) <= 0;
+            }
+
+            if (inOrder)
+            {
+                return;
+            }
+
+            var firstDisplayed = grid.FirstDisplayedScrollingRowIndex;
+            grid.Sort(_connectionSorter);
+
+            if (firstDisplayed >= 0 && firstDisplayed < grid.Rows.Count)
+            {
+                grid.FirstDisplayedScrollingRowIndex = firstDisplayed;
+            }
+        }
+
         private void DataGridViewConnections_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
         {
             if (_connectionSorter.Column == e.ColumnIndex)
@@ -633,7 +689,7 @@ namespace NetProxy.Client.Forms
             }
 
             SetupConnectionColumnHeaders();
-            dataGridViewConnections.Sort(_connectionSorter);
+            SortConnections();
         }
 
         private Guid GetSelectedProxyId()
@@ -804,7 +860,7 @@ namespace NetProxy.Client.Forms
                     _connectionSamples.Remove(staleId);
                 }
 
-                grid.Sort(_connectionSorter);
+                SortConnections();
 
                 //The first row of a grid is selected when it gets its rows, and nothing was selected by the user.
                 if (existing.Count == 0)

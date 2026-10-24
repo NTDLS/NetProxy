@@ -29,6 +29,7 @@ namespace NetProxy.Client.Forms
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             dataGridViewProxys = new DataGridView();
             ColumnStatus = new DataGridViewImageColumn();
             ColumnId = new DataGridViewTextBoxColumn();
@@ -44,6 +45,7 @@ namespace NetProxy.Client.Forms
             exitToolStripMenuItem = new ToolStripMenuItem();
             settingsToolStripMenuItem = new ToolStripMenuItem();
             configurationToolStripMenuItem = new ToolStripMenuItem();
+            pluginsToolStripMenuItem = new ToolStripMenuItem();
             languageToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
@@ -51,8 +53,25 @@ namespace NetProxy.Client.Forms
             chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
             splitContainerOuter = new SplitContainer();
             splitContainerInner = new SplitContainer();
-            listViewEndpointConnections = new ListView();
+            dataGridViewConnections = new DataGridView();
+            ColumnConnSourceAddress = new DataGridViewTextBoxColumn();
+            ColumnConnSourceHost = new DataGridViewTextBoxColumn();
+            ColumnConnSourcePort = new DataGridViewTextBoxColumn();
+            ColumnConnDestinationAddress = new DataGridViewTextBoxColumn();
+            ColumnConnDestinationHost = new DataGridViewTextBoxColumn();
+            ColumnConnDestinationPort = new DataGridViewTextBoxColumn();
+            ColumnConnProtocol = new DataGridViewTextBoxColumn();
+            ColumnConnVersion = new DataGridViewTextBoxColumn();
+            ColumnConnEncryption = new DataGridViewTextBoxColumn();
+            ColumnConnBytesIn = new DataGridViewTextBoxColumn();
+            ColumnConnBytesOut = new DataGridViewTextBoxColumn();
+            ColumnConnInPerSecond = new DataGridViewTextBoxColumn();
+            ColumnConnOutPerSecond = new DataGridViewTextBoxColumn();
+            ColumnConnStarted = new DataGridViewTextBoxColumn();
+            ColumnConnDuration = new DataGridViewTextBoxColumn();
+            ColumnConnIdle = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewConnections).BeginInit();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)chartPerformance).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerOuter).BeginInit();
@@ -64,6 +83,10 @@ namespace NetProxy.Client.Forms
             splitContainerInner.Panel2.SuspendLayout();
             splitContainerInner.SuspendLayout();
             SuspendLayout();
+            // 
+            // dataGridViewCellStyle1
+            // 
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleRight;
             // 
             // dataGridViewProxys
             // 
@@ -84,6 +107,7 @@ namespace NetProxy.Client.Forms
             dataGridViewProxys.Size = new Size(784, 193);
             dataGridViewProxys.TabIndex = 0;
             dataGridViewProxys.CellDoubleClick += DataGridViewProxys_CellDoubleClick;
+            dataGridViewProxys.ColumnHeaderMouseClick += DataGridViewProxys_ColumnHeaderMouseClick;
             dataGridViewProxys.MouseDown += DataGridViewProxys_MouseDown;
             // 
             // ColumnStatus
@@ -92,6 +116,7 @@ namespace NetProxy.Client.Forms
             ColumnStatus.HeaderText = "Status";
             ColumnStatus.Name = "ColumnStatus";
             ColumnStatus.ReadOnly = true;
+            ColumnStatus.SortMode = DataGridViewColumnSortMode.Programmatic;
             ColumnStatus.Width = 45;
             // 
             // ColumnId
@@ -110,6 +135,7 @@ namespace NetProxy.Client.Forms
             ColumnName.MinimumWidth = 150;
             ColumnName.Name = "ColumnName";
             ColumnName.ReadOnly = true;
+            ColumnName.SortMode = DataGridViewColumnSortMode.Programmatic;
             // 
             // ColumnProxyType
             // 
@@ -117,6 +143,7 @@ namespace NetProxy.Client.Forms
             ColumnProxyType.HeaderText = "Type";
             ColumnProxyType.Name = "ColumnProxyType";
             ColumnProxyType.ReadOnly = true;
+            ColumnProxyType.SortMode = DataGridViewColumnSortMode.Programmatic;
             ColumnProxyType.Width = 115;
             // 
             // ColummListenPort
@@ -125,6 +152,7 @@ namespace NetProxy.Client.Forms
             ColummListenPort.HeaderText = "Port";
             ColummListenPort.Name = "ColummListenPort";
             ColummListenPort.ReadOnly = true;
+            ColummListenPort.SortMode = DataGridViewColumnSortMode.Programmatic;
             ColummListenPort.Width = 50;
             // 
             // ColumnBytesTransferred
@@ -132,21 +160,24 @@ namespace NetProxy.Client.Forms
             ColumnBytesTransferred.HeaderText = "Bytes Transferred";
             ColumnBytesTransferred.Name = "ColumnBytesTransferred";
             ColumnBytesTransferred.ReadOnly = true;
-            ColumnBytesTransferred.Width = 80;
+            ColumnBytesTransferred.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnBytesTransferred.Width = 125;
             // 
             // ColumnTotalConnections
             // 
             ColumnTotalConnections.HeaderText = "Total Conn.";
             ColumnTotalConnections.Name = "ColumnTotalConnections";
             ColumnTotalConnections.ReadOnly = true;
-            ColumnTotalConnections.Width = 70;
+            ColumnTotalConnections.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnTotalConnections.Width = 95;
             // 
             // ColumnCurrentConnections
             // 
             ColumnCurrentConnections.HeaderText = "Curr. Conn.";
             ColumnCurrentConnections.Name = "ColumnCurrentConnections";
             ColumnCurrentConnections.ReadOnly = true;
-            ColumnCurrentConnections.Width = 50;
+            ColumnCurrentConnections.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnCurrentConnections.Width = 95;
             // 
             // menuStrip1
             // 
@@ -181,7 +212,7 @@ namespace NetProxy.Client.Forms
             // 
             // settingsToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem, languageToolStripMenuItem });
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem, pluginsToolStripMenuItem, languageToolStripMenuItem });
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(61, 20);
             settingsToolStripMenuItem.Text = "Settings";
@@ -192,6 +223,13 @@ namespace NetProxy.Client.Forms
             configurationToolStripMenuItem.Size = new Size(148, 22);
             configurationToolStripMenuItem.Text = "Configuration";
             configurationToolStripMenuItem.Click += ConfigurationToolStripMenuItem_Click;
+            //
+            // pluginsToolStripMenuItem
+            //
+            pluginsToolStripMenuItem.Name = "pluginsToolStripMenuItem";
+            pluginsToolStripMenuItem.Size = new Size(148, 22);
+            pluginsToolStripMenuItem.Text = "Plugins...";
+            pluginsToolStripMenuItem.Click += PluginsToolStripMenuItem_Click;
             // 
             // languageToolStripMenuItem
             // 
@@ -265,20 +303,167 @@ namespace NetProxy.Client.Forms
             // 
             // splitContainerInner.Panel2
             // 
-            splitContainerInner.Panel2.Controls.Add(listViewEndpointConnections);
+            splitContainerInner.Panel2.Controls.Add(dataGridViewConnections);
             splitContainerInner.Size = new Size(784, 347);
             splitContainerInner.SplitterDistance = 193;
             splitContainerInner.TabIndex = 4;
+            //
+            // dataGridViewConnections
+            //
+            dataGridViewConnections.AllowUserToAddRows = false;
+            dataGridViewConnections.AllowUserToDeleteRows = false;
+            dataGridViewConnections.AllowUserToResizeRows = false;
+            dataGridViewConnections.BackgroundColor = SystemColors.ButtonFace;
+            dataGridViewConnections.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewConnections.Columns.AddRange(new DataGridViewColumn[] { ColumnConnSourceAddress, ColumnConnSourceHost, ColumnConnSourcePort, ColumnConnDestinationAddress, ColumnConnDestinationHost, ColumnConnDestinationPort, ColumnConnProtocol, ColumnConnVersion, ColumnConnEncryption, ColumnConnBytesIn, ColumnConnBytesOut, ColumnConnInPerSecond, ColumnConnOutPerSecond, ColumnConnStarted, ColumnConnDuration, ColumnConnIdle });
+            dataGridViewConnections.Dock = DockStyle.Fill;
+            dataGridViewConnections.EditMode = DataGridViewEditMode.EditProgrammatically;
+            dataGridViewConnections.Location = new Point(0, 0);
+            dataGridViewConnections.Margin = new Padding(4, 3, 4, 3);
+            dataGridViewConnections.MultiSelect = false;
+            dataGridViewConnections.Name = "dataGridViewConnections";
+            dataGridViewConnections.ReadOnly = true;
+            dataGridViewConnections.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridViewConnections.Size = new Size(784, 150);
+            dataGridViewConnections.TabIndex = 0;
+            dataGridViewConnections.CellMouseUp += DataGridViewConnections_CellMouseUp;
+            dataGridViewConnections.ColumnHeaderMouseClick += DataGridViewConnections_ColumnHeaderMouseClick;
             // 
-            // listViewEndpointConnections
+            // ColumnConnSourceAddress
             // 
-            listViewEndpointConnections.Dock = DockStyle.Fill;
-            listViewEndpointConnections.Location = new Point(0, 0);
-            listViewEndpointConnections.Name = "listViewEndpointConnections";
-            listViewEndpointConnections.Size = new Size(784, 150);
-            listViewEndpointConnections.TabIndex = 0;
-            listViewEndpointConnections.UseCompatibleStateImageBehavior = false;
-            listViewEndpointConnections.View = View.Details;
+            ColumnConnSourceAddress.HeaderText = "Source IP";
+            ColumnConnSourceAddress.Name = "ColumnConnSourceAddress";
+            ColumnConnSourceAddress.ReadOnly = true;
+            ColumnConnSourceAddress.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnSourceAddress.Width = 110;
+            // 
+            // ColumnConnSourceHost
+            // 
+            ColumnConnSourceHost.HeaderText = "Source Host";
+            ColumnConnSourceHost.Name = "ColumnConnSourceHost";
+            ColumnConnSourceHost.ReadOnly = true;
+            ColumnConnSourceHost.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnSourceHost.Width = 130;
+            // 
+            // ColumnConnSourcePort
+            // 
+            ColumnConnSourcePort.HeaderText = "Source Port";
+            ColumnConnSourcePort.Name = "ColumnConnSourcePort";
+            ColumnConnSourcePort.ReadOnly = true;
+            ColumnConnSourcePort.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnSourcePort.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnSourcePort.Width = 95;
+            // 
+            // ColumnConnDestinationAddress
+            // 
+            ColumnConnDestinationAddress.HeaderText = "Destination IP";
+            ColumnConnDestinationAddress.Name = "ColumnConnDestinationAddress";
+            ColumnConnDestinationAddress.ReadOnly = true;
+            ColumnConnDestinationAddress.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnDestinationAddress.Width = 110;
+            // 
+            // ColumnConnDestinationHost
+            // 
+            ColumnConnDestinationHost.HeaderText = "Destination Host";
+            ColumnConnDestinationHost.Name = "ColumnConnDestinationHost";
+            ColumnConnDestinationHost.ReadOnly = true;
+            ColumnConnDestinationHost.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnDestinationHost.Width = 130;
+            // 
+            // ColumnConnDestinationPort
+            // 
+            ColumnConnDestinationPort.HeaderText = "Destination Port";
+            ColumnConnDestinationPort.Name = "ColumnConnDestinationPort";
+            ColumnConnDestinationPort.ReadOnly = true;
+            ColumnConnDestinationPort.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnDestinationPort.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnDestinationPort.Width = 125;
+            // 
+            // ColumnConnProtocol
+            // 
+            ColumnConnProtocol.HeaderText = "Protocol";
+            ColumnConnProtocol.Name = "ColumnConnProtocol";
+            ColumnConnProtocol.ReadOnly = true;
+            ColumnConnProtocol.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnProtocol.Width = 70;
+            // 
+            // ColumnConnVersion
+            // 
+            ColumnConnVersion.HeaderText = "Version";
+            ColumnConnVersion.Name = "ColumnConnVersion";
+            ColumnConnVersion.ReadOnly = true;
+            ColumnConnVersion.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnVersion.Width = 70;
+            // 
+            // ColumnConnEncryption
+            // 
+            ColumnConnEncryption.HeaderText = "Encryption";
+            ColumnConnEncryption.Name = "ColumnConnEncryption";
+            ColumnConnEncryption.ReadOnly = true;
+            ColumnConnEncryption.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnEncryption.Width = 130;
+            // 
+            // ColumnConnBytesIn
+            // 
+            ColumnConnBytesIn.HeaderText = "Bytes In";
+            ColumnConnBytesIn.Name = "ColumnConnBytesIn";
+            ColumnConnBytesIn.ReadOnly = true;
+            ColumnConnBytesIn.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnBytesIn.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnBytesIn.Width = 80;
+            // 
+            // ColumnConnBytesOut
+            // 
+            ColumnConnBytesOut.HeaderText = "Bytes Out";
+            ColumnConnBytesOut.Name = "ColumnConnBytesOut";
+            ColumnConnBytesOut.ReadOnly = true;
+            ColumnConnBytesOut.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnBytesOut.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnBytesOut.Width = 80;
+            // 
+            // ColumnConnInPerSecond
+            // 
+            ColumnConnInPerSecond.HeaderText = "In/s";
+            ColumnConnInPerSecond.Name = "ColumnConnInPerSecond";
+            ColumnConnInPerSecond.ReadOnly = true;
+            ColumnConnInPerSecond.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnInPerSecond.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnInPerSecond.Width = 80;
+            // 
+            // ColumnConnOutPerSecond
+            // 
+            ColumnConnOutPerSecond.HeaderText = "Out/s";
+            ColumnConnOutPerSecond.Name = "ColumnConnOutPerSecond";
+            ColumnConnOutPerSecond.ReadOnly = true;
+            ColumnConnOutPerSecond.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnOutPerSecond.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnOutPerSecond.Width = 80;
+            // 
+            // ColumnConnStarted
+            // 
+            ColumnConnStarted.HeaderText = "Started";
+            ColumnConnStarted.Name = "ColumnConnStarted";
+            ColumnConnStarted.ReadOnly = true;
+            ColumnConnStarted.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnStarted.Width = 140;
+            // 
+            // ColumnConnDuration
+            // 
+            ColumnConnDuration.HeaderText = "Duration";
+            ColumnConnDuration.Name = "ColumnConnDuration";
+            ColumnConnDuration.ReadOnly = true;
+            ColumnConnDuration.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnDuration.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnDuration.Width = 80;
+            // 
+            // ColumnConnIdle
+            // 
+            ColumnConnIdle.HeaderText = "Idle";
+            ColumnConnIdle.Name = "ColumnConnIdle";
+            ColumnConnIdle.ReadOnly = true;
+            ColumnConnIdle.SortMode = DataGridViewColumnSortMode.Programmatic;
+            ColumnConnIdle.DefaultCellStyle = dataGridViewCellStyle1;
+            ColumnConnIdle.Width = 70;
             // 
             // FormMain
             // 
@@ -298,6 +483,7 @@ namespace NetProxy.Client.Forms
             FormClosed += FormMain_FormClosed;
             Shown += FormMain_Shown;
             ((System.ComponentModel.ISupportInitialize)dataGridViewProxys).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewConnections).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)chartPerformance).EndInit();
@@ -323,6 +509,7 @@ namespace NetProxy.Client.Forms
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ToolStripMenuItem changeConnectionToolStripMenuItem;
         private ToolStripMenuItem settingsToolStripMenuItem;
+        private ToolStripMenuItem pluginsToolStripMenuItem;
         private ToolStripMenuItem configurationToolStripMenuItem;
         private ToolStripMenuItem languageToolStripMenuItem;
         private StatusStrip statusStripMain;
@@ -337,6 +524,22 @@ namespace NetProxy.Client.Forms
         private DataGridViewTextBoxColumn ColumnCurrentConnections;
         private SplitContainer splitContainerOuter;
         private SplitContainer splitContainerInner;
-        private ListView listViewEndpointConnections;
+        private DataGridView dataGridViewConnections;
+        private DataGridViewTextBoxColumn ColumnConnSourceAddress;
+        private DataGridViewTextBoxColumn ColumnConnSourceHost;
+        private DataGridViewTextBoxColumn ColumnConnSourcePort;
+        private DataGridViewTextBoxColumn ColumnConnDestinationAddress;
+        private DataGridViewTextBoxColumn ColumnConnDestinationHost;
+        private DataGridViewTextBoxColumn ColumnConnDestinationPort;
+        private DataGridViewTextBoxColumn ColumnConnProtocol;
+        private DataGridViewTextBoxColumn ColumnConnVersion;
+        private DataGridViewTextBoxColumn ColumnConnEncryption;
+        private DataGridViewTextBoxColumn ColumnConnBytesIn;
+        private DataGridViewTextBoxColumn ColumnConnBytesOut;
+        private DataGridViewTextBoxColumn ColumnConnInPerSecond;
+        private DataGridViewTextBoxColumn ColumnConnOutPerSecond;
+        private DataGridViewTextBoxColumn ColumnConnStarted;
+        private DataGridViewTextBoxColumn ColumnConnDuration;
+        private DataGridViewTextBoxColumn ColumnConnIdle;
     }
-}
+}

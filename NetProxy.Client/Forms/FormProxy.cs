@@ -38,10 +38,6 @@ namespace NetProxy.Client.Forms
             InitializeComponent();
             FormLocalizer.Apply(this);
             LocalizeGrids();
-            InitializeHostNamesTab();
-            InitializePluginsTab();
-            InitializeForwardedHeadersControl();
-            InitializeDatagramLimitControl();
             Theming.InitializeForm(this);
             SetupToolTips();
 
@@ -93,9 +89,19 @@ namespace NetProxy.Client.Forms
             comboBoxConnectionPattern.ValueMember = "Value";
             comboBoxConnectionPattern.DataSource = connectionPatterns;
 
+            var forwardedHeaders = new List<ComboItem>
+            {
+                new (Localize("Off"), ForwardedHeadersMode.Off),
+                new (Localize("Set (replace what the client sent)"), ForwardedHeadersMode.Replace),
+                new (Localize("Append (behind another proxy)"), ForwardedHeadersMode.Append)
+            };
+
+            comboBoxForwardedHeaders.DisplayMember = "Display";
+            comboBoxForwardedHeaders.ValueMember = "Value";
+            comboBoxForwardedHeaders.DataSource = forwardedHeaders;
+
             ColumnBindingsEnabled.DefaultCellStyle.NullValue = true;
             ColumnEndpointsEnabled.DefaultCellStyle.NullValue = true;
-            ColumnEndpointsTrafficType.Items.Add("Udp");
             ColumnHTTPHeadersEnabled.DefaultCellStyle.NullValue = true;
 
             //A new endpoint starts with the traffic type of the listener, which is usually what it needs.
@@ -116,107 +122,11 @@ namespace NetProxy.Client.Forms
             textBoxMaxConnections.Text = "0";
             textBoxMaxConnectionsPerClient.Text = "0";
             textBoxIdleTimeout.Text = "0";
-            _maxDatagrams.Text = "0";
+            textBoxMaxDatagrams.Text = "0";
             checkBoxListenAutoStart.Checked = true;
             //----------------------------------------------------------------------------
 
             _previousTrafficType = TrafficType.Http;
-        }
-
-        private DataGridView _hostNamesGrid = null!;
-        private DataGridViewCheckBoxColumn _hostNamesEnabled = null!;
-        private DataGridViewTextBoxColumn _hostNamesHost = null!;
-        private DataGridViewTextBoxColumn _hostNamesCertificate = null!;
-        private DataGridViewTextBoxColumn _hostNamesPassword = null!;
-        private DataGridViewTextBoxColumn _hostNamesDescription = null!;
-        private TabPage _tabPageHostNames = null!;
-
-        /// <summary>
-        /// The host names tab, which is where proxies that share a port are told apart (and given a certificate each).
-        /// </summary>
-        private void InitializeHostNamesTab()
-        {
-            _hostNamesEnabled = new DataGridViewCheckBoxColumn { HeaderText = Localize("Enabled"), Width = 55, Frozen = true };
-            _hostNamesEnabled.DefaultCellStyle.NullValue = true;
-            _hostNamesHost = new DataGridViewTextBoxColumn
-            {
-                HeaderText = Localize("Host name"),
-                Width = 170,
-                ToolTipText = Localize("A host name such as www.example.com, or *.example.com for every name below a domain.")
-            };
-            _hostNamesCertificate = new DataGridViewTextBoxColumn
-            {
-                HeaderText = Localize("Certificate (PFX)"),
-                Width = 170,
-                ToolTipText = Localize("HTTPS only. The certificate for this host name, on the machine that the service runs on (double-click to browse). When empty, the certificate of the proxy is used.")
-            };
-            _hostNamesPassword = new DataGridViewTextBoxColumn { HeaderText = Localize("Password"), Width = 80 };
-            _hostNamesDescription = new DataGridViewTextBoxColumn { HeaderText = Localize("Description"), Width = 120 };
-
-            _hostNamesGrid = new DataGridView
-            {
-                Location = new Point(9, 66),
-                Size = new Size(579, 253),
-                BackgroundColor = SystemColors.ButtonFace,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
-            _hostNamesGrid.Columns.AddRange(_hostNamesEnabled, _hostNamesHost, _hostNamesCertificate, _hostNamesPassword, _hostNamesDescription);
-            _hostNamesGrid.DataError += (_, e) => e.ThrowException = false;
-
-            //The password is not shown, in the grid or while it is typed.
-            _hostNamesGrid.CellFormatting += (_, e) =>
-            {
-                if (e.ColumnIndex == _hostNamesPassword.Index && string.IsNullOrEmpty(e.Value as string) == false)
-                {
-                    e.Value = "••••••";
-                    e.FormattingApplied = true;
-                }
-            };
-            _hostNamesGrid.EditingControlShowing += (_, e) =>
-            {
-                if (e.Control is TextBox textBox)
-                {
-                    textBox.UseSystemPasswordChar = _hostNamesGrid.CurrentCell?.ColumnIndex == _hostNamesPassword.Index;
-                }
-            };
-            _hostNamesGrid.CellDoubleClick += (_, e) =>
-            {
-                if (e.RowIndex < 0 || e.ColumnIndex != _hostNamesCertificate.Index || _hostNamesGrid.ReadOnly)
-                {
-                    return;
-                }
-
-                using var dialog = new OpenFileDialog
-                {
-                    Title = Localize("Select the TLS certificate"),
-                    Filter = Localize("PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*")
-                };
-
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    _hostNamesGrid.Rows[e.RowIndex].Cells[_hostNamesCertificate.Index].Value = dialog.FileName;
-                }
-            };
-
-            var info = new Label
-            {
-                Location = new Point(9, 9),
-                Size = new Size(579, 54),
-                Text = Localize("Several HTTP or HTTPS proxies can listen on the same port if they answer to different host names. A request goes to the proxy with the host name it asks for"
-                    + " (the Host header, or the server name of the TLS handshake). A proxy with no host names gets the requests that no other proxy claims. TCP and UDP proxies cannot share a port.")
-            };
-
-            _tabPageHostNames = new TabPage
-            {
-                Text = Localize("Host names"),
-                BackColor = SystemColors.Control,
-                Padding = new Padding(3)
-            };
-            _tabPageHostNames.Controls.Add(info);
-            _tabPageHostNames.Controls.Add(_hostNamesGrid);
-
-            tabControl.TabPages.Insert(tabControl.TabPages.IndexOf(tabPageBindings) + 1, _tabPageHostNames);
         }
 
         /// <summary>
@@ -240,6 +150,11 @@ namespace NetProxy.Client.Forms
             ColumnEndpointsTrafficType.HeaderText = Localize("Traffic");
             ColumnEndpointsValidateSSLCertificate.HeaderText = Localize("Validate Certificate");
             ColumnEndpointsDescription.HeaderText = Localize("Description");
+            ColumnHostNamesEnabled.HeaderText = Localize("Enabled");
+            ColumnHostNamesHost.HeaderText = Localize("Host name");
+            ColumnHostNamesCertificate.HeaderText = Localize("Certificate (PFX)");
+            ColumnHostNamesPassword.HeaderText = Localize("Password");
+            ColumnHostNamesDescription.HeaderText = Localize("Description");
         }
 
         /// <summary>
@@ -364,93 +279,63 @@ namespace NetProxy.Client.Forms
             toolTips.AddControls([label15, textBoxStickySessionCacheExpiration],
                 Localize("How long, in seconds, a client is remembered by sticky sessions after it was last connected."));
 
+            toolTips.AddControls([labelMaxDatagrams, textBoxMaxDatagrams],
+                Localize("UDP only. The most datagrams per second that one client (address and port) may send. The ones above that are dropped. 0 is no limit."));
+
+            toolTips.AddControls([labelForwardedHeaders, comboBoxForwardedHeaders],
+                Localize("Tell the endpoint who the client is, which it cannot see when the connection comes from the proxy. Set: X-Forwarded-For is the client address"
+                + " and X-Forwarded-Proto is http or https, replacing anything the client sent. Append: for a proxy behind another proxy, the client is added to the end of X-Forwarded-For."));
+
+            ColumnHostNamesHost.ToolTipText = Localize("A host name such as www.example.com, or *.example.com for every name below a domain.");
+            ColumnHostNamesCertificate.ToolTipText = Localize("HTTPS only. The certificate for this host name, on the machine that the service runs on (double-click to browse)."
+                + " When empty, the certificate of the proxy is used.");
+
             #endregion
         }
 
-        private TextBox _maxDatagrams = null!;
-        private Label _maxDatagramsLabel = null!;
-
-        /// <summary>
-        /// UDP only: below the idle timeout, the most datagrams per second one client may send.
-        /// </summary>
-        private void InitializeDatagramLimitControl()
-        {
-            _maxDatagramsLabel = new Label { Text = Localize("Max datagrams/s per client (UDP)"), Location = new Point(8, 157), AutoSize = true };
-            _maxDatagrams = new TextBox { Location = new Point(10, 175), Size = new Size(116, 23) };
-
-            groupBoxLimits.Height += 42;
-            groupBoxLimits.Controls.Add(_maxDatagramsLabel);
-            groupBoxLimits.Controls.Add(_maxDatagrams);
-
-            new ToolTip().SetToolTip(_maxDatagrams,
-                Localize("UDP only. The most datagrams per second that one client (address and port) may send. The ones above that are dropped. 0 is no limit."));
-        }
-
-        private ComboBox _forwardedHeaders = null!;
-
-        /// <summary>
-        /// At the bottom of the HTTP headers tab: whether the endpoint is told who the client is.
-        /// </summary>
-        private void InitializeForwardedHeadersControl()
-        {
-            _forwardedHeaders = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Location = new Point(190, 5),
-                Width = 220,
-                DisplayMember = "Display",
-                ValueMember = "Value",
-                DataSource = new List<ComboItem>
-                {
-                    new (Localize("Off"), ForwardedHeadersMode.Off),
-                    new (Localize("Set (replace what the client sent)"), ForwardedHeadersMode.Replace),
-                    new (Localize("Append (behind another proxy)"), ForwardedHeadersMode.Append)
-                }
-            };
-
-            var panel = new Panel { Dock = DockStyle.Bottom, Height = 34 };
-            panel.Controls.Add(new Label { Text = Localize("X-Forwarded-For / -Proto"), Location = new Point(6, 9), AutoSize = true });
-            panel.Controls.Add(_forwardedHeaders);
-
-            tabPageHTTPHeaders.Controls.Add(panel);
-            dataGridViewHTTPHeaders.BringToFront();
-
-            new ToolTip().SetToolTip(_forwardedHeaders,
-                Localize("Tell the endpoint who the client is, which it cannot see when the connection comes from the proxy. Set: X-Forwarded-For is the client address"
-                + " and X-Forwarded-Proto is http or https, replacing anything the client sent. Append: for a proxy behind another proxy, the client is added to the end of X-Forwarded-For."));
-        }
-
-        private CheckedListBox _pluginsList = null!;
-        private TabPage _tabPagePlugins = null!;
         private List<NpPluginGridItem> _servicePlugins = new();
 
-        /// <summary>
-        /// The plugins tab: the plugins of the service, ticked for the ones that this proxy uses. They are called in the order shown.
-        /// </summary>
-        private void InitializePluginsTab()
+        //The password of a host name is not shown, in the grid or while it is typed.
+        private void DataGridViewHostNames_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            _pluginsList = new CheckedListBox
+            if (e.ColumnIndex == ColumnHostNamesPassword.Index && string.IsNullOrEmpty(e.Value as string) == false)
             {
-                Location = new Point(9, 52),
-                Size = new Size(579, 267),
-                CheckOnClick = true,
-                IntegralHeight = false,
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
-            };
-
-            var info = new Label
-            {
-                Location = new Point(9, 9),
-                Size = new Size(579, 40),
-                Text = Localize("Tick the plugins that this proxy uses. They are set up for the whole service (Settings, Plugins) and are called in the order shown."
-                    + " A plugin that is not ticked is not called for this proxy.")
-            };
-
-            _tabPagePlugins = new TabPage { Text = Localize("Plugins"), BackColor = SystemColors.Control, Padding = new Padding(3) };
-            _tabPagePlugins.Controls.Add(info);
-            _tabPagePlugins.Controls.Add(_pluginsList);
-            tabControl.TabPages.Add(_tabPagePlugins);
+                e.Value = "••••••";
+                e.FormattingApplied = true;
+            }
         }
+
+        private void DataGridViewHostNames_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (e.Control is TextBox textBox)
+            {
+                textBox.UseSystemPasswordChar = dataGridViewHostNames.CurrentCell?.ColumnIndex == ColumnHostNamesPassword.Index;
+            }
+        }
+
+        private void DataGridViewHostNames_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != ColumnHostNamesCertificate.Index || dataGridViewHostNames.ReadOnly)
+            {
+                return;
+            }
+
+            //This browses the machine that the console runs on. The path is read by the service, so it only
+            //  makes sense to browse when that is the same machine; otherwise type the path on the service machine.
+            using var dialog = new OpenFileDialog
+            {
+                Title = Localize("Select the TLS certificate"),
+                Filter = Localize("PKCS#12 certificate (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*")
+            };
+
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                dataGridViewHostNames.Rows[e.RowIndex].Cells[ColumnHostNamesCertificate.Index].Value = dialog.FileName;
+            }
+        }
+
+        private void DataGridViewHostNames_DataError(object? sender, DataGridViewDataErrorEventArgs e)
+            => e.ThrowException = false;
 
         private void LoadServicePlugins()
         {
@@ -463,11 +348,11 @@ namespace NetProxy.Client.Forms
                 _servicePlugins = new();
             }
 
-            _pluginsList.Items.Clear();
+            checkedListBoxPlugins.Items.Clear();
             foreach (var plugin in _servicePlugins)
             {
                 var note = plugin.Enabled == false ? $" ({Localize("disabled")})" : (plugin.IsLoaded ? "" : $" ({Localize("not loaded")})");
-                _pluginsList.Items.Add(new PluginItem(plugin.Id, plugin.Name + note));
+                checkedListBoxPlugins.Items.Add(new PluginItem(plugin.Id, plugin.Name + note));
             }
         }
 
@@ -509,9 +394,9 @@ namespace NetProxy.Client.Forms
             textBoxMaxConnections.Text = $"{proxy.MaxConnections}";
             textBoxMaxConnectionsPerClient.Text = $"{proxy.MaxConnectionsPerClient}";
             textBoxIdleTimeout.Text = $"{proxy.IdleTimeoutSeconds}";
-            _maxDatagrams.Text = $"{proxy.MaxDatagramsPerSecondPerClient}";
+            textBoxMaxDatagrams.Text = $"{proxy.MaxDatagramsPerSecondPerClient}";
             checkBoxAllowHttp2.Checked = proxy.AllowHttp2;
-            _forwardedHeaders.SelectedValue = proxy.ForwardedHeaders;
+            comboBoxForwardedHeaders.SelectedValue = proxy.ForwardedHeaders;
             textBoxCertificatePath.Text = proxy.TlsCertificatePath;
             textBoxCertificatePassword.Text = proxy.TlsCertificatePassword;
 
@@ -522,14 +407,14 @@ namespace NetProxy.Client.Forms
                 );
             }
 
-            for (var i = 0; i < _pluginsList.Items.Count; i++)
+            for (var i = 0; i < checkedListBoxPlugins.Items.Count; i++)
             {
-                _pluginsList.SetItemChecked(i, proxy.PluginIds.Contains(((PluginItem)_pluginsList.Items[i]).Id));
+                checkedListBoxPlugins.SetItemChecked(i, proxy.PluginIds.Contains(((PluginItem)checkedListBoxPlugins.Items[i]).Id));
             }
 
             foreach (var host in proxy.HostNames)
             {
-                _hostNamesGrid.Rows.Add(
+                dataGridViewHostNames.Rows.Add(
                     [$"{host.Enabled}", host.Host, host.TlsCertificatePath, host.TlsCertificatePassword, host.Description]
                 );
             }
@@ -613,7 +498,7 @@ namespace NetProxy.Client.Forms
                 textBoxIdleTimeout.GetAndValidateNumeric(0, 31536000,
                     Localize("The idle timeout (s) must be between [min] and [max] (0 is no timeout)."));
 
-                _maxDatagrams.GetAndValidateNumeric(0, 100000000,
+                textBoxMaxDatagrams.GetAndValidateNumeric(0, 100000000,
                     Localize("The most datagrams per second must be between [min] and [max] (0 is no limit)."));
             }
             catch (Exception ex)
@@ -639,9 +524,9 @@ namespace NetProxy.Client.Forms
             proxy.MaxConnections = int.Parse(textBoxMaxConnections.Text);
             proxy.MaxConnectionsPerClient = int.Parse(textBoxMaxConnectionsPerClient.Text);
             proxy.IdleTimeoutSeconds = int.Parse(textBoxIdleTimeout.Text);
-            proxy.MaxDatagramsPerSecondPerClient = int.Parse(_maxDatagrams.Text);
+            proxy.MaxDatagramsPerSecondPerClient = int.Parse(textBoxMaxDatagrams.Text);
             proxy.AllowHttp2 = checkBoxAllowHttp2.Checked;
-            proxy.ForwardedHeaders = _forwardedHeaders.SelectedValue is ForwardedHeadersMode forwarded ? forwarded : ForwardedHeadersMode.Off;
+            proxy.ForwardedHeaders = comboBoxForwardedHeaders.SelectedValue is ForwardedHeadersMode forwarded ? forwarded : ForwardedHeadersMode.Off;
             proxy.TlsCertificatePath = textBoxCertificatePath.Text.Trim();
             proxy.TlsCertificatePassword = textBoxCertificatePassword.Text;
 
@@ -652,9 +537,9 @@ namespace NetProxy.Client.Forms
                 return false;
             }
 
-            foreach (DataGridViewRow row in _hostNamesGrid.Rows)
+            foreach (DataGridViewRow row in dataGridViewHostNames.Rows)
             {
-                var host = ((string)(row.Cells[_hostNamesHost.Index].Value ?? "")).Trim();
+                var host = ((string)(row.Cells[ColumnHostNamesHost.Index].Value ?? "")).Trim();
                 if (row.IsNewRow || host == string.Empty)
                 {
                     continue;
@@ -663,8 +548,8 @@ namespace NetProxy.Client.Forms
                 var hostPattern = NpHostMatcher.Normalize(host);
                 if (NpHostMatcher.IsValidPattern(hostPattern) == false)
                 {
-                    tabControl.SelectedTab = _tabPageHostNames;
-                    _hostNamesGrid.CurrentCell = row.Cells[_hostNamesHost.Index];
+                    tabControl.SelectedTab = tabPageHostNames;
+                    dataGridViewHostNames.CurrentCell = row.Cells[ColumnHostNamesHost.Index];
                     MessageBox.Show(Localize("'{0}' is not a valid host name (use a name like www.example.com, or *.example.com for all names below a domain).", host),
                         Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return false;
@@ -672,23 +557,23 @@ namespace NetProxy.Client.Forms
 
                 if (proxy.HostNames.Any(o => o.Host == hostPattern))
                 {
-                    tabControl.SelectedTab = _tabPageHostNames;
-                    _hostNamesGrid.CurrentCell = row.Cells[_hostNamesHost.Index];
+                    tabControl.SelectedTab = tabPageHostNames;
+                    dataGridViewHostNames.CurrentCell = row.Cells[ColumnHostNamesHost.Index];
                     MessageBox.Show(Localize("The host name '{0}' is listed more than once.", hostPattern!), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return false;
                 }
 
                 proxy.HostNames.Add(new NpHostName
                 {
-                    Enabled = bool.Parse(row.Cells[_hostNamesEnabled.Index].Value?.ToString() ?? "True"),
+                    Enabled = bool.Parse(row.Cells[ColumnHostNamesEnabled.Index].Value?.ToString() ?? "True"),
                     Host = hostPattern!,
-                    TlsCertificatePath = (row.Cells[_hostNamesCertificate.Index].Value?.ToString() ?? "").Trim(),
-                    TlsCertificatePassword = row.Cells[_hostNamesPassword.Index].Value?.ToString() ?? "",
-                    Description = row.Cells[_hostNamesDescription.Index].Value?.ToString() ?? ""
+                    TlsCertificatePath = (row.Cells[ColumnHostNamesCertificate.Index].Value?.ToString() ?? "").Trim(),
+                    TlsCertificatePassword = row.Cells[ColumnHostNamesPassword.Index].Value?.ToString() ?? "",
+                    Description = row.Cells[ColumnHostNamesDescription.Index].Value?.ToString() ?? ""
                 });
             }
 
-            foreach (PluginItem item in _pluginsList.CheckedItems)
+            foreach (PluginItem item in checkedListBoxPlugins.CheckedItems)
             {
                 proxy.PluginIds.Add(item.Id);
             }
@@ -900,15 +785,15 @@ namespace NetProxy.Client.Forms
             buttonBrowseCertificate.Enabled = trafficType == TrafficType.Https;
 
             //TCP and UDP traffic have no host name to tell proxies apart by, so they cannot share a port. HTTP/2 is HTTP.
-            _forwardedHeaders.Enabled = isHttp;
+            comboBoxForwardedHeaders.Enabled = isHttp;
             checkBoxAllowHttp2.Enabled = isHttp;
-            _hostNamesGrid.ReadOnly = isHttp == false;
-            _hostNamesCertificate.ReadOnly = trafficType != TrafficType.Https;
-            _hostNamesPassword.ReadOnly = trafficType != TrafficType.Https;
+            dataGridViewHostNames.ReadOnly = isHttp == false;
+            ColumnHostNamesCertificate.ReadOnly = trafficType != TrafficType.Https;
+            ColumnHostNamesPassword.ReadOnly = trafficType != TrafficType.Https;
 
             //Only UDP has sessions made of datagrams.
-            _maxDatagrams.Enabled = trafficType == TrafficType.Udp;
-            _maxDatagramsLabel.Enabled = trafficType == TrafficType.Udp;
+            textBoxMaxDatagrams.Enabled = trafficType == TrafficType.Udp;
+            labelMaxDatagrams.Enabled = trafficType == TrafficType.Udp;
         }
 
         private void CheckBoxListenOnAllAddresses_CheckedChanged(object? sender, EventArgs e)

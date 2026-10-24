@@ -1,9 +1,9 @@
 using NetProxy.Client.Classes;
 using NetProxy.Library;
-using NetProxy.Library.Payloads.ReliableMessages.Notifications;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NTDLS.Helpers;
+using NTDLS.Localization;
 using NTDLS.ReliableMessaging;
 using NTDLS.WinFormsHelpers;
 
@@ -13,73 +13,24 @@ namespace NetProxy.Client.Forms
     /// The plug-ins of the service: add, edit, delete and put them in the order that they are called in. A proxy opts in to the ones
     /// it wants on its Plugins tab.
     /// </summary>
-    public class FormPlugins : Form
+    public partial class FormPlugins : Form
     {
         private readonly RmClient? _messageClient;
-        private readonly List<string> _serviceMessages = new();
-        private readonly DataGridView _grid = new();
         private List<NpPluginGridItem> _plugins = new();
+
+        public FormPlugins()
+        {
+            InitializeComponent();
+            FormLocalizer.Apply(this);
+            LocalizeGrids();
+            Theming.InitializeForm(this);
+        }
 
         public FormPlugins(ConnectionInfo connectionInfo)
         {
-            Text = Localize("Plugins");
-            StartPosition = FormStartPosition.CenterParent;
-            ShowInTaskbar = false;
-            MinimumSize = new Size(720, 360);
-            ClientSize = new Size(820, 420);
-
-            _grid.Location = new Point(12, 12);
-            _grid.Size = new Size(796, 330);
-            _grid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            _grid.AllowUserToAddRows = false;
-            _grid.AllowUserToDeleteRows = false;
-            _grid.ReadOnly = true;
-            _grid.MultiSelect = false;
-            _grid.RowHeadersVisible = false;
-            _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            _grid.BackgroundColor = SystemColors.ButtonFace;
-            _grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            _grid.Columns.Add("Order", "#");
-            _grid.Columns.Add("Name", Localize("Name"));
-            _grid.Columns.Add("Enabled", Localize("Enabled"));
-            _grid.Columns.Add("Status", Localize("Status"));
-            _grid.Columns.Add("Plugin", Localize("Plugin"));
-            _grid.Columns.Add("Version", Localize("Version"));
-            _grid.Columns.Add("Assembly", Localize("Assembly"));
-            _grid.Columns["Order"]!.FillWeight = 8;
-            _grid.Columns["Enabled"]!.FillWeight = 14;
-            _grid.Columns["Version"]!.FillWeight = 14;
-            _grid.Columns["Assembly"]!.FillWeight = 60;
-            _grid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) { Edit(); } };
-            Controls.Add(_grid);
-
-            var buttons = new (string Text, Action Click)[]
-            {
-                (Localize("Add..."), Add), (Localize("Edit..."), Edit), (Localize("Delete"), Delete),
-                (Localize("Move up"), () => MoveSelected(-1)), (Localize("Move down"), () => MoveSelected(1)), (Localize("Reload"), Reload)
-            };
-
-            var x = 12;
-            foreach (var (text, click) in buttons)
-            {
-                var button = new Button { Text = text, Location = new Point(x, 354), Size = new Size(95, 28), Anchor = AnchorStyles.Bottom | AnchorStyles.Left };
-                button.Click += (_, _) => click();
-                Controls.Add(button);
-                x += 101;
-            }
-
-            var close = new Button { Text = Localize("Close"), Location = new Point(713, 382), Size = new Size(95, 28), Anchor = AnchorStyles.Bottom | AnchorStyles.Right, DialogResult = DialogResult.OK };
-            Controls.Add(close);
-            CancelButton = close;
-
-            Controls.Add(new Label
-            {
-                Text = Localize("Plugins are called in this order. A proxy uses the plugins that are ticked on its Plugins tab."),
-                Location = new Point(12, 392),
-                AutoSize = true,
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left
-            });
-
+            InitializeComponent();
+            FormLocalizer.Apply(this);
+            LocalizeGrids();
             Theming.InitializeForm(this);
 
             _messageClient = MessageClientFactory.Create(connectionInfo, out var error);
@@ -90,23 +41,26 @@ namespace NetProxy.Client.Forms
                 return;
             }
 
-            _messageClient.OnNotificationReceived += (RmContext context, IRmNotification payload) =>
-            {
-                if (payload is NotificationMessage message)
-                {
-                    lock (_serviceMessages)
-                    {
-                        _serviceMessages.Add(message.Text);
-                    }
-                }
-            };
-
             Shown += (_, _) => RefreshList();
             FormClosed += (_, _) => _messageClient?.Disconnect();
         }
 
+        /// <summary>
+        /// The headers of a grid are not translated by FormLocalizer.
+        /// </summary>
+        private void LocalizeGrids()
+        {
+            ColumnName.HeaderText = Localize("Name");
+            ColumnEnabled.HeaderText = Localize("Enabled");
+            ColumnStatus.HeaderText = Localize("Status");
+            ColumnPlugin.HeaderText = Localize("Plugin");
+            ColumnVersion.HeaderText = Localize("Version");
+            ColumnAssembly.HeaderText = Localize("Assembly");
+        }
+
         private NpPluginGridItem? Selected
-            => _grid.CurrentRow != null && _grid.CurrentRow.Index < _plugins.Count ? _plugins[_grid.CurrentRow.Index] : null;
+            => dataGridViewPlugins.CurrentRow != null && dataGridViewPlugins.CurrentRow.Index < _plugins.Count
+                ? _plugins[dataGridViewPlugins.CurrentRow.Index] : null;
 
         private void RefreshList(Guid? select = null)
         {
@@ -118,51 +72,40 @@ namespace NetProxy.Client.Forms
             var reply = _messageClient.Query<QueryPluginListReply>(new QueryPluginList());
             _plugins = reply.Collection;
 
-            _grid.Rows.Clear();
+            dataGridViewPlugins.Rows.Clear();
             for (var i = 0; i < _plugins.Count; i++)
             {
                 var p = _plugins[i];
                 var status = p.Enabled == false ? Localize("Disabled") : (p.IsLoaded ? Localize("Loaded") : $"{Localize("Not loaded")}: {p.LoadError}");
-                var index = _grid.Rows.Add(i + 1, p.Name, p.Enabled ? Localize("Yes") : Localize("No"), status, p.PluginName, p.PluginVersion, p.AssemblyPath);
+                var index = dataGridViewPlugins.Rows.Add(i + 1, p.Name, p.Enabled ? Localize("Yes") : Localize("No"), status, p.PluginName, p.PluginVersion, p.AssemblyPath);
 
-                _grid.Rows[index].Cells["Status"].ToolTipText = status;
-                _grid.Rows[index].Cells["Plugin"].ToolTipText = p.PluginDescription;
+                dataGridViewPlugins.Rows[index].Cells[ColumnStatus.Index].ToolTipText = status;
+                dataGridViewPlugins.Rows[index].Cells[ColumnPlugin.Index].ToolTipText = p.PluginDescription;
 
                 if (select == p.Id)
                 {
-                    _grid.CurrentCell = _grid.Rows[index].Cells["Name"];
+                    dataGridViewPlugins.CurrentCell = dataGridViewPlugins.Rows[index].Cells[ColumnName.Index];
                 }
             }
         }
 
-        /// <summary>
-        /// The service changes things without answering, but it tells us when it could not do what was asked.
-        /// </summary>
-        private void SendAndRefresh(IRmNotification notification, Guid? select = null)
+        private void DataGridViewPlugins_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
-            lock (_serviceMessages)
+            if (e.RowIndex >= 0)
             {
-                _serviceMessages.Clear();
-            }
-
-            _messageClient.EnsureNotNull().Notify(notification);
-            Thread.Sleep(600);
-
-            string? message;
-            lock (_serviceMessages)
-            {
-                message = _serviceMessages.FirstOrDefault();
-            }
-
-            RefreshList(select);
-
-            if (message != null)
-            {
-                MessageBox.Show(message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                Edit();
             }
         }
 
-        private void Add() => EditAndSave(null);
+        private void ButtonAdd_Click(object? sender, EventArgs e) => EditAndSave(null);
+
+        private void ButtonEdit_Click(object? sender, EventArgs e) => Edit();
+
+        private void ButtonMoveUp_Click(object? sender, EventArgs e) => Do(NpPluginAction.MoveUp);
+
+        private void ButtonMoveDown_Click(object? sender, EventArgs e) => Do(NpPluginAction.MoveDown);
+
+        private void ButtonReload_Click(object? sender, EventArgs e) => Do(NpPluginAction.Reload);
 
         /// <summary>
         /// Shows the editor and saves what is entered. If the service does not accept it (for example the name is taken) it says why and
@@ -230,7 +173,7 @@ namespace NetProxy.Client.Forms
             });
         }
 
-        private void Delete()
+        private void ButtonDelete_Click(object? sender, EventArgs e)
         {
             if (Selected is not { } selected)
             {
@@ -240,23 +183,35 @@ namespace NetProxy.Client.Forms
             if (MessageBox.Show(Localize("Delete the plugin '{0}'? Proxies stop using it.", selected.Name), Constants.FriendlyName,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                SendAndRefresh(new NotificationDeletePlugin(selected.Id));
+                Do(NpPluginAction.Delete);
             }
         }
 
-        private void MoveSelected(int direction)
+        /// <summary>
+        /// Moves, reloads or deletes the selected plugin, and says if the service could not.
+        /// </summary>
+        private void Do(NpPluginAction action)
         {
-            if (Selected is { } selected)
+            if (Selected is not { } selected)
             {
-                SendAndRefresh(new NotificationMovePlugin(selected.Id, direction), selected.Id);
+                return;
             }
-        }
 
-        private void Reload()
-        {
-            if (Selected is { } selected)
+            try
             {
-                SendAndRefresh(new NotificationReloadPlugin(selected.Id), selected.Id);
+                var reply = _messageClient.EnsureNotNull().Query<QueryActionReply>(new QueryPluginAction { Id = selected.Id, Action = action });
+
+                RefreshList(action == NpPluginAction.Delete ? null : selected.Id);
+
+                //A reload that could not load the plugin says why in its message.
+                if (string.IsNullOrEmpty(reply.Message) == false)
+                {
+                    MessageBox.Show(reply.Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.GetBaseException().Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
         }
     }

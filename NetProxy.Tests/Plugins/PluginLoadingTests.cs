@@ -1,5 +1,4 @@
 using NetProxy.PluginApi;
-using NetProxy.Service.Plugins;
 using NetProxy.Tests.Support;
 using Xunit;
 

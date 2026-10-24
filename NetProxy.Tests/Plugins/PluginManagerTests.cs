@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Service.Plugins;
 using NetProxy.Tests.Support;
@@ -293,8 +292,14 @@ namespace NetProxy.Tests.Plugins
         private static List<NpPluginConfiguration> Copy(NpPluginManager manager)
             => manager.GetGridItems().Select(o => new NpPluginConfiguration
             {
-                Id = o.Id, Name = o.Name, Description = o.Description, Enabled = o.Enabled, AssemblyPath = o.AssemblyPath,
-                TypeName = o.TypeName, Settings = new Dictionary<string, string>(o.Settings), TimeoutMilliseconds = o.TimeoutMilliseconds
+                Id = o.Id,
+                Name = o.Name,
+                Description = o.Description,
+                Enabled = o.Enabled,
+                AssemblyPath = o.AssemblyPath,
+                TypeName = o.TypeName,
+                Settings = new Dictionary<string, string>(o.Settings),
+                TimeoutMilliseconds = o.TimeoutMilliseconds
             }).ToList();
 
         [Fact]

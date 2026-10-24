@@ -5,7 +5,6 @@ using NetProxy.Service.Proxy;
 using NetProxy.Tests.Support;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using Xunit;
 
 namespace NetProxy.Tests.Service

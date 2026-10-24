@@ -1,10 +1,10 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NetProxy.Cli;
 using NetProxy.Library;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Tests.Support;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace NetProxy.Tests.Management

@@ -1,9 +1,8 @@
-using Newtonsoft.Json;
 using NetProxy.Library;
-using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Library.Utilities;
 using NetProxy.Tests.Support;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace NetProxy.Tests.Library

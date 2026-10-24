@@ -2,7 +2,6 @@ using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
 using NetProxy.Tests.Support;
 using System.Net.Sockets;
-using System.Net.Security;
 using System.Security.Cryptography;
 using System.Text;
 using Xunit;

@@ -1,8 +1,7 @@
-using Newtonsoft.Json.Linq;
 using NetProxy.ClientApi;
 using NetProxy.Library;
-using NetProxy.Library.Payloads.Routing;
 using NetProxy.Tests.Support;
+using Newtonsoft.Json.Linq;
 using System.Net.Sockets;
 using Xunit;
 

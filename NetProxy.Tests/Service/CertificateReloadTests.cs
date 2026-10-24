@@ -1,6 +1,5 @@
 using NetProxy.Library;
 using NetProxy.Library.Payloads.Routing;
-using NetProxy.Service.Proxy;
 using NetProxy.Tests.Support;
 using System.Net.Security;
 using System.Net.Sockets;

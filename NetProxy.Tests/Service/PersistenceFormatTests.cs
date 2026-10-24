@@ -34,7 +34,12 @@ namespace NetProxy.Tests.Service
                 c.Endpoints.ConnectionPattern = ConnectionPattern.Balanced;
                 c.HttpHeaderRules.Add(new NpHttpHeaderRule
                 {
-                    Name = "X-A", Value = "1", Action = HttpHeaderAction.Upsert, HeaderType = HttpHeaderType.Request, Verb = HttpVerb.Post, Enabled = true
+                    Name = "X-A",
+                    Value = "1",
+                    Action = HttpHeaderAction.Upsert,
+                    HeaderType = HttpHeaderType.Request,
+                    Verb = HttpVerb.Post,
+                    Enabled = true
                 });
             });
 

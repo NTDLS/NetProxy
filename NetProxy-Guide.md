@@ -240,7 +240,7 @@ Everything is stored as files in the configuration folder (`C:\ProgramData\NetPr
 
 ## Plugins
 
-A plugin is a .NET assembly with a class that derives from `NpPlugin`. Override the events you care about; the rest cost nothing.
+A plugin is a .NET assembly with a class that derives from `NpPlugin`. Override the events you care about; the rest cost nothing. You build it against the [NetProxy.PluginApi](https://www.nuget.org/packages/NetProxy.PluginApi) NuGet package (`dotnet add package NetProxy.PluginApi`), which has no dependencies, so the source of NetProxy is not needed.
 
 * **Service events:** starting, stopping, a timer tick, management logins, errors.
 * **Proxy events:** starting (can say no), started, stopped, configuration changed.

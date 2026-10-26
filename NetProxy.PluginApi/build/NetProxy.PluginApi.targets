@@ -1,0 +1,14 @@
+<Project>
+
+	<!--
+		The NetProxy service supplies the plug-in API to the plug-ins it loads. A plug-in that carried its own copy of NetProxy.PluginApi.dll
+		would have types that the service does not recognize as its own, so the assembly is built against but never copied to the output
+		of the plug-in. Set NetProxyPluginApiCopyLocal to true to keep the copy (it is only useful for a test project that runs a plug-in itself).
+	-->
+	<Target Name="NetProxyPluginApiLeaveOutOfOutput" AfterTargets="ResolveLockFileCopyLocalFiles" Condition="'$(NetProxyPluginApiCopyLocal)' != 'true'">
+		<ItemGroup>
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'NetProxy.PluginApi'" />
+		</ItemGroup>
+	</Target>
+
+</Project>

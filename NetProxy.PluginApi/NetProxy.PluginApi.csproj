@@ -11,7 +11,31 @@
 		<Version>3.1.0</Version>
 		<Company>NetworkDLS</Company>
 		<Product>NetProxy</Product>
-		<Description>The API for writing NetProxy plug-ins.</Description>
+		<Description>The API for writing NetProxy plug-ins: derive from NpPlugin, override the events you want, and load the assembly from the NetProxy console. No dependencies.</Description>
+
+		<!-- The NuGet package that plug-in authors build against, so they do not need the source of NetProxy. -->
+		<PackageId>NetProxy.PluginApi</PackageId>
+		<Authors>NetworkDLS</Authors>
+		<PackageTags>netproxy;proxy;reverse-proxy;plugin;plug-in;tcp;http;https;udp</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/NTDLS/NetProxy</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/NTDLS/NetProxy</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageReleaseNotes>See https://github.com/NTDLS/NetProxy/releases</PackageReleaseNotes>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="..\Images\128.png" Pack="true" PackagePath="icon.png" />
+
+		<!-- Makes a plug-in project leave this assembly out of its output: the service supplies it, and a second copy would be a different type. -->
+		<None Include="build\NetProxy.PluginApi.targets" Pack="true" PackagePath="build\" />
+	</ItemGroup>
 
 </Project>

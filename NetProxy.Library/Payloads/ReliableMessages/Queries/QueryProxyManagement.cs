@@ -27,10 +27,10 @@ namespace NetProxy.Library.Payloads.ReliableMessages.Queries
         public string? StartError { get; set; }
     }
 
-    public enum NpProxyAction { Start, Stop, Restart, Delete }
+    public enum NpProxyAction { Start, Stop, Restart, Delete, ClearStatistics }
 
     /// <summary>
-    /// Starts, stops, restarts or deletes a proxy, found by name or by id.
+    /// Starts, stops, restarts or deletes a proxy, or sets its statistics back to zero, found by name or by id.
     /// </summary>
     public class QueryProxyAction : IRmQuery<QueryActionReply>
     {

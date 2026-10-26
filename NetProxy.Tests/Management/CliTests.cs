@@ -404,6 +404,21 @@ namespace NetProxy.Tests.Management
         }
 
         [Fact]
+        public async Task Clear_stats_sets_the_counters_of_a_proxy_to_zero()
+        {
+            var proxy = NewProxy("web");
+            Client.ApplyProxy(proxy);
+            await Get(proxy);
+            var id = Client.ListProxies().Single().Id;
+            await NetProxy.Tests.Support.Client.Eventually(() => Task.FromResult(Client.GetStatistics()[id]), o => o.TotalConnections == 1);
+
+            Assert.Equal(0, Cli("proxy", "clear-stats", "web").Exit);
+
+            Assert.Equal(0UL, Client.GetStatistics()[id].TotalConnections);
+            Assert.Equal(1, Cli("proxy", "clear-stats", "nobody").Exit);
+        }
+
+        [Fact]
         public void Statistics_connections_and_certificates_are_listed()
         {
             Client.ApplyProxy(NewProxy("web"));

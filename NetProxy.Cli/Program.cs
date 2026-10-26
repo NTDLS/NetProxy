@@ -38,6 +38,7 @@ namespace NetProxy.Cli
               proxy apply -f <file|-> [--dry-run]   Adds or replaces proxies. The file holds a proxy, a list of proxies or an export.
               proxy validate -f <file|->
               proxy start|stop|restart|delete <name>
+              proxy clear-stats <name>     Sets the counters of the proxy back to zero.
               connections [<proxy>]        Open connections.
               connections close <proxy> | --id <connection id>
 
@@ -470,7 +471,7 @@ namespace NetProxy.Cli
 
         private static int Proxy(NpServiceClient client, Arguments a)
         {
-            var verb = a.Word(1, "proxy command (list, get, apply, validate, start, stop, restart, delete)").ToLowerInvariant();
+            var verb = a.Word(1, "proxy command (list, get, apply, validate, start, stop, restart, delete, clear-stats)").ToLowerInvariant();
 
             switch (verb)
             {
@@ -521,9 +522,10 @@ namespace NetProxy.Cli
                 case "stop":
                 case "restart":
                 case "delete":
+                case "clear-stats":
                     {
                         var name = a.Word(2, "proxy name");
-                        var action = Enum.Parse<NpProxyAction>(verb, ignoreCase: true);
+                        var action = verb == "clear-stats" ? NpProxyAction.ClearStatistics : Enum.Parse<NpProxyAction>(verb, ignoreCase: true);
                         var problem = client.ProxyAction(name, action);
 
                         if (problem != null)

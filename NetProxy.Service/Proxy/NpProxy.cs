@@ -81,6 +81,9 @@ namespace NetProxy.Service.Proxy
             Configuration = configuration;
             EffectiveTrafficType = configuration.TrafficType;
             HostPatterns = NpHostRouter.Patterns(configuration);
+
+            //A proxy that replaces another (it was edited) or comes back with the service continues the numbers of the one with its id.
+            Singletons.Statistics.Restore(this);
         }
 
         /// <summary>

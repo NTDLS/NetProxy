@@ -59,6 +59,7 @@ namespace NetProxy.Client.Forms
             editToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             deleteToolStripMenuItem = new ToolStripMenuItem();
+            clearStatisticsToolStripMenuItem = new ToolStripMenuItem();
             statusStripMain = new StatusStrip();
             chartPerformance = new System.Windows.Forms.DataVisualization.Charting.Chart();
             splitContainerOuter = new SplitContainer();
@@ -267,7 +268,7 @@ namespace NetProxy.Client.Forms
             // 
             // proxyToolStripMenuItem
             // 
-            proxyToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, refreshToolStripMenuItem, toolStripSeparator1, startToolStripMenuItem, stopToolStripMenuItem, editToolStripMenuItem, toolStripSeparator2, deleteToolStripMenuItem });
+            proxyToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, refreshToolStripMenuItem, toolStripSeparator1, startToolStripMenuItem, stopToolStripMenuItem, editToolStripMenuItem, clearStatisticsToolStripMenuItem, toolStripSeparator2, deleteToolStripMenuItem });
             proxyToolStripMenuItem.Name = "proxyToolStripMenuItem";
             proxyToolStripMenuItem.Size = new Size(48, 20);
             proxyToolStripMenuItem.Text = "Proxy";
@@ -317,6 +318,13 @@ namespace NetProxy.Client.Forms
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
             toolStripSeparator2.Size = new Size(177, 6);
+            // 
+            // clearStatisticsToolStripMenuItem
+            // 
+            clearStatisticsToolStripMenuItem.Name = "clearStatisticsToolStripMenuItem";
+            clearStatisticsToolStripMenuItem.Size = new Size(180, 22);
+            clearStatisticsToolStripMenuItem.Text = "Clear statistics";
+            clearStatisticsToolStripMenuItem.Click += ClearStatisticsToolStripMenuItem_Click;
             // 
             // deleteToolStripMenuItem
             // 
@@ -625,5 +633,6 @@ namespace NetProxy.Client.Forms
         private ToolStripMenuItem editToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripMenuItem deleteToolStripMenuItem;
+        private ToolStripMenuItem clearStatisticsToolStripMenuItem;
     }
 }

@@ -23,6 +23,21 @@
         /// </summary>
         public ulong BytesWritten => (ulong)Interlocked.Read(ref _bytesWritten);
 
+        /// <summary>
+        /// Takes the numbers that were kept from before.
+        /// </summary>
+        internal void Restore(ulong totalConnections, ulong bytesRead, ulong bytesWritten)
+        {
+            Interlocked.Exchange(ref _totalConnections, (long)totalConnections);
+            Interlocked.Exchange(ref _bytesRead, (long)bytesRead);
+            Interlocked.Exchange(ref _bytesWritten, (long)bytesWritten);
+        }
+
+        /// <summary>
+        /// Sets what was counted back to zero. The connections that are open now still are.
+        /// </summary>
+        internal void Reset() => Restore(0, 0, 0);
+
         internal void ConnectionOpened()
         {
             Interlocked.Increment(ref _totalConnections);

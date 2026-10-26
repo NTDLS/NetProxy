@@ -21,6 +21,8 @@ namespace NetProxy.Library
         public const int MinAcceptBacklogSize = 128;
         public const int DefaultAcceptBacklogSize = MinAcceptBacklogSize;
         public const int DefaultLogFileMaxSizeMB = 10;
+        /// <summary>How often the statistics of the proxies are written to disk (seconds). They are also written when the service stops.</summary>
+        public const int StatisticsSaveIntervalSeconds = 120;
         public const int DefaultLogFileRetainedCount = 5;
         public const string EventSourceName = "NetProxy";
     }

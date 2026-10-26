@@ -1041,6 +1041,7 @@ namespace NetProxy.Client.Forms
                 UIUtility.AddMenuItem(menu, "Start", Localize("Start")).Enabled = proxy != null && proxy.IsRunning == false;
                 UIUtility.AddMenuItem(menu, "Stop", Localize("Stop")).Enabled = proxy != null && proxy.IsRunning == true;
                 UIUtility.AddMenuItem(menu, "Edit", Localize("Edit")).Enabled = proxy != null;
+                UIUtility.AddMenuItem(menu, "Clear statistics", Localize("Clear statistics")).Enabled = proxy != null;
                 menu.Items.Add("-");
                 UIUtility.AddMenuItem(menu, "Chart all proxies", Localize("Chart all proxies")).Enabled = dataGridViewProxys.SelectedRows.Count > 0;
 
@@ -1102,6 +1103,36 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        /// <summary>
+        /// Sets what the service counted for the proxy back to zero.
+        /// </summary>
+        private void ClearProxyStatistics(Guid proxyId)
+        {
+            if (MessageBox.Show(Localize("Clear the statistics of the selected proxy?"), Constants.FriendlyName, MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                var reply = _messageClient.EnsureNotNull().Query<QueryActionReply>(new QueryProxyAction { Id = proxyId, Action = NpProxyAction.ClearStatistics });
+                if (reply.Success == false && string.IsNullOrEmpty(reply.Message) == false)
+                {
+                    MessageBox.Show(reply.Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return;
+                }
+
+                //Shown now instead of at the next tick.
+                _history.Clear();
+                RefreshProxyList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.GetBaseException().Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+            }
+        }
+
         private void DeleteProxy(Guid proxyId)
         {
             if (MessageBox.Show(Localize("Delete the selected proxy?"), Constants.FriendlyName,
@@ -1159,6 +1190,9 @@ namespace NetProxy.Client.Forms
                 case "Edit":
                     EditProxy(proxyId);
                     break;
+                case "Clear statistics":
+                    ClearProxyStatistics(proxyId);
+                    break;
                 case "Delete":
                     DeleteProxy(proxyId);
                     break;
@@ -1198,6 +1232,7 @@ namespace NetProxy.Client.Forms
             startToolStripMenuItem.Enabled = connected && proxy != null && proxy.IsRunning == false;
             stopToolStripMenuItem.Enabled = connected && proxy != null && proxy.IsRunning;
             editToolStripMenuItem.Enabled = connected && proxy != null;
+            clearStatisticsToolStripMenuItem.Enabled = connected && proxy != null;
             deleteToolStripMenuItem.Enabled = connected && proxy != null;
         }
 
@@ -1241,6 +1276,14 @@ namespace NetProxy.Client.Forms
             if (_messageClient != null && GetSelectedProxy() is { } proxy)
             {
                 EditProxy(proxy.Id);
+            }
+        }
+
+        private void ClearStatisticsToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient != null && GetSelectedProxy() is { } proxy)
+            {
+                ClearProxyStatistics(proxy.Id);
             }
         }
 

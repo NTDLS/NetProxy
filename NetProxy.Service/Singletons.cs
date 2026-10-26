@@ -25,6 +25,11 @@ namespace NetProxy.Service
         /// </summary>
         internal static NetProxy.Service.Proxy.NpCertificateManager Certificates { get; } = new();
 
+        /// <summary>
+        /// The statistics of the proxies, which are kept across restarts.
+        /// </summary>
+        internal static NetProxy.Service.Proxy.NpStatisticsStore Statistics { get; } = new();
+
         private static readonly object _loggingLock = new();
         private static NpLogging? _logging;
         private static RollingFileLogSink? _fileSink;

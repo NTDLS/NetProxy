@@ -155,7 +155,24 @@ namespace NetProxy.Service
         }
 
         /// <summary>
-        /// Starts, stops, restarts or deletes a proxy. Returns why it could not be done, or null.
+        /// Sets what was counted for the proxy (and its endpoints) back to zero, and writes that, so that it stays zero. The connections
+        /// that are open now are still counted as open.
+        /// </summary>
+        public void ClearStatistics(NpProxy proxy)
+        {
+            proxy.Statistics.Reset();
+            foreach (var endpoint in proxy.EndpointStatistics.Values)
+            {
+                endpoint.Reset();
+            }
+
+            Singletons.Statistics.Capture(proxy);
+            Singletons.Statistics.Save();
+            Singletons.Logging.Write(NpLogging.Severity.Information, $"The statistics of proxy '{proxy.Configuration.Name}' were cleared.");
+        }
+
+        /// <summary>
+        /// Starts, stops, restarts or deletes a proxy, or clears its statistics. Returns why it could not be done, or null.
         /// </summary>
         public string? ApplyProxyAction(Guid? id, string? name, NpProxyAction action)
         {
@@ -179,6 +196,10 @@ namespace NetProxy.Service
                     case NpProxyAction.Restart:
                         proxy.Stop();
                         return proxy.Start(out var restartError) ? null : restartError;
+
+                    case NpProxyAction.ClearStatistics:
+                        ClearStatistics(proxy);
+                        return null;
 
                     default:
                         proxy.Stop();

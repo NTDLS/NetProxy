@@ -102,6 +102,9 @@ namespace NetProxy.Service
 
         public void RemoveProxy(NpProxy proxy)
         {
+            //A proxy that replaces this one (it was edited) carries on with its numbers.
+            Singletons.Statistics.Capture(proxy);
+
             lock (_proxiesLock)
             {
                 _proxies.Remove(proxy);
@@ -294,7 +297,12 @@ namespace NetProxy.Service
         {
             try
             {
+                //Before the proxies are made, which take their numbers from it.
+                Singletons.Statistics.Load();
+
                 LoadConfiguration();
+
+                Singletons.Statistics.Start(() => GetProxies());
 
                 var server = new RmServer(new RmConfiguration
                 {
@@ -341,6 +349,7 @@ namespace NetProxy.Service
             {
                 _messageServer?.Stop();
                 _proxies.Stop();
+                Singletons.Statistics.Dispose();
                 SaveConfiguration();
                 Singletons.Plugins.StopAsync().GetAwaiter().GetResult();
                 Singletons.Certificates.Dispose();

@@ -37,6 +37,21 @@
         }
 
         /// <summary>
+        /// Takes the numbers that were kept from before.
+        /// </summary>
+        internal void Restore(ulong totalConnections, ulong bytesRead, ulong bytesWritten)
+        {
+            Interlocked.Exchange(ref _totalConnections, (long)totalConnections);
+            Interlocked.Exchange(ref _bytesRead, (long)bytesRead);
+            Interlocked.Exchange(ref _bytesWritten, (long)bytesWritten);
+        }
+
+        /// <summary>
+        /// Sets what was counted back to zero. The connections that are open now still are.
+        /// </summary>
+        internal void Reset() => Restore(0, 0, 0);
+
+        /// <summary>
         /// Counts a connection against the endpoint from the moment it is chosen, so that connections that arrive together
         /// are spread out, rather than all sent to the endpoint that had the fewest when they arrived.
         /// </summary>

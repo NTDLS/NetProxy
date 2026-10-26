@@ -596,6 +596,30 @@ namespace NetProxy.Service.Proxy
             return null;
         }
 
+        /// <summary>
+        /// Replaces all of the certificates by these. The files are read again, and nothing checks whether proxies use what goes: the
+        /// proxies are replaced along with them.
+        /// </summary>
+        public void ReplaceAll(IEnumerable<NpCertificateConfiguration> configurations)
+        {
+            var entries = configurations.Select(CreateEntry).ToList();
+
+            Entry[] previous;
+            lock (_lock)
+            {
+                previous = [.. _entries];
+                _entries = entries;
+                _byName = Index(entries);
+            }
+
+            foreach (var entry in previous)
+            {
+                entry.Dispose();
+            }
+
+            Save();
+        }
+
         public sealed class FileReloadResult
         {
             public List<string> Changes { get; } = [];

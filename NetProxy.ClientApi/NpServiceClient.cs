@@ -140,6 +140,30 @@ namespace NetProxy.ClientApi
             return reply.Lines;
         }
 
+        //---------------------------------------------------------------- Backup
+
+        /// <summary>
+        /// Everything that the service is set up with (proxies, certificates, plugins, users, settings), as one JSON document to keep
+        /// as a backup. It holds certificate passwords and password hashes: keep it private.
+        /// </summary>
+        public string ExportConfiguration()
+        {
+            var reply = _client.Query<QueryExportConfigurationReply>(new QueryExportConfiguration());
+            if (string.IsNullOrEmpty(reply.Document))
+            {
+                throw new InvalidOperationException(reply.Message ?? "The service did not return its configuration.");
+            }
+
+            return reply.Document;
+        }
+
+        /// <summary>
+        /// Replaces everything that the service is set up with by what the document holds. The document is checked first, and if it is
+        /// not good nothing is changed. With <paramref name="dryRun"/> it only checks.
+        /// </summary>
+        public QueryImportConfigurationReply ImportConfiguration(string document, bool dryRun = false)
+            => _client.Query<QueryImportConfigurationReply>(new QueryImportConfiguration { Document = document, DryRun = dryRun });
+
         //---------------------------------------------------------------- Certificates
 
         /// <summary>

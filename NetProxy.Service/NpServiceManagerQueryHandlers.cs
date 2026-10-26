@@ -313,6 +313,45 @@ namespace NetProxy.Service
             return NpFileBrowser.Browse(query, AppContext.BaseDirectory);
         }
 
+        public QueryExportConfigurationReply OnQueryExportConfiguration(RmContext context, QueryExportConfiguration query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryExportConfigurationReply();
+
+            try
+            {
+                reply.Document = serviceManager.ExportConfiguration();
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to export the configuration", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryImportConfigurationReply OnQueryImportConfiguration(RmContext context, QueryImportConfiguration query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+
+            try
+            {
+                var reply = serviceManager.ImportConfiguration(query.Document, query.DryRun);
+                if (query.DryRun == false && reply.Success)
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Information, $"The configuration was replaced by an import from connection {context.ConnectionId}.");
+                }
+
+                return reply;
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to import the configuration", ex);
+                return new QueryImportConfigurationReply { Message = ex.GetBaseException().Message };
+            }
+        }
+
         public QueryCertificateListReply OnQueryCertificateList(RmContext context, QueryCertificateList query)
         {
             EnforceLoginAndGetServiceManager(context);

@@ -1213,6 +1213,128 @@ namespace NetProxy.Client.Forms
             form.ShowDialog();
         }
 
+        /// <summary>
+        /// Saves everything that the service is set up with to a file on this machine, as a backup.
+        /// </summary>
+        private void ExportConfigurationToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient == null)
+            {
+                return;
+            }
+
+            using var dialog = new SaveFileDialog
+            {
+                Title = Localize("Export configuration"),
+                Filter = Localize("NetProxy configuration (*.json)|*.json|All files (*.*)|*.*"),
+                FileName = $"NetProxy-{_connectionInfo?.ServerName}-{DateTime.Now:yyyyMMdd}.json"
+            };
+
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            try
+            {
+                var reply = _messageClient.Query<QueryExportConfigurationReply>(new QueryExportConfiguration());
+                if (string.IsNullOrEmpty(reply.Document))
+                {
+                    MessageBox.Show(reply.Message ?? Localize("The service did not return its configuration."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return;
+                }
+
+                File.WriteAllText(dialog.FileName, reply.Document);
+
+                MessageBox.Show(Localize("The configuration was saved to {0}. The file holds the passwords of the certificates and the password hashes of the users: keep it private.", dialog.FileName),
+                    Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.GetBaseException().Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+            }
+        }
+
+        /// <summary>
+        /// Replaces everything that the service is set up with by what a file holds: the file is checked first, then the proxies are stopped,
+        /// the configuration is replaced, and the proxies that start automatically are started.
+        /// </summary>
+        private void ImportConfigurationToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_messageClient == null)
+            {
+                return;
+            }
+
+            using var dialog = new OpenFileDialog
+            {
+                Title = Localize("Import configuration"),
+                Filter = Localize("NetProxy configuration (*.json)|*.json|All files (*.*)|*.*")
+            };
+
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            try
+            {
+                var document = File.ReadAllText(dialog.FileName);
+
+                //Checked by the service before anything is touched.
+                var check = _messageClient.Query<QueryImportConfigurationReply>(new QueryImportConfiguration { Document = document, DryRun = true });
+                if (check.Success == false)
+                {
+                    var problems = check.Problems.Count > 0 ? string.Join(Environment.NewLine, check.Problems.Take(15)) : check.Message ?? string.Empty;
+                    MessageBox.Show(Localize("The file cannot be imported, and nothing was changed:") + Environment.NewLine + Environment.NewLine + problems,
+                        Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return;
+                }
+
+                if (MessageBox.Show(Localize("Replace the whole configuration of the service with this file ({0} proxies, {1} certificates, {2} plugins, {3} users)?"
+                        + " All of the proxies are stopped, and the ones that are set to start automatically are started again. A copy of the current configuration is kept on the service machine.",
+                        check.Proxies, check.Certificates, check.Plugins, check.Users),
+                        Constants.FriendlyName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                Cursor = Cursors.WaitCursor;
+                QueryImportConfigurationReply reply;
+                try
+                {
+                    reply = _messageClient.Query<QueryImportConfigurationReply>(new QueryImportConfiguration { Document = document });
+                }
+                finally
+                {
+                    Cursor = Cursors.Default;
+                }
+
+                _history.Clear();
+                RefreshProxyList();
+
+                if (reply.Success == false)
+                {
+                    MessageBox.Show(reply.Message ?? string.Join(Environment.NewLine, reply.Problems), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return;
+                }
+
+                if (reply.Problems.Count > 0)
+                {
+                    MessageBox.Show(Localize("The configuration was imported, but:") + Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, reply.Problems.Take(15)),
+                        Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                }
+                else
+                {
+                    MessageBox.Show(Localize("The configuration was imported."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.GetBaseException().Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+            }
+        }
+
         private void ExitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             Close();

@@ -160,6 +160,8 @@ The service writes to a rolling log file (`Logs/NetProxy.log` in its installatio
 
 The configuration is stored in the common application data folder: `C:\ProgramData\NetProxy` on Windows, `/usr/share/NetProxy` on Linux (see the Linux install notes in `@Installers`). The `NETPROXY_CONFIG_NAME` environment variable names a different folder, so a test instance does not touch the real configuration.
 
+**Backup and restore:** *File, Export configuration...* saves everything the service is set up with (proxies, certificates, plugins, users and settings) to a file on the machine of the console, and *File, Import configuration...* puts such a file in place of the current configuration. The file is checked first and nothing is changed if it is not good; then all of the proxies are stopped, the configuration is replaced, and the proxies that are set to start automatically are started. A copy of what was replaced is written to the `Backups` folder next to the configuration, so an import can be undone by importing that copy. The file holds the passwords of the certificates and the password hashes of the users: keep it private.
+
 ### Security
 
 * A new installation has one management user, `administrator`, with an **empty password**. Set a password first. The service logs a warning while any user has none.

@@ -291,6 +291,44 @@ namespace NetProxy.Service.Plugins
             }
         }
 
+        /// <summary>
+        /// Unloads all of the plug-ins and loads these in their place, in this order.
+        /// </summary>
+        public async Task ReplaceAllAsync(IEnumerable<NpPluginConfiguration> configurations)
+        {
+            await _gate.WaitAsync();
+            try
+            {
+                NpLoadedPlugin[] previous;
+                lock (_listLock)
+                {
+                    previous = [.. _plugins];
+                }
+
+                foreach (var plugin in previous)
+                {
+                    await plugin.StopAsync();
+                }
+
+                var loaded = new List<NpLoadedPlugin>();
+                foreach (var configuration in configurations)
+                {
+                    loaded.Add(await CreateAsync(configuration));
+                }
+
+                lock (_listLock)
+                {
+                    _plugins = loaded;
+                }
+
+                Save();
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
         public async Task MoveAsync(Guid id, int direction)
         {
             await _gate.WaitAsync();

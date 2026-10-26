@@ -42,6 +42,10 @@ namespace NetProxy.Client.Forms
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             changeConnectionToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparatorFile1 = new ToolStripSeparator();
+            exportConfigurationToolStripMenuItem = new ToolStripMenuItem();
+            importConfigurationToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparatorFile2 = new ToolStripSeparator();
             exitToolStripMenuItem = new ToolStripMenuItem();
             settingsToolStripMenuItem = new ToolStripMenuItem();
             configurationToolStripMenuItem = new ToolStripMenuItem();
@@ -198,7 +202,7 @@ namespace NetProxy.Client.Forms
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeConnectionToolStripMenuItem, exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeConnectionToolStripMenuItem, toolStripSeparatorFile1, exportConfigurationToolStripMenuItem, importConfigurationToolStripMenuItem, toolStripSeparatorFile2, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
@@ -209,6 +213,30 @@ namespace NetProxy.Client.Forms
             changeConnectionToolStripMenuItem.Size = new Size(180, 22);
             changeConnectionToolStripMenuItem.Text = "Change Connection";
             changeConnectionToolStripMenuItem.Click += ChangeConnectionToolStripMenuItem_Click;
+            // 
+            // toolStripSeparatorFile1
+            // 
+            toolStripSeparatorFile1.Name = "toolStripSeparatorFile1";
+            toolStripSeparatorFile1.Size = new Size(177, 6);
+            // 
+            // exportConfigurationToolStripMenuItem
+            // 
+            exportConfigurationToolStripMenuItem.Name = "exportConfigurationToolStripMenuItem";
+            exportConfigurationToolStripMenuItem.Size = new Size(180, 22);
+            exportConfigurationToolStripMenuItem.Text = "Export configuration...";
+            exportConfigurationToolStripMenuItem.Click += ExportConfigurationToolStripMenuItem_Click;
+            // 
+            // importConfigurationToolStripMenuItem
+            // 
+            importConfigurationToolStripMenuItem.Name = "importConfigurationToolStripMenuItem";
+            importConfigurationToolStripMenuItem.Size = new Size(180, 22);
+            importConfigurationToolStripMenuItem.Text = "Import configuration...";
+            importConfigurationToolStripMenuItem.Click += ImportConfigurationToolStripMenuItem_Click;
+            // 
+            // toolStripSeparatorFile2
+            // 
+            toolStripSeparatorFile2.Name = "toolStripSeparatorFile2";
+            toolStripSeparatorFile2.Size = new Size(177, 6);
             // 
             // exitToolStripMenuItem
             // 
@@ -590,6 +618,10 @@ namespace NetProxy.Client.Forms
         private ToolStripMenuItem helpToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ToolStripMenuItem changeConnectionToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparatorFile1;
+        private ToolStripMenuItem exportConfigurationToolStripMenuItem;
+        private ToolStripMenuItem importConfigurationToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparatorFile2;
         private ToolStripMenuItem settingsToolStripMenuItem;
         private ToolStripMenuItem pluginsToolStripMenuItem;
         private ToolStripMenuItem certificatesToolStripMenuItem;

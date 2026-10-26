@@ -127,7 +127,7 @@
     <value>True</value>
   </metadata>
   <data name="labelTlsInfo.Text" xml:space="preserve">
-    <value>When the traffic type is HTTPS, the proxy terminates TLS using this certificate, so that HTTP header rules can be applied. Whether the proxy uses TLS to talk to an endpoint is chosen for each endpoint (see the Endpoints tab).</value>
+    <value>When the traffic type is HTTPS, the proxy terminates TLS using one of the certificates that are set up for the service (Settings, Certificates), so that HTTP header rules can be applied. Whether the proxy uses TLS to talk to an endpoint is chosen for each endpoint (see the Endpoints tab).</value>
   </data>
   <metadata name="ColumnHTTPHeadersEnabled.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

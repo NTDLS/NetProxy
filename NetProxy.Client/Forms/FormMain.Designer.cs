@@ -46,6 +46,7 @@ namespace NetProxy.Client.Forms
             settingsToolStripMenuItem = new ToolStripMenuItem();
             configurationToolStripMenuItem = new ToolStripMenuItem();
             pluginsToolStripMenuItem = new ToolStripMenuItem();
+            certificatesToolStripMenuItem = new ToolStripMenuItem();
             languageToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
@@ -217,7 +218,7 @@ namespace NetProxy.Client.Forms
             // 
             // settingsToolStripMenuItem
             // 
-            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem, pluginsToolStripMenuItem, languageToolStripMenuItem });
+            settingsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { configurationToolStripMenuItem, certificatesToolStripMenuItem, pluginsToolStripMenuItem, languageToolStripMenuItem });
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             settingsToolStripMenuItem.Size = new Size(61, 20);
             settingsToolStripMenuItem.Text = "Settings";
@@ -228,6 +229,13 @@ namespace NetProxy.Client.Forms
             configurationToolStripMenuItem.Size = new Size(148, 22);
             configurationToolStripMenuItem.Text = "Configuration";
             configurationToolStripMenuItem.Click += ConfigurationToolStripMenuItem_Click;
+            // 
+            // certificatesToolStripMenuItem
+            // 
+            certificatesToolStripMenuItem.Name = "certificatesToolStripMenuItem";
+            certificatesToolStripMenuItem.Size = new Size(148, 22);
+            certificatesToolStripMenuItem.Text = "Certificates...";
+            certificatesToolStripMenuItem.Click += CertificatesToolStripMenuItem_Click;
             // 
             // pluginsToolStripMenuItem
             // 
@@ -576,6 +584,7 @@ namespace NetProxy.Client.Forms
         private ToolStripMenuItem changeConnectionToolStripMenuItem;
         private ToolStripMenuItem settingsToolStripMenuItem;
         private ToolStripMenuItem pluginsToolStripMenuItem;
+        private ToolStripMenuItem certificatesToolStripMenuItem;
         private ToolStripMenuItem configurationToolStripMenuItem;
         private ToolStripMenuItem languageToolStripMenuItem;
         private StatusStrip statusStripMain;

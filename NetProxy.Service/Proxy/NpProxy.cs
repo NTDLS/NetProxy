@@ -269,9 +269,9 @@ namespace NetProxy.Service.Proxy
             }
 
             var hostsWithCertificate = Configuration.HostNames
-                .Where(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false).ToList();
+                .Where(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificate) == false).ToList();
 
-            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificatePath) && hostsWithCertificate.Count == 0)
+            if (string.IsNullOrWhiteSpace(Configuration.TlsCertificate) && hostsWithCertificate.Count == 0)
             {
                 //How HTTPS was configured before TLS could be terminated: the encrypted traffic is passed through.
                 EffectiveTrafficType = TrafficType.Tcp;
@@ -281,14 +281,12 @@ namespace NetProxy.Service.Proxy
                 return;
             }
 
-            //Throws, with the reason, if a certificate cannot be loaded. Renewed certificates are picked up while the proxy runs.
+            //Throws, with the reason, if a certificate is not set up or cannot be loaded. Renewed certificates are picked up while the proxy runs.
             _certificates = NpCertificateStore.Create(Configuration);
-            _certificates?.StartWatching();
         }
 
         private void ReleaseResources()
         {
-            _certificates?.Dispose();
             _certificates = null;
 
             _stickySessions?.Dispose();

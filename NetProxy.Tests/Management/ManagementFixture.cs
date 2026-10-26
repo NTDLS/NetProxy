@@ -105,6 +105,11 @@ namespace NetProxy.Tests.Management
                 Client.PluginAction(plugin.Name, NpPluginAction.Delete);
             }
 
+            foreach (var certificate in Client.GetCertificates())
+            {
+                Client.DeleteCertificate(certificate.Name);
+            }
+
             foreach (var user in Client.ListUsers().Where(o => o.UserName != ManagementFixture.UserName))
             {
                 Client.RemoveUser(user.UserName);

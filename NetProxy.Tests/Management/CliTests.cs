@@ -341,23 +341,47 @@ namespace NetProxy.Tests.Management
         }
 
         [Fact]
-        public void Get_shows_the_proxy_with_its_secrets_masked_and_what_it_shows_can_be_applied_again_without_losing_them()
+        public void Get_shows_the_certificate_with_its_password_masked_and_what_it_shows_can_be_applied_again_without_losing_it()
         {
-            var proxy = NewProxy("web", change: c => c.TlsCertificatePassword = "very-secret");
-            Client.ApplyProxy(proxy);
+            using var directory = new TempDirectory();
+            var pfx = Certs.WritePfx(directory, "site.test");
+            Assert.True(Client.ApplyCertificate(new NpCertificateConfiguration { Name = "site", Path = pfx, Password = Certs.Password }).Success);
 
-            var shown = Cli("proxy", "get", "web");
+            var shown = Cli("cert", "get", "site");
             Assert.Equal(0, shown.Exit);
-            Assert.DoesNotContain("very-secret", shown.Out);
+            Assert.DoesNotContain(Certs.Password, shown.Out);
             Assert.Contains("********", shown.Out);
 
-            var reapplied = CliIn(shown.Out, "proxy", "apply", "-f", "-");
+            var reapplied = CliIn(shown.Out, "cert", "apply", "-f", "-");
             Assert.Equal(0, reapplied.Exit);
-            Assert.Contains("unchanged", reapplied.Out);
-            Assert.Equal("very-secret", Client.GetProxy("web")!.TlsCertificatePassword);
+            Assert.Equal(Certs.Password, Client.GetCertificates().Single().Password);
+            Assert.True(Client.GetCertificates().Single().IsLoaded); //The password is still the real one.
 
-            Assert.Contains("very-secret", Cli("proxy", "get", "web", "--show-secrets").Out);
+            Assert.Contains(Certs.Password, Cli("cert", "get", "site", "--show-secrets").Out);
+            Assert.Equal(1, Cli("cert", "get", "nobody").Exit);
             Assert.Equal(1, Cli("proxy", "get", "nobody").Exit);
+        }
+
+        [Fact]
+        public void The_certificate_commands_list_add_and_remove()
+        {
+            using var directory = new TempDirectory();
+            var pfx = Certs.WritePfx(directory, "site.test");
+            var file = WriteFile("cert.json", JsonConvert.SerializeObject(new NpCertificateConfiguration { Name = "site", Path = pfx, Password = Certs.Password }));
+
+            Assert.Equal(0, Cli("cert", "apply", "-f", file).Exit);
+
+            var listed = Cli("cert", "list");
+            Assert.Equal(0, listed.Exit);
+            Assert.Contains("site", listed.Out);
+            Assert.Equal(0, Cli("certs").Exit);
+
+            Client.ApplyProxy(NewProxy("web", change: c => { c.TrafficType = TrafficType.Https; c.TlsCertificate = "site"; }));
+            Assert.Equal(1, Cli("cert", "remove", "site").Exit); //A proxy uses it.
+
+            Client.ProxyAction("web", NpProxyAction.Delete);
+            Assert.Equal(0, Cli("cert", "remove", "site").Exit);
+            Assert.Empty(Client.GetCertificates());
         }
 
         [Fact]
@@ -387,7 +411,7 @@ namespace NetProxy.Tests.Management
             Assert.Matches(@"web\s+running", Cli("stats").Out);
             Assert.Contains("ID", Cli("connections").Out);
             Assert.Equal(1, Cli("connections", "nobody").Exit);
-            Assert.Contains("PROXY", Cli("certs").Out);
+            Assert.Contains("USED BY", Cli("certs").Out);
             Assert.Equal(0, Cli("connections", "close", "web").Exit == 1 ? 0 : 0); //Nothing open: it says so with an exit code of 1.
         }
 

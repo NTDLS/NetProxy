@@ -12,15 +12,10 @@ namespace NetProxy.Library.Payloads.Routing
         public string Host { get; set; } = string.Empty;
 
         /// <summary>
-        /// Path (on the machine running the service) of the PFX/PKCS#12 certificate that is presented to clients that ask for this
-        /// host name (Https traffic type). When it is empty the certificate of the proxy is used.
+        /// The name of the certificate (one of the certificates that are set up for the service) that is presented to clients that ask
+        /// for this host name (Https traffic type). When it is empty the certificate of the proxy is used.
         /// </summary>
-        public string TlsCertificatePath { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Password of the PFX certificate, if it has one. Stored encrypted by the service.
-        /// </summary>
-        public string TlsCertificatePassword { get; set; } = string.Empty;
+        public string TlsCertificate { get; set; } = string.Empty;
 
         public string Description { get; set; } = string.Empty;
     }

@@ -113,6 +113,36 @@ namespace NetProxy.Tests.Support
             return certificate.Export(X509ContentType.Pfx, Password);
         }
 
+        /// <summary>
+        /// Sets the PFX file up as a certificate of the service, which is what a proxy refers to, and returns its name. The same file
+        /// always gets the same name, so registering it again replaces what was read from it.
+        /// </summary>
+        public static string Register(string path, string password = Password)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return string.Empty; //No certificate.
+            }
+
+            var name = "t-" + System.IO.Path.GetFileNameWithoutExtension(path) + "-"
+                + Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(path)))[..8];
+
+            var problem = NetProxy.Service.Singletons.Certificates.Upsert(new NetProxy.Library.Payloads.Routing.NpCertificateConfiguration
+            {
+                Id = new Guid(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(name))),
+                Name = name,
+                Path = path,
+                Password = password
+            }, out _, out _);
+
+            if (problem != null)
+            {
+                throw new InvalidOperationException(problem);
+            }
+
+            return name;
+        }
+
         public static string WritePfx(TempDirectory directory, string commonName, string? fileName = null)
         {
             var path = directory.File(fileName ?? commonName + ".pfx");

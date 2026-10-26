@@ -151,8 +151,7 @@ namespace NetProxy.Client.Forms
             ColumnEndpointsDescription.HeaderText = Localize("Description");
             ColumnHostNamesEnabled.HeaderText = Localize("Enabled");
             ColumnHostNamesHost.HeaderText = Localize("Host name");
-            ColumnHostNamesCertificate.HeaderText = Localize("Certificate (PFX)");
-            ColumnHostNamesPassword.HeaderText = Localize("Password");
+            ColumnHostNamesCertificate.HeaderText = Localize("Certificate");
             ColumnHostNamesDescription.HeaderText = Localize("Description");
         }
 
@@ -207,15 +206,9 @@ namespace NetProxy.Client.Forms
 
             #region TLS.
 
-            toolTips.AddControls([labelCertificatePath, textBoxCertificatePath],
-                Localize("The PFX (PKCS#12) certificate that the listener presents to clients, for the HTTPS traffic type. The path is read by the service,"
-                + " so it is a path on the machine that the service runs on."));
-
-            toolTips.AddControls([buttonBrowseCertificate],
-                Localize("Browse this machine for the certificate. That only helps when the service runs on this machine."));
-
-            toolTips.AddControls([labelCertificatePassword, textBoxCertificatePassword],
-                Localize("The password of the PFX certificate. Leave it empty if the certificate has none. The service stores it encrypted."));
+            toolTips.AddControls([labelCertificate, comboBoxCertificate],
+                Localize("The certificate that the listener presents to clients, for the HTTPS traffic type. Certificates are set up once for the service"
+                + " (Settings, Certificates) and are chosen by name here."));
 
             #endregion
 
@@ -286,7 +279,7 @@ namespace NetProxy.Client.Forms
                 + " and X-Forwarded-Proto is http or https, replacing anything the client sent. Append: for a proxy behind another proxy, the client is added to the end of X-Forwarded-For."));
 
             ColumnHostNamesHost.ToolTipText = Localize("A host name such as www.example.com, or *.example.com for every name below a domain.");
-            ColumnHostNamesCertificate.ToolTipText = Localize("HTTPS only. The certificate for this host name, on the machine that the service runs on (double-click to browse)."
+            ColumnHostNamesCertificate.ToolTipText = Localize("HTTPS only. The certificate for this host name, chosen from the certificates of the service."
                 + " When empty, the certificate of the proxy is used.");
 
             #endregion
@@ -294,45 +287,42 @@ namespace NetProxy.Client.Forms
 
         private List<NpPluginGridItem> _servicePlugins = new();
 
-        //The password of a host name is not shown, in the grid or while it is typed.
-        private void DataGridViewHostNames_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex == ColumnHostNamesPassword.Index && string.IsNullOrEmpty(e.Value as string) == false)
-            {
-                e.Value = "••••••";
-                e.FormattingApplied = true;
-            }
-        }
+        private List<NpCertificateGridItem> _serviceCertificates = new();
 
-        private void DataGridViewHostNames_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
+        private void LoadServiceCertificates()
         {
-            if (e.Control is TextBox textBox)
+            try
             {
-                textBox.UseSystemPasswordChar = dataGridViewHostNames.CurrentCell?.ColumnIndex == ColumnHostNamesPassword.Index;
+                _serviceCertificates = _messageClient.EnsureNotNull().Query<QueryCertificateListReply>(new QueryCertificateList()).Collection;
             }
-        }
-
-        private void DataGridViewHostNames_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex != ColumnHostNamesCertificate.Index || dataGridViewHostNames.ReadOnly)
+            catch
             {
-                return;
+                _serviceCertificates = new();
             }
 
-            var certificate = BrowseForCertificate(dataGridViewHostNames.Rows[e.RowIndex].Cells[ColumnHostNamesCertificate.Index].Value?.ToString());
-            if (certificate != null)
-            {
-                dataGridViewHostNames.Rows[e.RowIndex].Cells[ColumnHostNamesCertificate.Index].Value = certificate;
-            }
+            FillCertificateChoices([]);
         }
 
         /// <summary>
-        /// Browses the machine that the service runs on, because that is where the certificate is read from.
+        /// The certificates that can be chosen: none, and the ones of the service. A name that the proxy has but the service has not
+        /// (it was deleted) is kept in the list, so that it is shown instead of lost.
         /// </summary>
-        private string? BrowseForCertificate(string? current)
+        private void FillCertificateChoices(IEnumerable<string> current)
         {
-            using var form = new FormRemoteBrowser(_messageClient.EnsureNotNull(), false, [".pfx", ".p12"], current, Localize("Select the TLS certificate"));
-            return form.ShowDialog(this) == DialogResult.OK ? form.SelectedPath : null;
+            var names = new List<string> { string.Empty };
+            names.AddRange(_serviceCertificates.Select(o => o.Name));
+
+            foreach (var name in current.Where(o => string.IsNullOrWhiteSpace(o) == false))
+            {
+                if (names.Contains(name, StringComparer.OrdinalIgnoreCase) == false)
+                {
+                    names.Add(name);
+                }
+            }
+
+            comboBoxCertificate.DataSource = names;
+            ColumnHostNamesCertificate.Items.Clear();
+            ColumnHostNamesCertificate.Items.AddRange(names.Cast<object>().ToArray());
         }
 
         private void DataGridViewHostNames_DataError(object? sender, DataGridViewDataErrorEventArgs e)
@@ -365,6 +355,7 @@ namespace NetProxy.Client.Forms
         private void FormProxy_Shown(object? sender, EventArgs e)
         {
             LoadServicePlugins();
+            LoadServiceCertificates();
 
             if (_isNewProxy == false && _proxyId != null)
             {
@@ -398,8 +389,8 @@ namespace NetProxy.Client.Forms
             textBoxMaxDatagrams.Text = $"{proxy.MaxDatagramsPerSecondPerClient}";
             checkBoxAllowHttp2.Checked = proxy.AllowHttp2;
             comboBoxForwardedHeaders.SelectedValue = proxy.ForwardedHeaders;
-            textBoxCertificatePath.Text = proxy.TlsCertificatePath;
-            textBoxCertificatePassword.Text = proxy.TlsCertificatePassword;
+            FillCertificateChoices(proxy.HostNames.Select(o => o.TlsCertificate).Append(proxy.TlsCertificate));
+            comboBoxCertificate.SelectedItem = string.IsNullOrWhiteSpace(proxy.TlsCertificate) ? string.Empty : proxy.TlsCertificate;
 
             foreach (var endpoint in proxy.Endpoints.Collection)
             {
@@ -416,7 +407,7 @@ namespace NetProxy.Client.Forms
             foreach (var host in proxy.HostNames)
             {
                 dataGridViewHostNames.Rows.Add(
-                    [$"{host.Enabled}", host.Host, host.TlsCertificatePath, host.TlsCertificatePassword, host.Description]
+                    [$"{host.Enabled}", host.Host, host.TlsCertificate, host.Description]
                 );
             }
 
@@ -444,15 +435,6 @@ namespace NetProxy.Client.Forms
         private void DataGridViewEndpoints_DefaultValuesNeeded(object? sender, DataGridViewRowEventArgs e)
         {
             e.Row.Cells[ColumnEndpointsTrafficType.Index].Value = $"{SelectedTrafficType}";
-        }
-
-        private void ButtonBrowseCertificate_Click(object? sender, EventArgs e)
-        {
-            var certificate = BrowseForCertificate(textBoxCertificatePath.Text);
-            if (certificate != null)
-            {
-                textBoxCertificatePath.Text = certificate;
-            }
         }
 
         private bool TryReadForm(out NpProxyConfiguration proxy)
@@ -521,8 +503,7 @@ namespace NetProxy.Client.Forms
             proxy.MaxDatagramsPerSecondPerClient = int.Parse(textBoxMaxDatagrams.Text);
             proxy.AllowHttp2 = checkBoxAllowHttp2.Checked;
             proxy.ForwardedHeaders = comboBoxForwardedHeaders.SelectedValue is ForwardedHeadersMode forwarded ? forwarded : ForwardedHeadersMode.Off;
-            proxy.TlsCertificatePath = textBoxCertificatePath.Text.Trim();
-            proxy.TlsCertificatePassword = textBoxCertificatePassword.Text;
+            proxy.TlsCertificate = comboBoxCertificate.SelectedItem as string ?? string.Empty;
 
             if (proxy.InitialBufferSize > proxy.MaxBufferSize)
             {
@@ -561,8 +542,7 @@ namespace NetProxy.Client.Forms
                 {
                     Enabled = bool.Parse(row.Cells[ColumnHostNamesEnabled.Index].Value?.ToString() ?? "True"),
                     Host = hostPattern!,
-                    TlsCertificatePath = (row.Cells[ColumnHostNamesCertificate.Index].Value?.ToString() ?? "").Trim(),
-                    TlsCertificatePassword = row.Cells[ColumnHostNamesPassword.Index].Value?.ToString() ?? "",
+                    TlsCertificate = (row.Cells[ColumnHostNamesCertificate.Index].Value?.ToString() ?? "").Trim(),
                     Description = row.Cells[ColumnHostNamesDescription.Index].Value?.ToString() ?? ""
                 });
             }
@@ -572,11 +552,11 @@ namespace NetProxy.Client.Forms
                 proxy.PluginIds.Add(item.Id);
             }
 
-            if (proxy.TrafficType == TrafficType.Https && string.IsNullOrWhiteSpace(proxy.TlsCertificatePath)
-                && proxy.HostNames.Any(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false) == false)
+            if (proxy.TrafficType == TrafficType.Https && string.IsNullOrWhiteSpace(proxy.TlsCertificate)
+                && proxy.HostNames.Any(o => o.Enabled && string.IsNullOrWhiteSpace(o.TlsCertificate) == false) == false)
             {
                 tabControl.SelectedTab = tabPageTls;
-                MessageBox.Show(Localize("A certificate (PFX) is required to terminate HTTPS traffic. Use the TCP traffic type to pass encrypted traffic through untouched."),
+                MessageBox.Show(Localize("A certificate is required to terminate HTTPS traffic (set certificates up under Settings, Certificates). Use the TCP traffic type to pass encrypted traffic through untouched."),
                     Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 return false;
             }
@@ -774,16 +754,13 @@ namespace NetProxy.Client.Forms
             var isHttp = trafficType is TrafficType.Http or TrafficType.Https;
             dataGridViewHTTPHeaders.ReadOnly = isHttp == false;
 
-            textBoxCertificatePath.Enabled = trafficType == TrafficType.Https;
-            textBoxCertificatePassword.Enabled = trafficType == TrafficType.Https;
-            buttonBrowseCertificate.Enabled = trafficType == TrafficType.Https;
+            comboBoxCertificate.Enabled = trafficType == TrafficType.Https;
 
             //TCP and UDP traffic have no host name to tell proxies apart by, so they cannot share a port. HTTP/2 is HTTP.
             comboBoxForwardedHeaders.Enabled = isHttp;
             checkBoxAllowHttp2.Enabled = isHttp;
             dataGridViewHostNames.ReadOnly = isHttp == false;
             ColumnHostNamesCertificate.ReadOnly = trafficType != TrafficType.Https;
-            ColumnHostNamesPassword.ReadOnly = trafficType != TrafficType.Https;
 
             //Only UDP has sessions made of datagrams.
             textBoxMaxDatagrams.Enabled = trafficType == TrafficType.Udp;

@@ -30,7 +30,7 @@ namespace NetProxy.Tests.Library
         {
             var original = ProxyBuilder.Configuration("a", 80, TrafficType.Https, 9000, c =>
             {
-                c.HostNames.Add(new NpHostName { Host = "a.example.com", TlsCertificatePassword = "secret" });
+                c.HostNames.Add(new NpHostName { Host = "a.example.com", TlsCertificate = "wildcard" });
                 c.PluginIds.Add(Guid.NewGuid());
                 c.ForwardedHeaders = ForwardedHeadersMode.Append;
             });
@@ -45,7 +45,7 @@ namespace NetProxy.Tests.Library
             Assert.Single(original.PluginIds);
             Assert.Equal(original.Id, original.Clone().Id);
             Assert.Equal(ForwardedHeadersMode.Append, original.Clone().ForwardedHeaders);
-            Assert.Equal("secret", original.Clone().HostNames[0].TlsCertificatePassword);
+            Assert.Equal("wildcard", original.Clone().HostNames[0].TlsCertificate);
         }
 
         [Fact]
@@ -94,7 +94,7 @@ namespace NetProxy.Tests.Library
         {
             var original = ProxyBuilder.Configuration("a", 80, TrafficType.Https, 9000, c =>
             {
-                c.HostNames.Add(new NpHostName { Host = "a.example.com", TlsCertificatePath = "a.pfx", Enabled = false });
+                c.HostNames.Add(new NpHostName { Host = "a.example.com", TlsCertificate = "a", Enabled = false });
                 c.HttpHeaderRules.Add(new NpHttpHeaderRule { Name = "X-A", Value = "1", Action = HttpHeaderAction.Upsert, HeaderType = HttpHeaderType.Request });
                 c.UseStickySessions = true;
                 c.AllowHttp2 = true;

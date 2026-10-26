@@ -188,7 +188,7 @@ namespace NetProxy.Service.Proxy
                 }
 
                 entry.Host = host!;
-                entry.TlsCertificatePath = entry.TlsCertificatePath?.Trim() ?? string.Empty;
+                entry.TlsCertificate = entry.TlsCertificate?.Trim() ?? string.Empty;
                 hosts.Add(entry);
             }
 

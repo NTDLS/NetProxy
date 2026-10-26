@@ -313,17 +313,93 @@ namespace NetProxy.Service
             return NpFileBrowser.Browse(query, AppContext.BaseDirectory);
         }
 
-        public QueryCertificateStatusReply OnQueryCertificateStatus(RmContext context, QueryCertificateStatus query)
+        public QueryCertificateListReply OnQueryCertificateList(RmContext context, QueryCertificateList query)
         {
-            var serviceManager = EnforceLoginAndGetServiceManager(context);
-            var reply = new QueryCertificateStatusReply();
+            EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryCertificateListReply();
 
             try
             {
-                reply.Collection = serviceManager.GetCertificateStatus();
+                reply.Collection = Singletons.Certificates.GetGridItems();
             }
             catch (Exception ex)
             {
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryUpsertCertificateReply OnQueryUpsertCertificate(RmContext context, QueryUpsertCertificate query)
+        {
+            EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryUpsertCertificateReply();
+
+            try
+            {
+                var certificate = query.Certificate;
+
+                if (query.MatchByName)
+                {
+                    var existing = Singletons.Certificates.GetGridItems()
+                        .FirstOrDefault(o => o.Name.Equals(certificate.Name?.Trim(), StringComparison.CurrentCultureIgnoreCase));
+                    if (existing != null)
+                    {
+                        certificate.Id = existing.Id;
+                    }
+                }
+
+                var problem = Singletons.Certificates.Upsert(certificate, out var loadError, out var created);
+                reply.Success = problem == null;
+                reply.Message = problem;
+                reply.Action = created ? "created" : "updated";
+                reply.LoadError = loadError;
+
+                if (problem == null)
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Information,
+                        $"Certificate '{certificate.Name}' was saved by connection {context.ConnectionId}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to save the certificate", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QueryActionReply OnQueryCertificateAction(RmContext context, QueryCertificateAction query)
+        {
+            EnforceLoginAndGetServiceManager(context);
+            var reply = new QueryActionReply();
+
+            try
+            {
+                var item = Singletons.Certificates.GetGridItems().FirstOrDefault(o => query.Id != null
+                    ? o.Id == query.Id
+                    : o.Name.Equals(query.Name?.Trim(), StringComparison.CurrentCultureIgnoreCase));
+
+                if (item == null)
+                {
+                    reply.Message = "There is no such certificate.";
+                    return reply;
+                }
+
+                var problem = Singletons.Certificates.Delete(item.Id, out _);
+                reply.Success = problem == null;
+                reply.Message = problem;
+
+                if (problem == null)
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Information,
+                        $"Certificate '{item.Name}' was deleted by connection {context.ConnectionId}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to delete the certificate", ex);
                 reply.Message = ex.GetBaseException().Message;
             }
 

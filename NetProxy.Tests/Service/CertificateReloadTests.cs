@@ -31,8 +31,7 @@ namespace NetProxy.Tests.Service
         private static NpProxyConfiguration Https(int port, int backendPort, string pfx)
             => ProxyBuilder.Configuration("tls", port, TrafficType.Https, backendPort, c =>
             {
-                c.TlsCertificatePath = pfx;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(pfx);
             });
 
         [Fact]
@@ -141,7 +140,7 @@ namespace NetProxy.Tests.Service
             var pfx = host.Directory.File("host.pfx");
             File.WriteAllBytes(pfx, Certs.PfxBytes("host-one.test"));
             host.Start(ProxyBuilder.Configuration("tls", port, TrafficType.Https, host.Backend("A").Port, c =>
-                c.HostNames.Add(new NpHostName { Host = "site.test", TlsCertificatePath = pfx, TlsCertificatePassword = Certs.Password })));
+                c.HostNames.Add(new NpHostName { Host = "site.test", TlsCertificate = Certs.Register(pfx) })));
             Assert.Equal("host-one.test", await CertificateSeen(port));
 
             File.WriteAllBytes(pfx, Certs.PfxBytes("host-two.test"));
@@ -160,8 +159,8 @@ namespace NetProxy.Tests.Service
             File.WriteAllBytes(b, Certs.PfxBytes("b-one.test"));
             host.Start(ProxyBuilder.Configuration("tls", port, TrafficType.Https, host.Backend("A").Port, c =>
             {
-                c.HostNames.Add(new NpHostName { Host = "a.test", TlsCertificatePath = a, TlsCertificatePassword = Certs.Password });
-                c.HostNames.Add(new NpHostName { Host = "b.test", TlsCertificatePath = b, TlsCertificatePassword = Certs.Password });
+                c.HostNames.Add(new NpHostName { Host = "a.test", TlsCertificate = Certs.Register(a) });
+                c.HostNames.Add(new NpHostName { Host = "b.test", TlsCertificate = Certs.Register(b) });
             }));
 
             File.WriteAllBytes(b, Certs.PfxBytes("b-two.test"));
@@ -171,7 +170,26 @@ namespace NetProxy.Tests.Service
         }
 
         [Fact]
-        public async Task A_stopped_proxy_lets_go_of_its_files()
+        public async Task A_renewed_file_reaches_every_proxy_that_uses_the_certificate()
+        {
+            using var host = new TestHost();
+            var first = Net.FreePort();
+            var second = Net.FreePort();
+            var pfx = host.Directory.File("shared.pfx");
+            File.WriteAllBytes(pfx, Certs.PfxBytes("one.test"));
+            host.Start(Https(first, host.Backend("A").Port, pfx));
+            host.Start(Https(second, host.Backend("B").Port, pfx));
+            Assert.Equal("one.test", await CertificateSeen(first));
+            Assert.Equal("one.test", await CertificateSeen(second));
+
+            File.WriteAllBytes(pfx, Certs.PfxBytes("two.test"));
+
+            Assert.Equal("two.test", await WaitFor(first, "two.test"));
+            Assert.Equal("two.test", await WaitFor(second, "two.test"));
+        }
+
+        [Fact]
+        public void A_stopped_proxy_does_not_hold_the_certificate_file_and_starts_again_with_the_certificate_it_has()
         {
             using var host = new TestHost();
             var port = Net.FreePort();
@@ -184,7 +202,9 @@ namespace NetProxy.Tests.Service
             //The file can be deleted, which it cannot if something still has it open.
             File.Delete(pfx);
             Assert.False(File.Exists(pfx));
-            Assert.True(proxy.Start(out var error) == false && error!.Contains("site.pfx"));
+
+            //The certificate that was read stays in use, so the proxy starts again without the file.
+            Assert.True(proxy.Start(out var error), error);
         }
     }
 }

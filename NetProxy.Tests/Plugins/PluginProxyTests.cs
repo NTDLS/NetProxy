@@ -310,8 +310,7 @@ namespace NetProxy.Tests.Plugins
             var certificate = Certs.WritePfx(_host.Directory, "p.test.local");
             _host.Start(Proxy(port, _host.Backend("A").Port, TrafficType.Https, c =>
             {
-                c.TlsCertificatePath = certificate;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(certificate);
             }, plugin));
 
             var (body, _) = await Client.Https(port, "p.test.local");

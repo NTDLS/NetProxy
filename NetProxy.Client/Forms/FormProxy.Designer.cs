@@ -72,16 +72,12 @@ namespace NetProxy.Client.Forms
             dataGridViewHostNames = new DataGridView();
             ColumnHostNamesEnabled = new DataGridViewCheckBoxColumn();
             ColumnHostNamesHost = new DataGridViewTextBoxColumn();
-            ColumnHostNamesCertificate = new DataGridViewTextBoxColumn();
-            ColumnHostNamesPassword = new DataGridViewTextBoxColumn();
+            ColumnHostNamesCertificate = new DataGridViewComboBoxColumn();
             ColumnHostNamesDescription = new DataGridViewTextBoxColumn();
             tabPageTls = new TabPage();
             labelTlsInfo = new Label();
-            labelCertificatePath = new Label();
-            textBoxCertificatePath = new TextBox();
-            buttonBrowseCertificate = new Button();
-            labelCertificatePassword = new Label();
-            textBoxCertificatePassword = new TextBox();
+            labelCertificate = new Label();
+            comboBoxCertificate = new ComboBox();
             tabPageHTTPHeaders = new TabPage();
             dataGridViewHTTPHeaders = new DataGridView();
             ColumnHTTPHeadersEnabled = new DataGridViewCheckBoxColumn();
@@ -433,16 +429,13 @@ namespace NetProxy.Client.Forms
             dataGridViewHostNames.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridViewHostNames.BackgroundColor = SystemColors.ButtonFace;
             dataGridViewHostNames.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewHostNames.Columns.AddRange(new DataGridViewColumn[] { ColumnHostNamesEnabled, ColumnHostNamesHost, ColumnHostNamesCertificate, ColumnHostNamesPassword, ColumnHostNamesDescription });
+            dataGridViewHostNames.Columns.AddRange(new DataGridViewColumn[] { ColumnHostNamesEnabled, ColumnHostNamesHost, ColumnHostNamesCertificate, ColumnHostNamesDescription });
             dataGridViewHostNames.Location = new Point(9, 85);
             dataGridViewHostNames.Margin = new Padding(4, 3, 4, 3);
             dataGridViewHostNames.Name = "dataGridViewHostNames";
             dataGridViewHostNames.Size = new Size(579, 234);
             dataGridViewHostNames.TabIndex = 1;
-            dataGridViewHostNames.CellDoubleClick += DataGridViewHostNames_CellDoubleClick;
-            dataGridViewHostNames.CellFormatting += DataGridViewHostNames_CellFormatting;
             dataGridViewHostNames.DataError += DataGridViewHostNames_DataError;
-            dataGridViewHostNames.EditingControlShowing += DataGridViewHostNames_EditingControlShowing;
             // 
             // ColumnHostNamesEnabled
             // 
@@ -462,15 +455,10 @@ namespace NetProxy.Client.Forms
             // 
             // ColumnHostNamesCertificate
             // 
-            ColumnHostNamesCertificate.HeaderText = "Certificate (PFX)";
+            ColumnHostNamesCertificate.FlatStyle = FlatStyle.Flat;
+            ColumnHostNamesCertificate.HeaderText = "Certificate";
             ColumnHostNamesCertificate.Name = "ColumnHostNamesCertificate";
             ColumnHostNamesCertificate.Width = 170;
-            // 
-            // ColumnHostNamesPassword
-            // 
-            ColumnHostNamesPassword.HeaderText = "Password";
-            ColumnHostNamesPassword.Name = "ColumnHostNamesPassword";
-            ColumnHostNamesPassword.Width = 80;
             // 
             // ColumnHostNamesDescription
             // 
@@ -482,11 +470,8 @@ namespace NetProxy.Client.Forms
             // 
             tabPageTls.BackColor = SystemColors.Control;
             tabPageTls.Controls.Add(labelTlsInfo);
-            tabPageTls.Controls.Add(labelCertificatePath);
-            tabPageTls.Controls.Add(textBoxCertificatePath);
-            tabPageTls.Controls.Add(buttonBrowseCertificate);
-            tabPageTls.Controls.Add(labelCertificatePassword);
-            tabPageTls.Controls.Add(textBoxCertificatePassword);
+            tabPageTls.Controls.Add(labelCertificate);
+            tabPageTls.Controls.Add(comboBoxCertificate);
             tabPageTls.Location = new Point(4, 24);
             tabPageTls.Name = "tabPageTls";
             tabPageTls.Padding = new Padding(3);
@@ -501,49 +486,24 @@ namespace NetProxy.Client.Forms
             labelTlsInfo.Size = new Size(555, 62);
             labelTlsInfo.TabIndex = 0;
             labelTlsInfo.Text = resources.GetString("labelTlsInfo.Text");
-            // 
-            // labelCertificatePath
-            // 
-            labelCertificatePath.AutoSize = true;
-            labelCertificatePath.Location = new Point(6, 94);
-            labelCertificatePath.Name = "labelCertificatePath";
-            labelCertificatePath.Size = new Size(244, 15);
-            labelCertificatePath.TabIndex = 1;
-            labelCertificatePath.Text = "Certificate (PFX) path on the service machine";
-            // 
-            // textBoxCertificatePath
-            // 
-            textBoxCertificatePath.Location = new Point(8, 111);
-            textBoxCertificatePath.Name = "textBoxCertificatePath";
-            textBoxCertificatePath.Size = new Size(470, 23);
-            textBoxCertificatePath.TabIndex = 2;
-            // 
-            // buttonBrowseCertificate
-            // 
-            buttonBrowseCertificate.Location = new Point(484, 109);
-            buttonBrowseCertificate.Name = "buttonBrowseCertificate";
-            buttonBrowseCertificate.Size = new Size(87, 25);
-            buttonBrowseCertificate.TabIndex = 3;
-            buttonBrowseCertificate.Text = "Browse";
-            buttonBrowseCertificate.UseVisualStyleBackColor = true;
-            buttonBrowseCertificate.Click += ButtonBrowseCertificate_Click;
-            // 
-            // labelCertificatePassword
-            // 
-            labelCertificatePassword.AutoSize = true;
-            labelCertificatePassword.Location = new Point(6, 139);
-            labelCertificatePassword.Name = "labelCertificatePassword";
-            labelCertificatePassword.Size = new Size(114, 15);
-            labelCertificatePassword.TabIndex = 4;
-            labelCertificatePassword.Text = "Certificate password";
-            // 
-            // textBoxCertificatePassword
-            // 
-            textBoxCertificatePassword.Location = new Point(8, 157);
-            textBoxCertificatePassword.Name = "textBoxCertificatePassword";
-            textBoxCertificatePassword.Size = new Size(250, 23);
-            textBoxCertificatePassword.TabIndex = 5;
-            textBoxCertificatePassword.UseSystemPasswordChar = true;
+            //
+            // labelCertificate
+            //
+            labelCertificate.AutoSize = true;
+            labelCertificate.Location = new Point(6, 94);
+            labelCertificate.Name = "labelCertificate";
+            labelCertificate.Size = new Size(133, 15);
+            labelCertificate.TabIndex = 1;
+            labelCertificate.Text = "Certificate of the proxy";
+            //
+            // comboBoxCertificate
+            //
+            comboBoxCertificate.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxCertificate.FormattingEnabled = true;
+            comboBoxCertificate.Location = new Point(8, 111);
+            comboBoxCertificate.Name = "comboBoxCertificate";
+            comboBoxCertificate.Size = new Size(300, 23);
+            comboBoxCertificate.TabIndex = 2;
             // 
             // tabPageHTTPHeaders
             // 
@@ -1064,8 +1024,7 @@ namespace NetProxy.Client.Forms
         private TextBox textBoxMaxDatagrams;
         private DataGridViewCheckBoxColumn ColumnHostNamesEnabled;
         private DataGridViewTextBoxColumn ColumnHostNamesHost;
-        private DataGridViewTextBoxColumn ColumnHostNamesCertificate;
-        private DataGridViewTextBoxColumn ColumnHostNamesPassword;
+        private DataGridViewComboBoxColumn ColumnHostNamesCertificate;
         private DataGridViewTextBoxColumn ColumnHostNamesDescription;
         private TextBox textBoxListenPort;
         private TabPage tabPageHTTPHeaders;
@@ -1109,11 +1068,8 @@ namespace NetProxy.Client.Forms
         private DataGridViewTextBoxColumn ColumnHTTPHeadersDescription;
         private TabPage tabPageTls;
         private Label labelTlsInfo;
-        private Label labelCertificatePath;
-        private TextBox textBoxCertificatePath;
-        private Button buttonBrowseCertificate;
-        private Label labelCertificatePassword;
-        private TextBox textBoxCertificatePassword;
+        private Label labelCertificate;
+        private ComboBox comboBoxCertificate;
         private DataGridViewCheckBoxColumn ColumnBindingsEnabled;
         private DataGridViewTextBoxColumn ColumnBindingsIPAddress;
         private DataGridViewTextBoxColumn ColumnBindingsDescription;

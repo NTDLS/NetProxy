@@ -530,7 +530,7 @@ namespace NetProxy.Tests.Service
             var hosts = Udp("udp", 53, 9, c => c.HostNames.Add(new NpHostName { Host = "a.example.com" }));
             Assert.Contains(NpProxyValidator.Validate(hosts, []), o => o.Contains("host names"));
 
-            var tls = Udp("udp", 53, 9, c => c.TlsCertificatePath = "x.pfx");
+            var tls = Udp("udp", 53, 9, c => c.TlsCertificate = Certs.Register("x.pfx"));
             Assert.Contains(NpProxyValidator.Validate(tls, []), o => o.Contains("certificate"));
 
             var forwarded = Udp("udp", 53, 9, c => c.ForwardedHeaders = ForwardedHeadersMode.Replace);

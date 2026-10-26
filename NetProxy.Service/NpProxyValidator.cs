@@ -14,7 +14,8 @@ namespace NetProxy.Service
         /// Cleans up the host names of the proxy (normalized) and returns what is wrong with it, if anything. <paramref name="others"/>
         /// are the other proxies of the service: the name has to be unique and the port can only be shared the way the rules say.
         /// </summary>
-        public static List<string> Validate(NpProxyConfiguration configuration, IEnumerable<NpProxyConfiguration> others)
+        public static List<string> Validate(NpProxyConfiguration configuration, IEnumerable<NpProxyConfiguration> others,
+            IReadOnlyCollection<string>? certificateNames = null)
         {
             var problems = new List<string>();
             var label = string.IsNullOrWhiteSpace(configuration.Name) ? "(no name)" : configuration.Name;
@@ -68,7 +69,7 @@ namespace NetProxy.Service
                     problems.Add($"Proxy '{label}': a UDP proxy cannot have host names (a datagram does not say which host it is for).");
                 }
 
-                if (string.IsNullOrWhiteSpace(configuration.TlsCertificatePath) == false)
+                if (string.IsNullOrWhiteSpace(configuration.TlsCertificate) == false)
                 {
                     problems.Add($"Proxy '{label}': a UDP proxy cannot have a TLS certificate.");
                 }
@@ -93,6 +94,21 @@ namespace NetProxy.Service
             if (hostProblem != null)
             {
                 problems.Add($"Proxy '{label}': {hostProblem}");
+            }
+
+            //A proxy refers to its certificates by name, so the names have to be certificates that are set up for the service.
+            var referenced = new List<string> { configuration.TlsCertificate };
+            referenced.AddRange(configuration.HostNames.Select(o => o.TlsCertificate));
+            foreach (var certificate in referenced.Where(o => string.IsNullOrWhiteSpace(o) == false).Select(o => o.Trim()).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                var known = certificateNames != null
+                    ? certificateNames.Any(o => o.Equals(certificate, StringComparison.OrdinalIgnoreCase))
+                    : Singletons.Certificates.Exists(certificate);
+
+                if (known == false)
+                {
+                    problems.Add($"Proxy '{label}': the TLS certificate '{certificate}' is not set up for the service (add it under Settings, Certificates).");
+                }
             }
 
             var otherList = others.Where(o => o.Id != configuration.Id).ToList();

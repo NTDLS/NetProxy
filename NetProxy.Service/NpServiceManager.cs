@@ -147,13 +147,43 @@ namespace NetProxy.Service
             }
         }
 
+        /// <summary>
+        /// A certificate was renamed: the proxies that use it follow.
+        /// </summary>
+        public void RenameCertificateInProxies(string oldName, string newName)
+        {
+            var changed = false;
+
+            foreach (var proxy in GetProxies())
+            {
+                var configuration = proxy.Configuration;
+
+                if (string.Equals(configuration.TlsCertificate?.Trim(), oldName, StringComparison.OrdinalIgnoreCase))
+                {
+                    configuration.TlsCertificate = newName;
+                    changed = true;
+                }
+
+                foreach (var host in configuration.HostNames.Where(o => string.Equals(o.TlsCertificate?.Trim(), oldName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    host.TlsCertificate = newName;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                SaveConfiguration();
+            }
+        }
+
         public void SaveConfiguration()
         {
             lock (_saveLock)
             {
                 try
                 {
-                    //The secrets (password hashes, certificate passwords) are written encrypted. This works on copies, because
+                    //The secrets (password hashes) are written encrypted. This works on copies, because
                     //  the ones in use must keep the real values.
                     NpConfiguration configuration;
                     lock (Configuration)
@@ -176,16 +206,7 @@ namespace NetProxy.Service
                         }
                     }
 
-                    var proxyConfigurations = GetProxies().Select(o =>
-                    {
-                        var copy = o.Configuration.Clone();
-                        copy.TlsCertificatePassword = SecretProtector.Protect(copy.TlsCertificatePassword) ?? string.Empty;
-                        foreach (var host in copy.HostNames)
-                        {
-                            host.TlsCertificatePassword = SecretProtector.Protect(host.TlsCertificatePassword) ?? string.Empty;
-                        }
-                        return copy;
-                    }).ToList();
+                    var proxyConfigurations = GetProxies().Select(o => o.Configuration.Clone()).ToList();
 
                     CommonApplicationData.SaveToDisk(Singletons.ConfigurationName, configuration);
                     CommonApplicationData.SaveToDisk(Singletons.ConfigurationName, proxyConfigurations);
@@ -225,19 +246,6 @@ namespace NetProxy.Service
                 hasPlainTextSecrets |= plain;
             }
 
-            foreach (var proxy in proxies)
-            {
-                proxy.TlsCertificatePassword = SecretProtector.Unprotect(proxy.TlsCertificatePassword,
-                    $"the certificate password of proxy '{proxy.Name}'", out var plain) ?? string.Empty;
-                hasPlainTextSecrets |= plain;
-
-                foreach (var host in proxy.HostNames)
-                {
-                    host.TlsCertificatePassword = SecretProtector.Unprotect(host.TlsCertificatePassword,
-                        $"the certificate password of host name '{host.Host}' of proxy '{proxy.Name}'", out var hostPlain) ?? string.Empty;
-                    hasPlainTextSecrets |= hostPlain;
-                }
-            }
         }
 
         public void LoadConfiguration()
@@ -310,7 +318,11 @@ namespace NetProxy.Service
 
                 RegisterReloadSignal();
 
-                //Before the proxies, so that the plug-ins are there for their start.
+                //Before the proxies, so that the certificates and the plug-ins are there for their start.
+                Singletons.Certificates.Proxies = () => GetProxies().Select(o => o.Configuration);
+                Singletons.Certificates.Renamed = RenameCertificateInProxies;
+                Singletons.Certificates.Start();
+
                 Singletons.Plugins.StartAsync().GetAwaiter().GetResult();
 
                 Singletons.Logging.Write(NpLogging.Severity.Information, "Starting the proxies.");
@@ -331,6 +343,7 @@ namespace NetProxy.Service
                 _proxies.Stop();
                 SaveConfiguration();
                 Singletons.Plugins.StopAsync().GetAwaiter().GetResult();
+                Singletons.Certificates.Dispose();
             }
             catch (Exception ex)
             {

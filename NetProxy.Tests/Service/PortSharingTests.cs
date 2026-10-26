@@ -14,8 +14,7 @@ namespace NetProxy.Tests.Service
         private static NpProxyConfiguration Proxy(string name, int port, TrafficType type, EchoBackend backend, string? pfx = null, params string[] hosts)
             => ProxyBuilder.Configuration(name, port, type, backend.Port, c =>
             {
-                c.TlsCertificatePath = pfx ?? string.Empty;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(pfx ?? string.Empty);
                 foreach (var host in hosts)
                 {
                     c.HostNames.Add(new NpHostName { Host = host });
@@ -115,8 +114,7 @@ namespace NetProxy.Tests.Service
             var certificate = Certs.WritePfx(host.Directory, "a.test.local");
             host.Start(ProxyBuilder.Configuration("a", port, TrafficType.Https, host.Backend("A").Port, c =>
             {
-                c.TlsCertificatePath = certificate;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(certificate);
                 c.HostNames.Add(new NpHostName { Host = "a.test.local" });
             }));
 
@@ -212,9 +210,9 @@ namespace NetProxy.Tests.Service
             var apex = Certs.WritePfx(host.Directory, "test.local");
 
             host.Start(ProxyBuilder.Configuration("www", port, TrafficType.Https, host.Backend("WWW").Port, c =>
-                c.HostNames.Add(new NpHostName { Host = "www.test.local", TlsCertificatePath = www, TlsCertificatePassword = Certs.Password })));
+                c.HostNames.Add(new NpHostName { Host = "www.test.local", TlsCertificate = Certs.Register(www) })));
             host.Start(ProxyBuilder.Configuration("apex", port, TrafficType.Https, host.Backend("APEX").Port, c =>
-                c.HostNames.Add(new NpHostName { Host = "test.local", TlsCertificatePath = apex, TlsCertificatePassword = Certs.Password })));
+                c.HostNames.Add(new NpHostName { Host = "test.local", TlsCertificate = Certs.Register(apex) })));
 
             var (wwwBody, wwwCertificate) = await Client.Https(port, "www.test.local");
             var (apexBody, apexCertificate) = await Client.Https(port, "test.local");
@@ -234,8 +232,7 @@ namespace NetProxy.Tests.Service
 
             host.Start(ProxyBuilder.Configuration("a", port, TrafficType.Https, host.Backend("A").Port, c =>
             {
-                c.TlsCertificatePath = shared;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(shared);
                 c.HostNames.Add(new NpHostName { Host = "a.test.local" });
             }));
 
@@ -252,14 +249,13 @@ namespace NetProxy.Tests.Service
             var fallback = Certs.WritePfx(host.Directory, "fallback.test.local");
 
             host.Start(ProxyBuilder.Configuration("named", port, TrafficType.Https, host.Backend("NAMED").Port, c =>
-                c.HostNames.Add(new NpHostName { Host = "named.test.local", TlsCertificatePath = named, TlsCertificatePassword = Certs.Password })));
+                c.HostNames.Add(new NpHostName { Host = "named.test.local", TlsCertificate = Certs.Register(named) })));
 
             await Assert.ThrowsAnyAsync<Exception>(() => Client.Https(port, "other.test.local"));
 
             host.Start(ProxyBuilder.Configuration("default", port, TrafficType.Https, host.Backend("DEFAULT").Port, c =>
             {
-                c.TlsCertificatePath = fallback;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(fallback);
             }));
 
             var (body, certificate) = await Client.Https(port, "other.test.local");
@@ -275,7 +271,7 @@ namespace NetProxy.Tests.Service
             var wildcard = Certs.WritePfx(host.Directory, "wild.test.local");
 
             host.Start(ProxyBuilder.Configuration("wild", port, TrafficType.Https, host.Backend("WILD").Port, c =>
-                c.HostNames.Add(new NpHostName { Host = "*.test.local", TlsCertificatePath = wildcard, TlsCertificatePassword = Certs.Password })));
+                c.HostNames.Add(new NpHostName { Host = "*.test.local", TlsCertificate = Certs.Register(wildcard) })));
 
             var (body, certificate) = await Client.Https(port, "anything.test.local");
             Assert.Contains("backend=WILD", body);
@@ -289,7 +285,7 @@ namespace NetProxy.Tests.Service
             var path = host.Directory.File("broken.pfx");
             File.WriteAllBytes(path, [1, 2, 3]);
 
-            var proxy = host.Create(ProxyBuilder.Configuration("p", Net.FreePort(), TrafficType.Https, host.Backend("A").Port, c => c.TlsCertificatePath = path));
+            var proxy = host.Create(ProxyBuilder.Configuration("p", Net.FreePort(), TrafficType.Https, host.Backend("A").Port, c => c.TlsCertificate = Certs.Register(path)));
 
             Assert.False(proxy.Start(out var error));
             Assert.Contains("broken.pfx", error);

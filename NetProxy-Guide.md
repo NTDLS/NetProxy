@@ -69,7 +69,7 @@ Keep your proxies as files, check them into source control, and apply them with 
 | **Health** | A failed endpoint is tried last for a while, and endpoints can be switched off without deleting them |
 | **Client address** | `X-Forwarded-For` and `X-Forwarded-Proto` (replace or append) |
 | **Header rules** | Insert, update, upsert or delete request and response headers |
-| **Certificates** | PFX files, watched for changes: renewed certificates are picked up without a restart |
+| **Certificates** | Set up once and used by name; PFX files are watched, so renewed certificates reach every proxy that uses them without a restart |
 | **IP versions** | IPv4, IPv6 or both, on every address or only the ones you list |
 | **Limits** | Connections per proxy, connections per client, idle timeout |
 | **Plugins** | .NET plugins with service, proxy, connection and data events; data hooks see decrypted traffic |
@@ -114,15 +114,16 @@ A **proxy** listens on a port and hands every connection to one of its **endpoin
 ### Recipe: a website with HTTPS
 
 1. Make a PFX certificate (see *Free certificates* below).
-2. Add a proxy of traffic type **HTTPS**, port **443**, and give it the PFX file and its password.
-3. Add an endpoint: your web server's address and port, traffic type **HTTP** (NetProxy terminates TLS) or **HTTPS** (it re-encrypts).
-4. Optionally add a second proxy of type **HTTP** on port **80** to the same server.
+2. Under **Settings, Certificates** add it once: a name, the PFX file on the service machine (Browse lists that machine) and its password.
+3. Add a proxy of traffic type **HTTPS**, port **443**, and choose the certificate by name on its **TLS** tab.
+4. Add an endpoint: your web server's address and port, traffic type **HTTP** (NetProxy terminates TLS) or **HTTPS** (it re-encrypts).
+5. Optionally add a second proxy of type **HTTP** on port **80** to the same server.
 
 ### Recipe: many sites on one port
 
 1. Create a proxy for each site, all of traffic type **HTTPS** and all on port **443**.
 2. On each one's **Host names** tab, add the names it answers to: `www.example.com`, `example.com`, `*.example.com`.
-3. For HTTPS, give each host name its own PFX file if the sites have different certificates. A host name with none uses the proxy's certificate.
+3. For HTTPS, choose a certificate by name for each host name if the sites have different certificates. A host name with none uses the proxy's certificate.
 4. Leave **one** proxy without host names if you want a default for names nobody claims.
 
 How a request is matched:
@@ -186,9 +187,9 @@ wacs.exe --accepttos --emailaddress info@YOURDOMAIN.com --target manual --host *
 * `--host *.YOURDOMAIN.com,YOURDOMAIN.com` puts the wildcard **and** the root domain on one certificate, so a single file covers everything.
 * `--validation manual` shows you a DNS TXT record (`_acme-challenge.YOURDOMAIN.com`) to create at your DNS provider. Create it, wait for it to appear, press Enter.
 * `--store centralssl --centralsslstore ... --pfxpassword ...` writes the PFX file into the folder you chose, protected by the password. `--installation none` skips installing it anywhere.
-* In NetProxy, set the PFX file of the proxy (or of a host name) to that file and enter the password.
+* In NetProxy, add the file under **Settings, Certificates** with a name of your choice and the password you gave. Then choose it by name on every proxy and host name that should use it: 50 proxies can share one wildcard certificate that you entered once.
 
-**Renewals are picked up by themselves.** NetProxy watches its PFX files. When win-acme (or certbot, or you) replaces one, new connections use the new certificate seconds later. Connections that are open keep the one they started with, and nothing is restarted. A file that is still being written is retried until it can be read.
+**Renewals are picked up by themselves.** NetProxy reads each certificate file once and watches it. When win-acme (or certbot, or you) replaces one, new connections of every proxy that uses it get the new certificate seconds later. Connections that are open keep the one they started with, and nothing is restarted. A file that is still being written is retried until it can be read.
 
 To renew a certificate, run the same command again before it expires. To renew without typing, use a win-acme DNS plugin for your DNS provider.
 
@@ -225,7 +226,7 @@ netproxyctl help                                            # everything else
 
 * **Apply by name.** `proxy apply` adds a proxy, or replaces the one with the same name, the way `kubectl apply` does. A proxy that is the same as what the service already has is left alone and is not restarted.
 * **Great for scripts.** `--json` prints JSON, exit codes say what happened, and `export` and `import` move proxies, plugins and settings from one service to another.
-* **Also:** `reload`, `logs`, `certs` (when the certificates expire), `stats`, `connections`, `user`, `plugin`, `settings`.
+* **Also:** `reload`, `logs`, `cert` (list, get, apply, remove) and `certs` (when they expire), `stats`, `connections`, `user`, `plugin`, `settings`.
 
 ### Configuration as files
 

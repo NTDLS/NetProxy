@@ -20,6 +20,11 @@ namespace NetProxy.Service
         /// </summary>
         internal static NetProxy.Service.Plugins.NpPluginManager Plugins { get; } = new();
 
+        /// <summary>
+        /// The TLS certificates of the service, which the proxies refer to by name.
+        /// </summary>
+        internal static NetProxy.Service.Proxy.NpCertificateManager Certificates { get; } = new();
+
         private static readonly object _loggingLock = new();
         private static NpLogging? _logging;
         private static RollingFileLogSink? _fileSink;

@@ -27,14 +27,14 @@ namespace NetProxy.Cli
                                            keep running. Also done by kill -HUP on Linux and macOS.
               validate                     reload --dry-run: checks the files and says what a reload would do.
               logs [-n 100]                The end of the service log.
-              certs                        The TLS certificates and when they expire.
+              certs                        The TLS certificates and when they expire (cert list).
               stats                        Traffic of each proxy.
-              export [-o file]             The proxies, plugins and settings as one JSON document.
-              import -f file [--dry-run]   Applies such a document (proxies and plugins by name).
+              export [-o file]             The certificates, proxies, plugins and settings as one JSON document.
+              import -f file [--dry-run]   Applies such a document (certificates, proxies and plugins by name).
 
             Proxies (matched by name)
               proxy list
-              proxy get <name> [--show-secrets]
+              proxy get <name>
               proxy apply -f <file|-> [--dry-run]   Adds or replaces proxies. The file holds a proxy, a list of proxies or an export.
               proxy validate -f <file|->
               proxy start|stop|restart|delete <name>
@@ -46,6 +46,12 @@ namespace NetProxy.Cli
               user add <name> [--password-stdin] [--description text]
               user passwd <name> [--password-stdin]
               user remove <name>
+
+            Certificates (the proxies refer to them by name)
+              cert list
+              cert get <name> [--show-secrets]
+              cert apply -f <file|->       Adds or replaces certificates by name. The file holds a certificate, a list or an export.
+              cert remove <name>           Not while a proxy uses it.
 
             Plugins
               plugin list
@@ -121,7 +127,8 @@ namespace NetProxy.Cli
                 case "reload": return Reload(client, a, a.Has("dry-run"));
                 case "validate": return Reload(client, a, dryRun: true);
                 case "logs": return Logs(client, a);
-                case "certs": return Certificates(client, a);
+                case "certs": return CertificateList(client, a);
+                case "cert": return Certificates(client, a);
                 case "stats": return Statistics(client, a);
                 case "export": return Export(client, a);
                 case "import": return Import(client, a);
@@ -287,7 +294,7 @@ namespace NetProxy.Cli
             return message == null ? 0 : 1;
         }
 
-        private static int Certificates(NpServiceClient client, Arguments a)
+        private static int CertificateList(NpServiceClient client, Arguments a)
         {
             var certificates = client.GetCertificates();
 
@@ -297,14 +304,91 @@ namespace NetProxy.Cli
                 return 0;
             }
 
-            Output.Table(["PROXY", "HOST", "EXPIRES", "DAYS", "SUBJECT"],
+            Output.Table(["NAME", "EXPIRES", "DAYS", "USED BY", "SUBJECT"],
                 certificates.Select(o => new[]
                 {
-                    o.ProxyName, o.HostName.Length == 0 ? "(proxy)" : o.HostName, o.NotAfterUtc?.ToString("yyyy-MM-dd") ?? "-",
-                    o.DaysLeft?.ToString() ?? "-", o.Error.Length > 0 ? $"ERROR: {o.Error}" : o.Subject
+                    o.Name, o.NotAfterUtc?.ToString("yyyy-MM-dd") ?? "-", o.DaysLeft?.ToString() ?? "-",
+                    string.Join(", ", o.UsedBy), o.Error.Length > 0 ? $"ERROR: {o.Error}" : o.Subject
                 }));
 
             return certificates.Any(o => o.Error.Length > 0 || o.DaysLeft < 0) ? 1 : 0;
+        }
+
+        private static int Certificates(NpServiceClient client, Arguments a)
+        {
+            var verb = a.Word(1, "cert command (list, get, apply, remove)").ToLowerInvariant();
+
+            switch (verb)
+            {
+                case "list":
+                    return CertificateList(client, a);
+
+                case "get":
+                    {
+                        var name = a.Word(2, "certificate name");
+                        var certificate = client.GetCertificates().FirstOrDefault(o => o.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase))
+                            ?? throw new CommandFailedException($"There is no certificate '{name}'.");
+                        var configuration = new NpCertificateConfiguration
+                        {
+                            Id = certificate.Id,
+                            Name = certificate.Name,
+                            Description = certificate.Description,
+                            Path = certificate.Path,
+                            Password = certificate.Password
+                        };
+                        Console.WriteLine(JsonConvert.SerializeObject(a.Has("show-secrets") ? configuration : NpServiceClient.MaskSecrets(configuration), Formatting.Indented));
+                        return 0;
+                    }
+
+                case "apply":
+                    {
+                        var token = JToken.Parse(ReadInput(a));
+                        var certificates = token is JArray array ? array.ToObject<List<NpCertificateConfiguration>>() ?? []
+                            : (token is JObject obj && obj["Certificates"] is JArray inner ? inner.ToObject<List<NpCertificateConfiguration>>() ?? []
+                            : [token.ToObject<NpCertificateConfiguration>()!]);
+
+                        var failed = false;
+                        foreach (var certificate in certificates)
+                        {
+                            failed |= ApplyCertificate(client, certificate, dryRun: false) == false;
+                        }
+
+                        return failed ? 1 : 0;
+                    }
+
+                case "remove":
+                    {
+                        var name = a.Word(2, "certificate name");
+                        return Done(client.DeleteCertificate(name), $"certificate {name}: removed");
+                    }
+
+                default:
+                    throw new UsageException($"Unknown cert command '{verb}'.");
+            }
+        }
+
+        private static bool ApplyCertificate(NpServiceClient client, NpCertificateConfiguration certificate, bool dryRun)
+        {
+            if (dryRun)
+            {
+                Console.WriteLine($"certificate/{certificate.Name}: would apply");
+                return true;
+            }
+
+            var reply = client.ApplyCertificate(certificate);
+            Console.WriteLine($"certificate/{certificate.Name}: {(reply.Success ? reply.Action : "not applied")}");
+
+            if (reply.Message != null)
+            {
+                Console.Error.WriteLine($"  problem: {reply.Message}");
+            }
+
+            if (string.IsNullOrEmpty(reply.LoadError) == false)
+            {
+                Console.Error.WriteLine($"  saved, but the file could not be loaded: {reply.LoadError}");
+            }
+
+            return reply.Success && string.IsNullOrEmpty(reply.LoadError);
         }
 
         private static int Statistics(NpServiceClient client, Arguments a)
@@ -345,7 +429,7 @@ namespace NetProxy.Cli
             else
             {
                 File.WriteAllText(path, text);
-                Console.WriteLine($"Wrote {export.Proxies.Count} proxies and {export.Plugins.Count} plugins to {path}. The file holds certificate passwords: keep it private.");
+                Console.WriteLine($"Wrote {export.Certificates.Count} certificates, {export.Proxies.Count} proxies and {export.Plugins.Count} plugins to {path}. The file holds certificate passwords: keep it private.");
             }
 
             return 0;
@@ -356,6 +440,12 @@ namespace NetProxy.Cli
             var dryRun = a.Has("dry-run");
             var export = JsonConvert.DeserializeObject<NpExport>(ReadInput(a)) ?? throw new CommandFailedException("The file is empty.");
             var failed = false;
+
+            //The certificates first: the proxies refer to them.
+            foreach (var certificate in export.Certificates)
+            {
+                failed |= ApplyCertificate(client, certificate, dryRun) == false;
+            }
 
             foreach (var plugin in export.Plugins)
             {
@@ -409,7 +499,7 @@ namespace NetProxy.Cli
                     {
                         var name = a.Word(2, "proxy name");
                         var proxy = client.GetProxy(name) ?? throw new CommandFailedException($"There is no proxy '{name}'.");
-                        Console.WriteLine(JsonConvert.SerializeObject(a.Has("show-secrets") ? proxy : NpServiceClient.MaskSecrets(proxy), Formatting.Indented));
+                        Console.WriteLine(JsonConvert.SerializeObject(proxy, Formatting.Indented));
                         return 0;
                     }
 

@@ -915,6 +915,15 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        private void CertificatesToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            using var form = new FormCertificates(_connectionInfo.EnsureNotNull()) { Icon = Icon };
+            form.ShowDialog(this);
+
+            //The proxies show which certificate they use, and the list may have changed under them.
+            RefreshProxyList();
+        }
+
         private void PluginsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             using var form = new FormPlugins(_connectionInfo.EnsureNotNull()) { Icon = Icon };

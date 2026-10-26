@@ -67,14 +67,10 @@ namespace NetProxy.Library.Payloads.Routing
         public int MaxDatagramsPerSecondPerClient { get; set; }
 
         /// <summary>
-        /// Path (on the machine running the service) of the PFX/PKCS#12 certificate the listener presents to clients (Https traffic type).
+        /// The name of the certificate (one of the certificates that are set up for the service, see <see cref="NpCertificateConfiguration"/>)
+        /// that the listener presents to clients (Https traffic type). Empty for none.
         /// </summary>
-        public string TlsCertificatePath { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Password of the PFX certificate, if it has one. Stored encrypted by the service.
-        /// </summary>
-        public string TlsCertificatePassword { get; set; } = string.Empty;
+        public string TlsCertificate { get; set; } = string.Empty;
 
         /// <summary>
         /// The host names that this proxy answers to. Proxies (of the HTTP or HTTPS traffic type) that listen on the same port tell

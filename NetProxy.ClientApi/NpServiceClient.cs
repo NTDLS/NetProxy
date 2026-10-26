@@ -43,6 +43,7 @@ namespace NetProxy.ClientApi
         public int FormatVersion { get; set; } = 1;
         public List<NpProxyConfiguration> Proxies { get; set; } = new();
         public List<NpPluginConfiguration> Plugins { get; set; } = new();
+        public List<NpCertificateConfiguration> Certificates { get; set; } = new();
         public NpServiceSettings? Settings { get; set; }
     }
 
@@ -139,8 +140,37 @@ namespace NetProxy.ClientApi
             return reply.Lines;
         }
 
-        public List<NpCertificateStatus> GetCertificates()
-            => _client.Query<QueryCertificateStatusReply>(new QueryCertificateStatus()).Collection;
+        //---------------------------------------------------------------- Certificates
+
+        /// <summary>
+        /// The TLS certificates of the service, when they expire and which proxies use them.
+        /// </summary>
+        public List<NpCertificateGridItem> GetCertificates()
+            => _client.Query<QueryCertificateListReply>(new QueryCertificateList()).Collection;
+
+        /// <summary>
+        /// Adds the certificate, or replaces the one with the same name. A password that is <see cref="SecretMask"/> keeps the password
+        /// of the certificate it replaces.
+        /// </summary>
+        public QueryUpsertCertificateReply ApplyCertificate(NpCertificateConfiguration certificate)
+        {
+            if (certificate.Password == SecretMask)
+            {
+                certificate.Password = GetCertificates()
+                    .FirstOrDefault(o => o.Name.Equals(certificate.Name?.Trim(), StringComparison.CurrentCultureIgnoreCase))?.Password ?? string.Empty;
+            }
+
+            return _client.Query<QueryUpsertCertificateReply>(new QueryUpsertCertificate { Certificate = certificate, MatchByName = true });
+        }
+
+        /// <summary>
+        /// Deletes the certificate. Returns why it was not deleted (proxies use it, for one), or null.
+        /// </summary>
+        public string? DeleteCertificate(string name)
+        {
+            var reply = _client.Query<QueryActionReply>(new QueryCertificateAction { Name = name, Action = NpCertificateAction.Delete });
+            return reply.Success ? null : reply.Message ?? "The service did not do it.";
+        }
 
         /// <summary>
         /// Lists a folder on the machine that the service runs on. See <see cref="QueryBrowse"/>.
@@ -190,8 +220,6 @@ namespace NetProxy.ClientApi
             var result = new NpApplyResult();
             var existing = string.IsNullOrWhiteSpace(configuration.Name) ? null : GetProxy(configuration.Name);
 
-            RestoreSecrets(configuration, existing);
-
             if (existing != null)
             {
                 configuration.AdoptEndpointIds(existing);
@@ -231,38 +259,17 @@ namespace NetProxy.ClientApi
         }
 
         /// <summary>
-        /// A copy of the proxy with its secrets replaced by <see cref="SecretMask"/>, for showing.
+        /// A copy of the certificate with its password replaced by <see cref="SecretMask"/>, for showing.
         /// </summary>
-        public static NpProxyConfiguration MaskSecrets(NpProxyConfiguration configuration)
-        {
-            var copy = configuration.Clone();
-
-            if (copy.TlsCertificatePassword.Length > 0)
+        public static NpCertificateConfiguration MaskSecrets(NpCertificateConfiguration certificate)
+            => new()
             {
-                copy.TlsCertificatePassword = SecretMask;
-            }
-
-            foreach (var host in copy.HostNames.Where(o => o.TlsCertificatePassword.Length > 0))
-            {
-                host.TlsCertificatePassword = SecretMask;
-            }
-
-            return copy;
-        }
-
-        private static void RestoreSecrets(NpProxyConfiguration configuration, NpProxyConfiguration? existing)
-        {
-            if (configuration.TlsCertificatePassword == SecretMask)
-            {
-                configuration.TlsCertificatePassword = existing?.TlsCertificatePassword ?? string.Empty;
-            }
-
-            foreach (var host in configuration.HostNames.Where(o => o.TlsCertificatePassword == SecretMask))
-            {
-                host.TlsCertificatePassword = existing?.HostNames
-                    .FirstOrDefault(o => NpHostMatcher.Normalize(o.Host) == NpHostMatcher.Normalize(host.Host))?.TlsCertificatePassword ?? string.Empty;
-            }
-        }
+                Id = certificate.Id,
+                Name = certificate.Name,
+                Description = certificate.Description,
+                Path = certificate.Path,
+                Password = certificate.Password.Length > 0 ? SecretMask : string.Empty
+            };
 
         private static bool AreSame(NpProxyConfiguration a, NpProxyConfiguration b)
         {
@@ -337,12 +344,20 @@ namespace NetProxy.ClientApi
         //---------------------------------------------------------------- Export and import
 
         /// <summary>
-        /// The proxies, plugins and settings. Users are not included: their passwords are hashes that cannot be set from outside.
+        /// The proxies, certificates, plugins and settings. Users are not included: their passwords are hashes that cannot be set from outside.
         /// </summary>
         public NpExport Export()
             => new()
             {
                 Proxies = GetAllProxies(),
+                Certificates = GetCertificates().Select(o => new NpCertificateConfiguration
+                {
+                    Id = o.Id,
+                    Name = o.Name,
+                    Description = o.Description,
+                    Path = o.Path,
+                    Password = o.Password
+                }).ToList(),
                 Plugins = ListPlugins().Select(o => new NpPluginConfiguration
                 {
                     Id = o.Id,

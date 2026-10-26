@@ -179,28 +179,47 @@ namespace NetProxy.Tests.Management
             Assert.Contains("backend=A", await Get(proxy));
         }
 
+        private static string CertificateFile => FolderFile("NpCertificateConfiguration.json");
+
         [Fact]
-        public void A_plain_text_password_typed_into_the_file_is_encrypted_when_it_is_applied()
+        public void A_certificate_typed_into_its_file_is_added_and_its_plain_text_password_is_encrypted()
         {
             using var directory = new TempDirectory();
             var pfx = Certs.WritePfx(directory, "site.test");
             var port = Net.FreePort();
+
+            File.WriteAllText(CertificateFile, new JArray(new JObject { ["Name"] = "site", ["Path"] = pfx, ["Password"] = Certs.Password }).ToString());
+
             var proxies = ReadProxies();
             var entry = Edited("tls", port, Host.Backend("A").Port);
             entry["TrafficType"] = "Https";
-            entry["TlsCertificatePath"] = pfx;
-            entry["TlsCertificatePassword"] = Certs.Password;
+            entry["TlsCertificate"] = "site";
             proxies.Add(entry);
             WriteProxies(proxies);
 
             var reply = Client.Reload();
 
             Assert.True(reply.Success, string.Join("; ", reply.Problems));
+            Assert.Contains("Certificate 'site': added.", reply.Changes);
             Assert.True(Service.Manager.FindProxy(null, "tls")!.IsRunning); //The certificate loaded, so the plain text password was understood.
-            var saved = (string)Find(ReadProxies(), "tls")["TlsCertificatePassword"]!;
+            Assert.True(Client.GetCertificates().Single().IsLoaded);
+
+            var saved = (string)JArray.Parse(File.ReadAllText(CertificateFile)).OfType<JObject>().Single()["Password"]!;
             Assert.StartsWith("enc:", saved);
-            Assert.DoesNotContain(Certs.Password, File.ReadAllText(ProxyFile));
-            Assert.Equal(Certs.Password, Client.GetProxy("tls")!.TlsCertificatePassword); //The service still has the real one.
+            Assert.DoesNotContain(Certs.Password, File.ReadAllText(CertificateFile));
+        }
+
+        [Fact]
+        public void A_proxy_file_that_uses_a_certificate_that_is_not_set_up_is_refused()
+        {
+            var proxies = ReadProxies();
+            var entry = Edited("tls", Net.FreePort(), Host.Backend("A").Port);
+            entry["TrafficType"] = "Https";
+            entry["TlsCertificate"] = "nobody";
+            proxies.Add(entry);
+            WriteProxies(proxies);
+
+            AssertRefused("'nobody' is not set up");
         }
 
         //---------------------------------------------------------------- Files that are wrong

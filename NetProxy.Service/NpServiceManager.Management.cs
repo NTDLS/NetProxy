@@ -288,50 +288,6 @@ namespace NetProxy.Service
         }
 
         /// <summary>
-        /// The certificates of the proxies, and when they expire.
-        /// </summary>
-        public List<NpCertificateStatus> GetCertificateStatus()
-        {
-            var result = new List<NpCertificateStatus>();
-
-            foreach (var proxy in GetProxies())
-            {
-                var configuration = proxy.Configuration;
-
-                if (string.IsNullOrWhiteSpace(configuration.TlsCertificatePath) == false)
-                {
-                    result.Add(ReadCertificate(configuration.Name, string.Empty, configuration.TlsCertificatePath, configuration.TlsCertificatePassword));
-                }
-
-                foreach (var host in configuration.HostNames.Where(o => string.IsNullOrWhiteSpace(o.TlsCertificatePath) == false))
-                {
-                    result.Add(ReadCertificate(configuration.Name, host.Host, host.TlsCertificatePath, host.TlsCertificatePassword));
-                }
-            }
-
-            return result;
-        }
-
-        private static NpCertificateStatus ReadCertificate(string proxyName, string hostName, string path, string password)
-        {
-            var status = new NpCertificateStatus { ProxyName = proxyName, HostName = hostName, Path = path };
-
-            try
-            {
-                using var certificate = X509CertificateLoader.LoadPkcs12FromFile(path, string.IsNullOrEmpty(password) ? null : password);
-                status.Subject = certificate.Subject;
-                status.NotAfterUtc = certificate.NotAfter.ToUniversalTime();
-                status.DaysLeft = (int)Math.Floor((certificate.NotAfter.ToUniversalTime() - DateTime.UtcNow).TotalDays);
-            }
-            catch (Exception ex)
-            {
-                status.Error = ex.GetBaseException().Message;
-            }
-
-            return status;
-        }
-
-        /// <summary>
         /// The last lines of the log file.
         /// </summary>
         public List<string> TailLog(int lines, out string? message)
@@ -450,9 +406,14 @@ namespace NetProxy.Service
                     desired.AdoptEndpointIds(existing.Configuration);
                 }
 
+                //The certificates of the file come first: the proxies of the file are checked against them.
+                var certificateResult = Singletons.Certificates.ReloadFromDisk(dryRun: true, fileProxies);
+                result.Problems.AddRange(certificateResult.Problems);
+                var certificateNames = Singletons.Certificates.ReadNamesFromDisk();
+
                 foreach (var desired in fileProxies)
                 {
-                    foreach (var problem in NpProxyValidator.Validate(desired, fileProxies))
+                    foreach (var problem in NpProxyValidator.Validate(desired, fileProxies, certificateNames))
                     {
                         result.Problems.Add(problem);
                     }
@@ -504,6 +465,7 @@ namespace NetProxy.Service
                 {
                     result.Changes.Add("Settings: changed.");
                 }
+                result.Changes.AddRange(certificateResult.Changes);
                 result.Changes.AddRange(pluginResult.Changes);
 
                 result.Success = true;
@@ -512,6 +474,9 @@ namespace NetProxy.Service
                 {
                     return result;
                 }
+
+                //The certificates before the proxies, which start with them.
+                Singletons.Certificates.ReloadFromDisk(dryRun: false, fileProxies);
 
                 //Stopped first, so that the ports they had are free for the proxies that take them.
                 var restart = new List<(NpProxyConfiguration Configuration, bool WasRunning)>();

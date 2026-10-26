@@ -283,8 +283,7 @@ namespace NetProxy.Tests.Service
             var frontCertificate = Certs.WritePfx(host.Directory, "front.test.local");
             host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Https, tls.Port, c =>
             {
-                c.TlsCertificatePath = frontCertificate;
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(frontCertificate);
                 c.Endpoints.Collection[0].TrafficType = TrafficType.Https;
                 c.Endpoints.Collection[0].TlsValidateSSLCertificate = false;
             }));
@@ -505,8 +504,7 @@ namespace NetProxy.Tests.Service
             var port = Net.FreePort();
             host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Https, backend.Port, c =>
             {
-                c.TlsCertificatePath = Certs.WritePfx(host.Directory, "p.test.local");
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(Certs.WritePfx(host.Directory, "p.test.local"));
                 c.HttpHeaderRules.Add(new NpHttpHeaderRule { Name = "Host", Value = "internal.local", Action = HttpHeaderAction.Update, HeaderType = HttpHeaderType.Request, Enabled = true });
             }));
 
@@ -580,8 +578,7 @@ namespace NetProxy.Tests.Service
             var port = Net.FreePort();
             host.Start(ProxyBuilder.Configuration("p", port, TrafficType.Https, backend.Port, c =>
             {
-                c.TlsCertificatePath = Certs.WritePfx(host.Directory, "p.test.local");
-                c.TlsCertificatePassword = Certs.Password;
+                c.TlsCertificate = Certs.Register(Certs.WritePfx(host.Directory, "p.test.local"));
                 c.ForwardedHeaders = ForwardedHeadersMode.Replace;
             }));
 

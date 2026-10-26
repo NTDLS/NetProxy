@@ -298,38 +298,41 @@ namespace NetProxy.Tests.Management
         {
             using var directory = new TempDirectory();
             var pfx = Certs.WritePfx(directory, "site.test");
-            var proxy = NewProxy("tls", change: c =>
-            {
-                c.TrafficType = TrafficType.Https;
-                c.TlsCertificatePath = pfx;
-                c.TlsCertificatePassword = Certs.Password;
-                c.HostNames.Add(new NpHostName { Host = "site.test", TlsCertificatePath = pfx, TlsCertificatePassword = Certs.Password });
-            });
-            Client.ApplyProxy(proxy);
+            Assert.True(Client.ApplyCertificate(new NpCertificateConfiguration { Name = "site", Path = pfx, Password = Certs.Password }).Success);
 
-            var stored = Client.GetProxy("tls")!;
+            var stored = Client.GetCertificates().Single();
             var shown = NpServiceClient.MaskSecrets(stored);
-            Assert.Equal(NpServiceClient.SecretMask, shown.TlsCertificatePassword);
-            Assert.Equal(NpServiceClient.SecretMask, shown.HostNames[0].TlsCertificatePassword);
-            Assert.Equal(Certs.Password, stored.TlsCertificatePassword); //The copy is masked, not the proxy.
+            Assert.Equal(NpServiceClient.SecretMask, shown.Password);
+            Assert.Equal(Certs.Password, stored.Password); //The copy is masked, not the certificate.
 
             shown.Description = "edited from the masked copy";
-            var result = Client.ApplyProxy(shown);
+            var result = Client.ApplyCertificate(shown);
 
+            Assert.True(result.Success);
             Assert.Equal("updated", result.Action);
-            var after = Client.GetProxy("tls")!;
-            Assert.Equal(Certs.Password, after.TlsCertificatePassword);
-            Assert.Equal(Certs.Password, after.HostNames[0].TlsCertificatePassword);
-            Assert.True(Service.Manager.FindProxy(null, "tls")!.IsRunning); //The certificate still loads, so the password is the real one.
+            var after = Client.GetCertificates().Single();
+            Assert.Equal(Certs.Password, after.Password);
+            Assert.Equal("edited from the masked copy", after.Description);
+            Assert.True(after.IsLoaded); //The file still loads, so the password is the real one.
         }
 
         [Fact]
-        public void A_masked_secret_on_a_new_proxy_becomes_empty_and_not_the_mask()
+        public void A_masked_secret_on_a_new_certificate_becomes_empty_and_not_the_mask()
         {
-            var proxy = NewProxy("new", change: c => c.TlsCertificatePassword = NpServiceClient.SecretMask);
-            Client.ApplyProxy(proxy);
+            using var directory = new TempDirectory();
+            var pfx = Certs.WritePfx(directory, "site.test");
 
-            Assert.Equal("", Client.GetProxy("new")!.TlsCertificatePassword);
+            Client.ApplyCertificate(new NpCertificateConfiguration { Name = "new", Path = pfx, Password = NpServiceClient.SecretMask });
+
+            Assert.Equal("", Client.GetCertificates().Single().Password);
+        }
+
+        [Fact]
+        public void The_proxy_list_never_carries_secrets()
+        {
+            Client.ApplyProxy(NewProxy("web"));
+
+            Assert.DoesNotContain("Password", Newtonsoft.Json.JsonConvert.SerializeObject(Client.ListProxies()));
         }
 
         [Fact]
@@ -472,14 +475,6 @@ namespace NetProxy.Tests.Management
             Assert.Contains("backend=B", await Get(b, "b.example.com"));
             Assert.All(Client.ListProxies(), o => Assert.True(o.IsRunning));
             Assert.Equal(["a.example.com"], Client.ListProxies().Single(o => o.Name == "a").HostNames.Select(o => o.Host));
-        }
-
-        [Fact]
-        public void The_proxy_list_never_carries_passwords()
-        {
-            Client.ApplyProxy(NewProxy("web", change: c => c.TlsCertificatePassword = "secret"));
-
-            Assert.All(Client.ListProxies(), o => Assert.Equal("", o.TlsCertificatePassword));
         }
 
         //---------------------------------------------------------------- Users
@@ -655,25 +650,22 @@ namespace NetProxy.Tests.Management
         {
             using var directory = new TempDirectory();
             var pfx = Certs.WritePfx(directory, "site.test");
+            Client.ApplyCertificate(new NpCertificateConfiguration { Name = "site", Path = pfx, Password = Certs.Password });
             Client.ApplyProxy(NewProxy("tls", change: c =>
             {
                 c.TrafficType = TrafficType.Https;
-                c.TlsCertificatePath = pfx;
-                c.TlsCertificatePassword = Certs.Password;
-                c.HostNames.Add(new NpHostName { Host = "a.test", TlsCertificatePath = pfx, TlsCertificatePassword = Certs.Password });
+                c.TlsCertificate = "site";
+                c.HostNames.Add(new NpHostName { Host = "a.test", TlsCertificate = "site" });
             }));
+            Client.ApplyProxy(NewProxy("other", change: c => { c.TrafficType = TrafficType.Https; c.TlsCertificate = "SITE"; }));
 
-            var certificates = Client.GetCertificates();
+            var certificate = Assert.Single(Client.GetCertificates());
 
-            Assert.Equal(2, certificates.Count);
-            Assert.All(certificates, o =>
-            {
-                Assert.Equal("", o.Error);
-                Assert.Contains("site.test", o.Subject);
-                Assert.InRange(o.DaysLeft!.Value, 28, 31);
-            });
-            Assert.Contains(certificates, o => o.HostName == "" && o.ProxyName == "tls");
-            Assert.Contains(certificates, o => o.HostName == "a.test");
+            Assert.Equal("", certificate.Error);
+            Assert.True(certificate.IsLoaded);
+            Assert.Contains("site.test", certificate.Subject);
+            Assert.InRange(certificate.DaysLeft!.Value, 28, 31);
+            Assert.Equal(["other", "tls"], certificate.UsedBy);
         }
 
         [Fact]
@@ -681,16 +673,14 @@ namespace NetProxy.Tests.Management
         {
             using var directory = new TempDirectory();
             var good = Certs.WritePfx(directory, "good.test");
-            Client.ApplyProxy(NewProxy("tls", change: c =>
-            {
-                c.TrafficType = TrafficType.Https;
-                c.AutoStart = false;
-                c.TlsCertificatePath = good;
-                c.TlsCertificatePassword = "wrong password";
-            }));
+            var reply = Client.ApplyCertificate(new NpCertificateConfiguration { Name = "wrong", Path = good, Password = "wrong password" });
+
+            Assert.True(reply.Success); //It is saved, so that the file can be put right.
+            Assert.False(string.IsNullOrEmpty(reply.LoadError));
 
             var certificate = Assert.Single(Client.GetCertificates());
 
+            Assert.False(certificate.IsLoaded);
             Assert.False(string.IsNullOrEmpty(certificate.Error));
             Assert.Null(certificate.DaysLeft);
         }

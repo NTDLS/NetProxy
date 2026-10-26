@@ -8,7 +8,7 @@
 		<NoWarn>$(NoWarn);CS1591</NoWarn>
 
 		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
-		<Version>1.0.0</Version>
+		<Version>3.1.0</Version>
 		<Company>NetworkDLS</Company>
 		<Product>NetProxy</Product>
 		<Description>The API for writing NetProxy plug-ins.</Description>

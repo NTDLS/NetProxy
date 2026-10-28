@@ -66,6 +66,7 @@ namespace NetProxy.Client.Forms
             dataGridViewPlugins.Size = new Size(796, 330);
             dataGridViewPlugins.TabIndex = 0;
             dataGridViewPlugins.CellDoubleClick += DataGridViewPlugins_CellDoubleClick;
+            dataGridViewPlugins.MouseUp += DataGridViewPlugins_MouseUp;
             // 
             // ColumnOrder
             // 

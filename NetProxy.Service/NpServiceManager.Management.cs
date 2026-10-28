@@ -112,8 +112,9 @@ namespace NetProxy.Service
         /// <summary>
         /// Saves a proxy (replacing the one it is the new version of) and starts it if it is set to start automatically.
         /// Returns why it could not be saved, or null. <paramref name="startError"/> says why it was saved but did not start.
+        /// <paramref name="start"/> decides if it is started (the default is what <see cref="NpProxyConfiguration.AutoStart"/> says).
         /// </summary>
-        public string? UpsertProxy(NpProxyConfiguration configuration, bool matchByName, out string action, out string? startError)
+        public string? UpsertProxy(NpProxyConfiguration configuration, bool matchByName, out string action, out string? startError, bool? start = null)
         {
             lock (_managementLock)
             {
@@ -145,12 +146,61 @@ namespace NetProxy.Service
                 proxy.Plugins.ProxyConfigurationChangedAsync(proxy.Info, existing != null ? NpChangeKind.Changed : NpChangeKind.Added)
                     .AsTask().GetAwaiter().GetResult();
 
-                if (configuration.AutoStart && proxy.Start(out var error) == false)
+                if ((start ?? configuration.AutoStart) && proxy.Start(out var error) == false)
                 {
                     startError = error;
                 }
 
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Makes the proxies in <paramref name="proxyIds"/>, and only those, use the plugin. A proxy that changes is saved the way an edit of
+        /// it is (so it is replaced by a new one), and is running afterwards if it was running before, whatever it is set to start with.
+        /// What went wrong for a proxy is added to <paramref name="problems"/>. Returns how many proxies were changed.
+        /// </summary>
+        public int SetPluginProxies(Guid pluginId, IReadOnlyCollection<Guid> proxyIds, List<string> problems)
+        {
+            lock (_managementLock)
+            {
+                var wanted = proxyIds.ToHashSet();
+                var changed = 0;
+
+                foreach (var proxy in GetProxies())
+                {
+                    var uses = proxy.Configuration.PluginIds.Contains(pluginId);
+                    if (uses == wanted.Contains(proxy.Configuration.Id))
+                    {
+                        continue;
+                    }
+
+                    var configuration = proxy.Configuration.Clone();
+                    if (uses)
+                    {
+                        configuration.PluginIds.RemoveAll(o => o == pluginId);
+                    }
+                    else
+                    {
+                        configuration.PluginIds.Add(pluginId);
+                    }
+
+                    var problem = UpsertProxy(configuration, matchByName: false, out _, out var startError, start: proxy.IsRunning);
+                    if (problem != null)
+                    {
+                        problems.Add($"{configuration.Name}: {problem}");
+                        continue;
+                    }
+
+                    changed++;
+
+                    if (startError != null)
+                    {
+                        problems.Add($"{configuration.Name}: {startError}");
+                    }
+                }
+
+                return changed;
             }
         }
 

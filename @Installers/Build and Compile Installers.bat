@@ -8,6 +8,8 @@ rd output /q /s
 md output
 md publish
 
+dotnet pack ..\NetProxy.PluginApi -c Release -o ".\output"
+
 REM Windows console and service (the installer needs the .NET 10 Desktop runtime on the machine).
 dotnet publish ..\NetProxy.Client -c Release -o publish\win-x64\Client --runtime win-x64 --self-contained false
 del publish\win-x64\Client\*.pdb /q

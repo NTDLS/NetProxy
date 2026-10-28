@@ -97,6 +97,66 @@ namespace NetProxy.Client.Forms
             }
         }
 
+        private void DataGridViewPlugins_MouseUp(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right)
+            {
+                return;
+            }
+
+            var hit = dataGridViewPlugins.HitTest(e.X, e.Y);
+            if (hit.RowIndex >= 0)
+            {
+                dataGridViewPlugins.CurrentCell = dataGridViewPlugins.Rows[hit.RowIndex].Cells[ColumnName.Index];
+            }
+
+            var menu = new ContextMenuStrip();
+            menu.Closed += (_, _) => menu.BeginInvoke(menu.Dispose);
+            menu.Items.Add(Localize("Select proxies..."), null, (_, _) => SelectProxies()).Enabled = hit.RowIndex >= 0;
+            menu.Show(dataGridViewPlugins, e.X, e.Y);
+        }
+
+        /// <summary>
+        /// Shows all the proxies, ticked for the ones that use the selected plugin, and saves what is ticked.
+        /// </summary>
+        private void SelectProxies()
+        {
+            if (Selected is not { } selected)
+            {
+                return;
+            }
+
+            try
+            {
+                var client = _messageClient.EnsureNotNull();
+                var proxies = client.Query<QueryProxyConfigurationListReply>(new QueryProxyConfigurationList()).Collection;
+
+                if (proxies.Count == 0)
+                {
+                    MessageBox.Show(Localize("There are no proxies yet."), Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return;
+                }
+
+                using var form = new FormPluginProxies(selected.Name, selected.Id, proxies);
+                if (form.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+
+                var reply = client.Query<QuerySetPluginProxiesReply>(new QuerySetPluginProxies { PluginId = selected.Id, ProxyIds = form.SelectedProxyIds });
+
+                if (reply.Problems.Count > 0 || string.IsNullOrEmpty(reply.Message) == false)
+                {
+                    MessageBox.Show(Localize("Not every proxy could be changed: {0}", string.Join(Environment.NewLine, reply.Problems.Prepend(reply.Message ?? string.Empty).Where(o => o.Length > 0))),
+                        Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.GetBaseException().Message, Constants.FriendlyName, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+            }
+        }
+
         private void ButtonAdd_Click(object? sender, EventArgs e) => EditAndSave(null);
 
         private void ButtonEdit_Click(object? sender, EventArgs e) => Edit();

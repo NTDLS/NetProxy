@@ -612,6 +612,55 @@ namespace NetProxy.Tests.Management
         }
 
         [Fact]
+        public async Task The_proxies_of_a_plugin_are_set_at_once_and_a_running_proxy_stays_running()
+        {
+            using var directory = new TempDirectory();
+            Client.ApplyPlugin(PluginSupport.Recorder("rec", directory));
+            var pluginId = Client.ListPlugins().Single().Id;
+
+            var uses = NewProxy("uses", change: c => c.PluginIds.Add(pluginId));
+            var joins = NewProxy("joins");
+            var stopped = NewProxy("stopped", change: c => c.AutoStart = false);
+            Client.ApplyProxy(uses);
+            Client.ApplyProxy(joins);
+            Client.ApplyProxy(stopped);
+
+            Assert.Equal([pluginId], Client.ListProxies().Single(o => o.Name == "uses").PluginIds);
+
+            //"uses" is unticked, "joins" and "stopped" are ticked.
+            var reply = Client.Raw.Query<QuerySetPluginProxiesReply>(new QuerySetPluginProxies
+            {
+                PluginId = pluginId,
+                ProxyIds = [joins.Id, stopped.Id]
+            });
+
+            Assert.True(reply.Success, string.Join(" ", reply.Problems));
+            Assert.Equal(3, reply.Changed);
+            Assert.Empty(Client.GetProxy("uses")!.PluginIds);
+            Assert.Equal([pluginId], Client.GetProxy("joins")!.PluginIds);
+            Assert.Equal([pluginId], Client.GetProxy("stopped")!.PluginIds);
+
+            //The ones that ran still run, the one that did not run (although it was changed) does not, and the plugin is called for the new one.
+            Assert.True(Service.Manager.FindProxy(null, "uses")!.IsRunning);
+            Assert.True(Service.Manager.FindProxy(null, "joins")!.IsRunning);
+            Assert.False(Service.Manager.FindProxy(null, "stopped")!.IsRunning);
+            Assert.Contains("backend=A", await Get(joins));
+            Assert.Contains(PluginSupport.Events(directory, "rec"), o => o.StartsWith("Connecting"));
+
+            //The same ticks again change nothing.
+            Assert.Equal(0, Client.Raw.Query<QuerySetPluginProxiesReply>(new QuerySetPluginProxies { PluginId = pluginId, ProxyIds = [joins.Id, stopped.Id] }).Changed);
+        }
+
+        [Fact]
+        public void Setting_the_proxies_of_a_plugin_that_does_not_exist_says_so()
+        {
+            var reply = Client.Raw.Query<QuerySetPluginProxiesReply>(new QuerySetPluginProxies { PluginId = Guid.NewGuid() });
+
+            Assert.False(reply.Success);
+            Assert.Contains("There is no plugin", reply.Message);
+        }
+
+        [Fact]
         public void A_login_is_told_to_the_plugins()
         {
             using var directory = new TempDirectory();

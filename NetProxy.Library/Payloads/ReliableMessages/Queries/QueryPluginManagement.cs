@@ -30,4 +30,26 @@ namespace NetProxy.Library.Payloads.ReliableMessages.Queries
         public string? Name { get; set; }
         public NpPluginAction Action { get; set; }
     }
+
+    /// <summary>
+    /// Sets which proxies use a plugin: exactly the proxies in <see cref="ProxyIds"/> do afterwards. A proxy that is changed is saved
+    /// the way an edit of it is, and is running again afterwards if it was running.
+    /// </summary>
+    public class QuerySetPluginProxies : IRmQuery<QuerySetPluginProxiesReply>
+    {
+        public Guid PluginId { get; set; }
+        public List<Guid> ProxyIds { get; set; } = new();
+    }
+
+    public class QuerySetPluginProxiesReply : IRmQueryReply
+    {
+        public string? Message { get; set; }
+        public bool Success { get; set; }
+
+        /// <summary>How many proxies were changed.</summary>
+        public int Changed { get; set; }
+
+        /// <summary>The proxies that could not be changed (or started again), each with the reason.</summary>
+        public List<string> Problems { get; set; } = new();
+    }
 }

@@ -124,7 +124,8 @@ namespace NetProxy.Service
                         ListenPort = proxy.Configuration.ListenPort,
                         ListenOnAllAddresses = proxy.Configuration.ListenOnAllAddresses,
                         Bindings = proxy.Configuration.Bindings,
-                        HostNames = proxy.Configuration.HostNames.Select(o => new NpHostName { Enabled = o.Enabled, Host = o.Host }).ToList()
+                        HostNames = proxy.Configuration.HostNames.Select(o => new NpHostName { Enabled = o.Enabled, Host = o.Host }).ToList(),
+                        PluginIds = proxy.Configuration.PluginIds.ToList()
                     });
                 }
             }
@@ -470,6 +471,38 @@ namespace NetProxy.Service
             catch (Exception ex)
             {
                 Singletons.Logging.Write("Failed to save the plugin", ex);
+                reply.Message = ex.GetBaseException().Message;
+            }
+
+            return reply;
+        }
+
+        public QuerySetPluginProxiesReply OnQuerySetPluginProxies(RmContext context, QuerySetPluginProxies query)
+        {
+            var serviceManager = EnforceLoginAndGetServiceManager(context);
+            var reply = new QuerySetPluginProxiesReply();
+
+            try
+            {
+                var plugin = Singletons.Plugins.GetGridItems().FirstOrDefault(o => o.Id == query.PluginId);
+                if (plugin == null)
+                {
+                    reply.Message = $"There is no plugin {query.PluginId}.";
+                    return reply;
+                }
+
+                reply.Changed = serviceManager.SetPluginProxies(plugin.Id, query.ProxyIds, reply.Problems);
+                reply.Success = reply.Problems.Count == 0;
+
+                if (reply.Changed > 0)
+                {
+                    Singletons.Logging.Write(NpLogging.Severity.Information,
+                        $"The proxies that use plugin '{plugin.Name}' were set by connection {context.ConnectionId} ({reply.Changed} changed).");
+                }
+            }
+            catch (Exception ex)
+            {
+                Singletons.Logging.Write("Failed to set the proxies of the plugin", ex);
                 reply.Message = ex.GetBaseException().Message;
             }
 

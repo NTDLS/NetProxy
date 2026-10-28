@@ -4,7 +4,6 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn);CS1591</NoWarn>
 
 		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
@@ -21,6 +20,7 @@
 		<PackageProjectUrl>https://github.com/NTDLS/NetProxy</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/NTDLS/NetProxy</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+		
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReleaseNotes>See https://github.com/NTDLS/NetProxy/releases</PackageReleaseNotes>

@@ -376,6 +376,51 @@ namespace NetProxy.Tests.Plugins
             Assert.Contains(events, o => o.StartsWith("Disconnected reason=ClosedByPlugin"));
         }
 
+        [Fact]
+        public async Task A_plugin_can_answer_the_client_itself_and_the_endpoint_never_sees_the_request()
+        {
+            var plugin = await Plugin("rec", new() { ["RespondOnData"] = "/cached", ["RespondWith"] = "FROM-PLUGIN" });
+            var echo = _host.Own(new TcpEchoBackend());
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, echo.Port, TrafficType.Tcp, null, plugin));
+
+            using var client = new TcpClient();
+            await client.ConnectAsync("127.0.0.1", port);
+            var stream = client.GetStream();
+            var buffer = new byte[100];
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            await stream.WriteAsync("/cached"u8.ToArray());
+            var read = await stream.ReadAsync(buffer, timeout.Token);
+            Assert.Equal("FROM-PLUGIN", Encoding.ASCII.GetString(buffer, 0, read));
+
+            //The connection is still up, and the endpoint only gets what the plugin did not answer (the echo would have said "/cached" too).
+            await stream.WriteAsync("/other"u8.ToArray());
+            read = await stream.ReadAsync(buffer, timeout.Token);
+            Assert.Equal("/other", Encoding.ASCII.GetString(buffer, 0, read));
+        }
+
+        [Fact]
+        public async Task A_plugin_can_answer_an_http_request_and_close_the_connection()
+        {
+            var plugin = await Plugin("rec", new()
+            {
+                ["RespondOnData"] = "GET /",
+                ["RespondWith"] = "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 4\r\nConnection: close\r\n\r\ndown",
+                ["RespondClose"] = "true"
+            });
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, _host.Backend("A").Port, plugins: plugin));
+
+            var response = await Client.Http(port);
+            var events = await EventsWhen(() => Events("rec"), e => e.Any(o => o.StartsWith("Disconnected")));
+
+            Assert.StartsWith("HTTP/1.1 503", response);
+            Assert.EndsWith("down", response);
+            Assert.DoesNotContain("backend=A", response);
+            Assert.Contains(events, o => o.StartsWith("Disconnected reason=ClosedByPlugin"));
+        }
+
         //---------------------------------------------------------------- Plugins that misbehave
 
         [Fact]

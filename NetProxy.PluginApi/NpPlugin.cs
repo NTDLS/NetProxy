@@ -120,7 +120,8 @@ namespace NetProxy.PluginApi
 
         /// <summary>
         /// Data was read from one side, before the proxy does anything with it (before the HTTP header rules). For a proxy that
-        /// terminates TLS this is the decrypted data. Change it with <see cref="NpDataEventArgs.Replace"/>, drop it, or close the connection.
+        /// terminates TLS this is the decrypted data. Change it with <see cref="NpDataEventArgs.Replace"/>, drop it, close the connection,
+        /// or answer the client yourself with <see cref="NpDataEventArgs.Respond"/> (see <see cref="NpDataEventArgs.CanRespond"/>).
         /// A read is whatever arrived together: it is not a message, so a request or a record can be split over several reads.
         /// </summary>
         public virtual ValueTask OnDataReceivedAsync(NpDataEventArgs data, CancellationToken cancellationToken) => ValueTask.CompletedTask;

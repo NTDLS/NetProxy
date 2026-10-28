@@ -26,6 +26,29 @@ namespace NetProxy.Tests.Plugins
             => new(connection ?? new FakeConnection(), direction, Encoding.UTF8.GetBytes(text), receivedEncrypted: true, willBeSentEncrypted: false);
 
         [Fact]
+        public void Respond_drops_the_data_and_keeps_the_answer_when_the_event_can_be_answered()
+        {
+            var data = new NpDataEventArgs(new FakeConnection(), NpDataDirection.ClientToEndpoint, Encoding.UTF8.GetBytes("GET /"),
+                receivedEncrypted: false, willBeSentEncrypted: false, canRespond: true);
+
+            data.Respond("answer"u8.ToArray(), closeConnection: true);
+
+            Assert.True(data.IsDropped);
+            Assert.Equal("answer", Encoding.UTF8.GetString(data.Response!.Value.Span));
+            Assert.True(data.CloseAfterResponse);
+        }
+
+        [Fact]
+        public void Respond_is_refused_when_the_event_can_not_be_answered()
+        {
+            var data = Data("GET /");
+
+            Assert.False(data.CanRespond);
+            Assert.Throws<InvalidOperationException>(() => data.Respond("answer"u8.ToArray()));
+            Assert.False(data.IsDropped);
+        }
+
+        [Fact]
         public async Task An_empty_set_does_nothing_and_allows_everything()
         {
             var connection = new FakeConnection();

@@ -79,6 +79,11 @@ namespace NetProxy.Service.Proxy
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object?> _state = new();
 
         private Stream? _clientStream;
+
+        /// <summary>
+        /// Only one thing can write to the client at a time: the data from the endpoint, and what a plug-in answers the client with.
+        /// </summary>
+        private readonly SemaphoreSlim _clientWriteLock = new(1, 1);
         private TcpClient? _endpointClient;
         private Stream? _endpointStream;
         private NpProxyEndpointStatistics? _endpointStatistics;
@@ -758,6 +763,7 @@ namespace NetProxy.Service.Proxy
             var buffer = new PumpBuffer(Math.Max(configuration.InitialBufferSize, initialBytes?.Length ?? 0));
             var parser = CreateHttpParser(direction);
             var dataDirection = direction == ConnectionDirection.Inbound ? NpDataDirection.ClientToEndpoint : NpDataDirection.EndpointToClient;
+            var draining = false;
 
             try
             {
@@ -782,6 +788,11 @@ namespace NetProxy.Service.Proxy
                         return;
                     }
 
+                    if (draining)
+                    {
+                        continue; //The client has been answered and is closing: read until it does.
+                    }
+
                     buffer.Length = read;
                     Touch();
 
@@ -801,13 +812,28 @@ namespace NetProxy.Service.Proxy
                     //The plug-ins see the data as it is between the two sides: what was read from a TLS side is decrypted already.
                     if (_plugins.HasDataHooks)
                     {
-                        var received = new NpDataEventArgs(this, dataDirection, buffer.Bytes.AsMemory(0, read), from is SslStream, to is SslStream);
+                        var received = new NpDataEventArgs(this, dataDirection, buffer.Bytes.AsMemory(0, read), from is SslStream, to is SslStream,
+                            canRespond: direction == ConnectionDirection.Inbound && _clientIsHttp2 == false);
                         await _plugins.DataReceivedAsync(received);
 
                         if (received.CloseReason != null)
                         {
                             ClosedByPlugin(received.CloseReason);
                             return;
+                        }
+
+                        if (received.Response is { } response)
+                        {
+                            await RespondToClientAsync(response);
+
+                            if (received.CloseAfterResponse)
+                            {
+                                await FinishAnsweringClientAsync();
+                                draining = true;
+                            }
+
+                            buffer.AutoResize(configuration.MaxBufferSize);
+                            continue;
                         }
 
                         if (received.IsDropped || (received.IsModified && received.Data.Length == 0))
@@ -854,7 +880,23 @@ namespace NetProxy.Service.Proxy
 
                     if (length > 0) //Nothing to send while a partial HTTP header is held.
                     {
-                        await to.WriteAsync(bytes.AsMemory(0, length), _abort.Token);
+                        if (direction == ConnectionDirection.Outbound)
+                        {
+                            await _clientWriteLock.WaitAsync(_abort.Token);
+                            try
+                            {
+                                await to.WriteAsync(bytes.AsMemory(0, length), _abort.Token);
+                            }
+                            finally
+                            {
+                                _clientWriteLock.Release();
+                            }
+                        }
+                        else
+                        {
+                            await to.WriteAsync(bytes.AsMemory(0, length), _abort.Token);
+                        }
+
                         Touch();
 
                         if (direction == ConnectionDirection.Inbound)
@@ -894,6 +936,62 @@ namespace NetProxy.Service.Proxy
                 await _plugins.ErrorAsync(new NpPluginError($"Connection {Id} from {_clientDisplay} failed: {ex.GetBaseException().Message}", ex, _proxy.Info, this));
                 Abort();
             }
+        }
+
+        /// <summary>
+        /// A plug-in answered the client itself (<see cref="NpDataEventArgs.Respond"/>), so what the client sent does not go to the endpoint.
+        /// </summary>
+        private async Task RespondToClientAsync(ReadOnlyMemory<byte> response)
+        {
+            if (response.Length == 0)
+            {
+                return;
+            }
+
+            await _clientWriteLock.WaitAsync(_abort.Token);
+            try
+            {
+                await _clientStream!.WriteAsync(response, _abort.Token);
+            }
+            finally
+            {
+                _clientWriteLock.Release();
+            }
+
+            Touch();
+            _proxy.Statistics.AddBytesWritten(response.Length);
+        }
+
+        /// <summary>
+        /// A plug-in answered the client and asked for the connection to be closed. The client is told that the answer is complete
+        /// (a hard close could throw the answer away before the client has read it), and the connection ends when the client closes
+        /// its side, or after a few seconds if it does not.
+        /// </summary>
+        private async Task FinishAnsweringClientAsync()
+        {
+            _disconnectReason = NpDisconnectReason.ClosedByPlugin;
+            Singletons.Logging.Write(NpLogging.Severity.Verbose, $"Connection {Id} from {_clientDisplay} was closed by a plugin after it answered the client.");
+
+            await _clientWriteLock.WaitAsync(_abort.Token);
+            try
+            {
+                if (_clientStream is SslStream ssl)
+                {
+                    await ssl.ShutdownAsync();
+                }
+
+                _client.Client?.Shutdown(SocketShutdown.Send);
+            }
+            catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or InvalidOperationException)
+            {
+                Abort();
+            }
+            finally
+            {
+                _clientWriteLock.Release();
+            }
+
+            _abort.CancelAfter(TimeSpan.FromSeconds(5));
         }
 
         /// <summary>

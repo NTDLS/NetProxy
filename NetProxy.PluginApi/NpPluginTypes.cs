@@ -155,7 +155,7 @@ namespace NetProxy.PluginApi
     /// the way out. A TCP proxy that passes TLS through only has the encrypted bytes.
     /// </summary>
     public sealed class NpDataEventArgs(INpConnection connection, NpDataDirection direction, ReadOnlyMemory<byte> data,
-        bool receivedEncrypted, bool willBeSentEncrypted)
+        bool receivedEncrypted, bool willBeSentEncrypted, bool canRespond = false)
     {
         public INpConnection Connection { get; } = connection;
         public NpDataDirection Direction { get; } = direction;
@@ -174,6 +174,44 @@ namespace NetProxy.PluginApi
         public bool IsModified { get; private set; }
         public bool IsDropped { get; private set; }
         public string? CloseReason { get; private set; }
+
+        /// <summary>
+        /// True when <see cref="Respond"/> can be used. That is for data that a client sent (<see cref="NpDataDirection.ClientToEndpoint"/>)
+        /// in <see cref="NpPlugin.OnDataReceivedAsync"/>, on a TCP, HTTP or HTTPS proxy, and not when the client speaks HTTP/2.
+        /// </summary>
+        public bool CanRespond { get; } = canRespond;
+
+        /// <summary>
+        /// What the plug-in answered with instead of sending the data on, or null.
+        /// </summary>
+        public ReadOnlyMemory<byte>? Response { get; private set; }
+
+        /// <summary>
+        /// True when the connection is to be closed once <see cref="Response"/> has been sent.
+        /// </summary>
+        public bool CloseAfterResponse { get; private set; }
+
+        /// <summary>
+        /// Answers the client with these bytes, from the proxy, and does not send the data on: the endpoint never sees it. The connection
+        /// stays open unless <paramref name="closeConnection"/> is set. Use it for a cached page, a page that tells that a site is down for
+        /// maintenance, or a refusal.
+        ///
+        /// Mind that a read is not a message. The data may hold part of a request, or several. The plug-in has to know that it has the whole
+        /// request, and that the endpoint has not got the start of it, or an answer for a request that is still being answered. The bytes
+        /// are sent as they are: for HTTP that is a whole response, with its status line, headers and body.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">When <see cref="CanRespond"/> is false.</exception>
+        public void Respond(ReadOnlyMemory<byte> response, bool closeConnection = false)
+        {
+            if (CanRespond == false)
+            {
+                throw new InvalidOperationException("The client can not be answered from this event (see NpDataEventArgs.CanRespond).");
+            }
+
+            Response = response.ToArray(); //A copy, so that the plug-in can reuse its own buffer.
+            CloseAfterResponse = closeConnection;
+            Drop();
+        }
 
         /// <summary>
         /// Sends this data instead of the data that was received. It can be longer or shorter.

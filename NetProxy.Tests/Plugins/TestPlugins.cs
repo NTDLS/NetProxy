@@ -7,6 +7,7 @@ using System.Text;
 /// <summary>
 /// Writes down every event it gets, and misbehaves the way its settings say:
 ///   LogFile (where it writes), Throw, SleepMs, CloseOnData (text), DropOnData (text), Replace (find=>replace), DenyClients (comma list),
+///   RespondOnData (text) with RespondWith (what the client is answered with) and RespondClose,
 ///   DenyProxyStart, DenyEndpointPort, Tag (written in front of each line).
 /// </summary>
 [NpPlugin("Recorder", Version = "1.2", Author = "tests", Description = "Writes down what happens.")]
@@ -17,7 +18,8 @@ public class RecordingPlugin : NpPlugin
     private string _tag = "";
     private bool _throw;
     private int _sleep;
-    private string? _closeOn, _dropOn, _find, _replace;
+    private string? _closeOn, _dropOn, _find, _replace, _respondOn, _respondWith;
+    private bool _respondClose;
     private HashSet<string> _denyClients = [];
     private bool _denyProxyStart;
     private int _denyEndpointPort;
@@ -59,6 +61,9 @@ public class RecordingPlugin : NpPlugin
         _sleep = int.TryParse(settings.GetValueOrDefault("SleepMs"), out var sleep) ? sleep : 0;
         _closeOn = settings.GetValueOrDefault("CloseOnData");
         _dropOn = settings.GetValueOrDefault("DropOnData");
+        _respondOn = settings.GetValueOrDefault("RespondOnData");
+        _respondWith = settings.GetValueOrDefault("RespondWith");
+        _respondClose = settings.GetValueOrDefault("RespondClose") == "true";
         _denyClients = (settings.GetValueOrDefault("DenyClients") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
         _denyProxyStart = settings.GetValueOrDefault("DenyProxyStart") == "true";
         _denyEndpointPort = int.TryParse(settings.GetValueOrDefault("DenyEndpointPort"), out var deny) ? deny : 0;
@@ -152,6 +157,10 @@ public class RecordingPlugin : NpPlugin
         else if (_dropOn != null && text.Contains(_dropOn))
         {
             data.Drop();
+        }
+        else if (_respondOn != null && text.Contains(_respondOn))
+        {
+            data.Respond(Encoding.UTF8.GetBytes(_respondWith ?? ""), _respondClose);
         }
 
         await Misbehave(cancellationToken);

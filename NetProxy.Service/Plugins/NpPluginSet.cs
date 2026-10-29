@@ -100,6 +100,20 @@ namespace NetProxy.Service.Plugins
         public ValueTask<NpVerdict> ConnectingAsync(INpConnection connection)
             => AskAsync(nameof(NpPlugin.OnConnectingAsync), (p, ct) => p.OnConnectingAsync(connection, ct));
 
+        /// <summary>
+        /// Gives the endpoints to each plug-in in turn, so that each can change the order the one before it left.
+        /// </summary>
+        public async ValueTask EndpointsOrderingAsync(NpEndpointOrderEventArgs order)
+        {
+            foreach (var plugin in _plugins)
+            {
+                if (plugin.Handles(nameof(NpPlugin.OnEndpointsOrderingAsync)))
+                {
+                    await plugin.RunAsync(nameof(NpPlugin.OnEndpointsOrderingAsync), (p, ct) => p.OnEndpointsOrderingAsync(order, ct));
+                }
+            }
+        }
+
         public ValueTask<NpVerdict> EndpointConnectingAsync(INpConnection connection, NpEndpointInfo endpoint)
             => AskAsync(nameof(NpPlugin.OnEndpointConnectingAsync), (p, ct) => p.OnEndpointConnectingAsync(connection, endpoint, ct));
 
@@ -108,6 +122,25 @@ namespace NetProxy.Service.Plugins
 
         public ValueTask EndpointConnectFailedAsync(INpConnection connection, NpEndpointInfo endpoint, string error)
             => NotifyAsync(nameof(NpPlugin.OnEndpointConnectFailedAsync), (p, ct) => p.OnEndpointConnectFailedAsync(connection, endpoint, error, ct));
+
+        /// <summary>
+        /// Asks each plug-in in turn until one answers the client.
+        /// </summary>
+        public async ValueTask EndpointsUnavailableAsync(NpUnavailableEventArgs unavailable)
+        {
+            foreach (var plugin in _plugins)
+            {
+                if (plugin.Handles(nameof(NpPlugin.OnEndpointsUnavailableAsync)))
+                {
+                    await plugin.RunAsync(nameof(NpPlugin.OnEndpointsUnavailableAsync), (p, ct) => p.OnEndpointsUnavailableAsync(unavailable, ct));
+
+                    if (unavailable.Response != null)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
 
         public ValueTask ConnectedAsync(INpConnection connection)
             => NotifyAsync(nameof(NpPlugin.OnConnectedAsync), (p, ct) => p.OnConnectedAsync(connection, ct));

@@ -33,3 +33,8 @@ NetProxy.Cli/bin/
 NetProxy.Cli/obj/
 NetProxy.Tests/bin/
 NetProxy.Tests/obj/
+
+NetProxy.Plugins/**/bin/
+NetProxy.Plugins/**/obj/
+NetProxy.Plugins/Publish/
+NetProxy.Plugins/publish/

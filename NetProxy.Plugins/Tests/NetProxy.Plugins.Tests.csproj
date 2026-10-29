@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\NetProxy.PluginApi\NetProxy.PluginApi.csproj" />
+		<ProjectReference Include="..\Common\NetProxy.Plugins.Common.csproj" />
+		<ProjectReference Include="..\AccessLog\NetProxy.Plugins.AccessLog.csproj" />
+		<ProjectReference Include="..\Alerts\NetProxy.Plugins.Alerts.csproj" />
+		<ProjectReference Include="..\AntiHammer\NetProxy.Plugins.AntiHammer.csproj" />
+		<ProjectReference Include="..\BasicAuth\NetProxy.Plugins.BasicAuth.csproj" />
+		<ProjectReference Include="..\Cache\NetProxy.Plugins.Cache.csproj" />
+		<ProjectReference Include="..\GeoFilter\NetProxy.Plugins.GeoFilter.csproj" />
+		<ProjectReference Include="..\Maintenance\NetProxy.Plugins.Maintenance.csproj" />
+		<ProjectReference Include="..\Metrics\NetProxy.Plugins.Metrics.csproj" />
+		<ProjectReference Include="..\Redirect\NetProxy.Plugins.Redirect.csproj" />
+		<ProjectReference Include="..\SecurityHeaders\NetProxy.Plugins.SecurityHeaders.csproj" />
+		<ProjectReference Include="..\TrafficSplit\NetProxy.Plugins.TrafficSplit.csproj" />
+	</ItemGroup>
+
+</Project>

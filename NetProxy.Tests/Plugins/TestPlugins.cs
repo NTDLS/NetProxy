@@ -8,7 +8,7 @@ using System.Text;
 /// Writes down every event it gets, and misbehaves the way its settings say:
 ///   LogFile (where it writes), Throw, SleepMs, CloseOnData (text), DropOnData (text), Replace (find=>replace), DenyClients (comma list),
 ///   RespondOnData (text) with RespondWith (what the client is answered with) and RespondClose,
-///   DenyProxyStart, DenyEndpointPort, Tag (written in front of each line).
+///   UnavailableWith (what the client is answered with when no endpoint works), PreferEndpointPort, OnlyEndpointPort, DenyProxyStart, DenyEndpointPort, Tag (written in front of each line).
 /// </summary>
 [NpPlugin("Recorder", Version = "1.2", Author = "tests", Description = "Writes down what happens.")]
 public class RecordingPlugin : NpPlugin
@@ -20,6 +20,8 @@ public class RecordingPlugin : NpPlugin
     private int _sleep;
     private string? _closeOn, _dropOn, _find, _replace, _respondOn, _respondWith;
     private bool _respondClose;
+    private string? _unavailableWith;
+    private int _preferPort, _onlyPort;
     private HashSet<string> _denyClients = [];
     private bool _denyProxyStart;
     private int _denyEndpointPort;
@@ -64,6 +66,9 @@ public class RecordingPlugin : NpPlugin
         _respondOn = settings.GetValueOrDefault("RespondOnData");
         _respondWith = settings.GetValueOrDefault("RespondWith");
         _respondClose = settings.GetValueOrDefault("RespondClose") == "true";
+        _unavailableWith = settings.GetValueOrDefault("UnavailableWith");
+        _preferPort = int.TryParse(settings.GetValueOrDefault("PreferEndpointPort"), out var prefer) ? prefer : 0;
+        _onlyPort = int.TryParse(settings.GetValueOrDefault("OnlyEndpointPort"), out var only) ? only : 0;
         _denyClients = (settings.GetValueOrDefault("DenyClients") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
         _denyProxyStart = settings.GetValueOrDefault("DenyProxyStart") == "true";
         _denyEndpointPort = int.TryParse(settings.GetValueOrDefault("DenyEndpointPort"), out var deny) ? deny : 0;
@@ -122,6 +127,23 @@ public class RecordingPlugin : NpPlugin
         return _denyClients.Contains(connection.ClientAddress) ? NpVerdict.Deny("blocked") : NpVerdict.Allow;
     }
 
+    public override ValueTask OnEndpointsOrderingAsync(NpEndpointOrderEventArgs order, CancellationToken cancellationToken)
+    {
+        Write($"Ordering {string.Join(",", order.Endpoints.Select(o => o.Port))}");
+
+        if (_preferPort > 0)
+        {
+            order.Prefer(order.Endpoints.Where(o => o.Port == _preferPort).Select(o => o.Id));
+        }
+
+        if (_onlyPort > 0)
+        {
+            order.Only(order.Endpoints.Where(o => o.Port == _onlyPort).Select(o => o.Id));
+        }
+
+        return default;
+    }
+
     public override ValueTask<NpVerdict> OnEndpointConnectingAsync(INpConnection connection, NpEndpointInfo endpoint, CancellationToken cancellationToken)
     {
         Write($"EndpointConnecting {endpoint.Port}");
@@ -133,6 +155,18 @@ public class RecordingPlugin : NpPlugin
 
     public override ValueTask OnEndpointConnectFailedAsync(INpConnection connection, NpEndpointInfo endpoint, string error, CancellationToken cancellationToken)
     { Write($"EndpointFailed {endpoint.Port}"); return default; }
+
+    public override ValueTask OnEndpointsUnavailableAsync(NpUnavailableEventArgs unavailable, CancellationToken cancellationToken)
+    {
+        Write($"Unavailable failures={unavailable.Failures.Count} canRespond={unavailable.CanRespond}");
+
+        if (_unavailableWith != null && unavailable.CanRespond)
+        {
+            unavailable.Respond(Encoding.UTF8.GetBytes(_unavailableWith));
+        }
+
+        return default;
+    }
 
     public override ValueTask OnConnectedAsync(INpConnection connection, CancellationToken cancellationToken)
     { Write($"Connected endpoint={connection.Endpoint?.Port}"); return default; }

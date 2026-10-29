@@ -84,6 +84,7 @@ namespace NetProxy.Service.Proxy
         /// Only one thing can write to the client at a time: the data from the endpoint, and what a plug-in answers the client with.
         /// </summary>
         private readonly SemaphoreSlim _clientWriteLock = new(1, 1);
+        private readonly List<NpEndpointFailure> _endpointFailures = [];
         private TcpClient? _endpointClient;
         private Stream? _endpointStream;
         private NpProxyEndpointStatistics? _endpointStatistics;
@@ -288,6 +289,8 @@ namespace NetProxy.Service.Proxy
                     {
                         _disconnectReason = NpDisconnectReason.EndpointUnavailable;
                     }
+
+                    await AnswerUnavailableAsync();
                     return;
                 }
 
@@ -618,6 +621,19 @@ namespace NetProxy.Service.Proxy
         {
             var candidates = _proxy.GetEndpointAttemptOrder(_clientKey);
             var failures = new List<string>();
+            _endpointFailures.Clear();
+
+            if (candidates.Count > 1)
+            {
+                var order = new NpEndpointOrderEventArgs(this, candidates.Select(o => new NpEndpointInfo(o.Id, o.Address, o.Port, o.TrafficType == TrafficType.Https)));
+                await _plugins.EndpointsOrderingAsync(order);
+
+                if (order.IsChanged)
+                {
+                    var byId = candidates.ToDictionary(o => o.Id);
+                    candidates = [.. order.Endpoints.Where(o => byId.ContainsKey(o.Id)).Select(o => byId[o.Id])];
+                }
+            }
 
             foreach (var endpoint in candidates)
             {
@@ -629,6 +645,7 @@ namespace NetProxy.Service.Proxy
                 if (verdict.Allowed == false)
                 {
                     failures.Add($"{NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}: skipped. {verdict.Reason}");
+                    _endpointFailures.Add(new NpEndpointFailure(endpointInfo, $"skipped. {verdict.Reason}"));
                     continue;
                 }
 
@@ -681,6 +698,7 @@ namespace NetProxy.Service.Proxy
 
                     var description = $"{NpNetwork.FormatHostPort(endpoint.Address, endpoint.Port)}: {ex.GetBaseException().Message}";
                     failures.Add(description);
+                    _endpointFailures.Add(new NpEndpointFailure(endpointInfo, ex.GetBaseException().Message));
 
                     await _plugins.EndpointConnectFailedAsync(this, endpointInfo, ex.GetBaseException().Message);
 
@@ -695,6 +713,43 @@ namespace NetProxy.Service.Proxy
                 + (failures.Count > 0 ? $" ({string.Join("; ", failures)})." : " (there are none enabled)."));
 
             return false;
+        }
+
+        /// <summary>
+        /// No endpoint could be connected to. A plug-in can answer the client (a page that says that the site is down for maintenance), and
+        /// then the connection is closed once the client has had the answer. The request is still unread at this point, so it is read away
+        /// before the connection closes: closing with it unread would reset the connection and could throw the answer away.
+        /// </summary>
+        private async Task AnswerUnavailableAsync()
+        {
+            if (_clientStream == null)
+            {
+                return;
+            }
+
+            var unavailable = new NpUnavailableEventArgs(this, _endpointFailures.ToList(), canRespond: _clientIsHttp2 == false);
+            await _plugins.EndpointsUnavailableAsync(unavailable);
+
+            if (unavailable.Response is not { } response)
+            {
+                return;
+            }
+
+            await RespondToClientAsync(response);
+            await FinishAnsweringClientAsync();
+            _disconnectReason = NpDisconnectReason.EndpointUnavailable;
+
+            try
+            {
+                var buffer = new byte[4096];
+                while (await _clientStream.ReadAsync(buffer, _abort.Token) > 0)
+                {
+                }
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or IOException or SocketException or ObjectDisposedException)
+            {
+                //The client closed, or did not within the few seconds that it is given.
+            }
         }
 
         /// <summary>

@@ -99,6 +99,11 @@ namespace NetProxy.PluginApi
     public sealed record NpDisconnectInfo(NpDisconnectReason Reason, TimeSpan Duration, long BytesFromClient, long BytesFromEndpoint);
 
     /// <summary>
+    /// An endpoint that a client could not be connected to, and why: the error, or the reason that a plug-in did not allow it.
+    /// </summary>
+    public sealed record NpEndpointFailure(NpEndpointInfo Endpoint, string Error);
+
+    /// <summary>
     /// A failure that the service reports to the plug-ins.
     /// </summary>
     public sealed record NpPluginError(string Message, Exception? Exception, NpProxyInfo? Proxy, INpConnection? Connection);
@@ -147,6 +152,97 @@ namespace NetProxy.PluginApi
         /// Ends the connection.
         /// </summary>
         void Close(string reason);
+    }
+
+    /// <summary>
+    /// The endpoints that a client is about to be connected to, in the order they will be tried. A plug-in can change that order
+    /// (send some clients to one endpoint first, for a canary release) without taking an endpoint away: the others stay behind
+    /// as fall-backs, so a client is only turned away when every endpoint fails.
+    /// </summary>
+    public sealed class NpEndpointOrderEventArgs(INpConnection connection, IEnumerable<NpEndpointInfo> endpoints)
+    {
+        private readonly List<NpEndpointInfo> _endpoints = [.. endpoints];
+
+        public INpConnection Connection { get; } = connection;
+
+        /// <summary>The endpoints in the order they will be tried, as the plug-ins before this one left them.</summary>
+        public IReadOnlyList<NpEndpointInfo> Endpoints => _endpoints;
+
+        public bool IsChanged { get; private set; }
+
+        /// <summary>
+        /// Moves these endpoints to the front, in the order that they already have. The other endpoints follow, as fall-backs.
+        /// Ids that are not among the endpoints are ignored.
+        /// </summary>
+        public void Prefer(IEnumerable<Guid> endpointIds)
+        {
+            var ids = endpointIds.ToHashSet();
+            var preferred = _endpoints.Where(o => ids.Contains(o.Id)).ToList();
+
+            if (preferred.Count == 0 || preferred.Count == _endpoints.Count)
+            {
+                return;
+            }
+
+            var reordered = preferred.Concat(_endpoints.Where(o => ids.Contains(o.Id) == false)).ToList();
+            if (reordered.SequenceEqual(_endpoints) == false)
+            {
+                _endpoints.Clear();
+                _endpoints.AddRange(reordered);
+                IsChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// Keeps only these endpoints. Without a fall-back: a client is turned away when none of them works. Ids that are not among the
+        /// endpoints are ignored.
+        /// </summary>
+        public void Only(IEnumerable<Guid> endpointIds)
+        {
+            var ids = endpointIds.ToHashSet();
+
+            if (_endpoints.RemoveAll(o => ids.Contains(o.Id) == false) > 0)
+            {
+                IsChanged = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// A client that could not be connected to any endpoint. Answer it with <see cref="Respond"/> (a "back soon" page, for example), or
+    /// do nothing and the connection is closed, as it is without a plug-in.
+    /// </summary>
+    public sealed class NpUnavailableEventArgs(INpConnection connection, IReadOnlyList<NpEndpointFailure> failures, bool canRespond)
+    {
+        public INpConnection Connection { get; } = connection;
+
+        /// <summary>The endpoints that were tried, in the order they were tried. Empty when the proxy has no endpoints that are switched on.</summary>
+        public IReadOnlyList<NpEndpointFailure> Failures { get; } = failures;
+
+        /// <summary>
+        /// True when <see cref="Respond"/> can be used. That is not so when the client speaks HTTP/2, which cannot be answered with
+        /// the text of an HTTP/1.x response.
+        /// </summary>
+        public bool CanRespond { get; } = canRespond;
+
+        /// <summary>What the plug-in answered with, or null.</summary>
+        public ReadOnlyMemory<byte>? Response { get; private set; }
+
+        /// <summary>
+        /// Answers the client with these bytes, from the proxy, and then closes the connection (once the client has had the answer; the
+        /// service waits a few seconds for it to be read). For HTTP that is a whole response, with its status line, headers and body,
+        /// and "Connection: close" is the honest header for it.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">When <see cref="CanRespond"/> is false.</exception>
+        public void Respond(ReadOnlyMemory<byte> response)
+        {
+            if (CanRespond == false)
+            {
+                throw new InvalidOperationException("The client can not be answered from this event (see NpUnavailableEventArgs.CanRespond).");
+            }
+
+            Response = response.ToArray(); //A copy, so that the plug-in can reuse its own buffer.
+        }
     }
 
     /// <summary>

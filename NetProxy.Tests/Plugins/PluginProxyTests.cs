@@ -421,6 +421,119 @@ namespace NetProxy.Tests.Plugins
             Assert.Contains(events, o => o.StartsWith("Disconnected reason=ClosedByPlugin"));
         }
 
+        [Fact]
+        public async Task A_plugin_can_answer_the_client_when_no_endpoint_works()
+        {
+            var plugin = await Plugin("rec", new() { ["UnavailableWith"] = "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 11\r\nConnection: close\r\n\r\nback soon!!" });
+            var down = Net.FreePort();
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, down, plugins: plugin));
+
+            var response = await Client.Http(port);
+            var events = await EventsWhen(() => Events("rec"), e => e.Any(o => o.StartsWith("Disconnected")));
+
+            Assert.StartsWith("HTTP/1.1 503", response);
+            Assert.EndsWith("back soon!!", response);
+            Assert.Contains("Unavailable failures=1 canRespond=True", events);
+            Assert.Contains($"EndpointFailed {down}", events);
+            Assert.Contains(events, o => o.StartsWith("Disconnected reason=EndpointUnavailable"));
+        }
+
+        [Fact]
+        public async Task The_unavailable_event_does_not_happen_when_a_later_endpoint_works()
+        {
+            var plugin = await Plugin("rec", new() { ["UnavailableWith"] = "HTTP/1.1 503 X\r\nContent-Length: 0\r\n\r\n" });
+            var up = _host.Backend("UP");
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, Net.FreePort(), TrafficType.Http, c =>
+            {
+                c.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                c.Endpoints.Add(ProxyBuilder.Endpoint(up.Port));
+            }, plugin));
+
+            Assert.Contains("backend=UP", await Client.Http(port));
+            Assert.DoesNotContain(Events("rec"), o => o.StartsWith("Unavailable"));
+        }
+
+        [Fact]
+        public async Task Endpoints_that_a_plugin_skipped_count_as_unavailable()
+        {
+            var backend = _host.Backend("A");
+            var plugin = await Plugin("rec", new() { ["DenyEndpointPort"] = backend.Port.ToString(), ["UnavailableWith"] = "HTTP/1.1 503 X\r\nContent-Length: 0\r\n\r\n" });
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, backend.Port, plugins: plugin));
+
+            Assert.StartsWith("HTTP/1.1 503", await Client.Http(port));
+            Assert.Contains("Unavailable failures=1 canRespond=True", Events("rec"));
+        }
+
+        [Fact]
+        public async Task Without_an_answer_the_connection_is_closed_as_it_always_was()
+        {
+            var plugin = await Plugin("rec");
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, Net.FreePort(), plugins: plugin));
+
+            var response = await Client.Http(port);
+            var events = await EventsWhen(() => Events("rec"), e => e.Any(o => o.StartsWith("Disconnected")));
+
+            Assert.DoesNotContain("HTTP/1.1", response);
+            Assert.Contains("Unavailable failures=1 canRespond=True", events);
+            Assert.Contains(events, o => o.StartsWith("Disconnected reason=EndpointUnavailable"));
+        }
+
+        [Fact]
+        public async Task A_plugin_can_put_an_endpoint_first_and_the_others_stay_as_fallbacks()
+        {
+            var first = _host.Backend("FIRST");
+            var second = _host.Backend("SECOND");
+            var plugin = await Plugin("rec", new() { ["PreferEndpointPort"] = second.Port.ToString() });
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, first.Port, TrafficType.Http, c =>
+            {
+                c.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                c.Endpoints.Add(ProxyBuilder.Endpoint(second.Port));
+            }, plugin));
+
+            Assert.Contains("backend=SECOND", await Client.Http(port));
+            Assert.Contains($"Ordering {first.Port},{second.Port}", Events("rec"));
+        }
+
+        [Fact]
+        public async Task A_preferred_endpoint_that_is_down_falls_back_to_the_others()
+        {
+            var up = _host.Backend("UP");
+            var down = Net.FreePort();
+            var plugin = await Plugin("rec", new() { ["PreferEndpointPort"] = down.ToString() });
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, up.Port, TrafficType.Http, c =>
+            {
+                c.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                c.Endpoints.Add(ProxyBuilder.Endpoint(down));
+            }, plugin));
+
+            Assert.Contains("backend=UP", await Client.Http(port));
+            Assert.Contains($"EndpointFailed {down}", Events("rec"));
+        }
+
+        [Fact]
+        public async Task A_plugin_can_leave_only_some_endpoints_and_without_them_the_client_is_turned_away()
+        {
+            var first = _host.Backend("FIRST");
+            var second = _host.Backend("SECOND");
+            var plugin = await Plugin("rec", new() { ["OnlyEndpointPort"] = second.Port.ToString() });
+            var port = Net.FreePort();
+            _host.Start(Proxy(port, first.Port, TrafficType.Http, c =>
+            {
+                c.Endpoints.ConnectionPattern = ConnectionPattern.FailOver;
+                c.Endpoints.Add(ProxyBuilder.Endpoint(second.Port));
+            }, plugin));
+
+            var response = await Client.Http(port);
+            Assert.Contains("backend=SECOND", response);
+            Assert.DoesNotContain($"EndpointConnecting {first.Port}", Events("rec"));
+        }
+
         //---------------------------------------------------------------- Plugins that misbehave
 
         [Fact]

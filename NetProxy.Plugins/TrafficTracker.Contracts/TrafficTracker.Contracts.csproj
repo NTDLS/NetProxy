@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Description>The messages that the NetProxy traffic tracker plug-in sends and the ingestion service receives.</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NTDLS.CatMQ.Shared" Version="2.9.0" />
+	</ItemGroup>
+
+</Project>

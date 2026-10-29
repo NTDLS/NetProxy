@@ -92,6 +92,13 @@ namespace NetProxy.PluginApi
         public virtual ValueTask<NpVerdict> OnConnectingAsync(INpConnection connection, CancellationToken cancellationToken)
             => ValueTask.FromResult(NpVerdict.Allow);
 
+        /// <summary>
+        /// The endpoints that the client is to be connected to are known, in the order they will be tried. Change that order with
+        /// <see cref="NpEndpointOrderEventArgs.Prefer"/> (a canary release, say). Called for TCP, HTTP and HTTPS proxies.
+        /// </summary>
+        public virtual ValueTask OnEndpointsOrderingAsync(NpEndpointOrderEventArgs order, CancellationToken cancellationToken)
+            => ValueTask.CompletedTask;
+
         /// <summary>The proxy is about to connect to an endpoint. Deny to skip this endpoint (the next one is tried).</summary>
         public virtual ValueTask<NpVerdict> OnEndpointConnectingAsync(INpConnection connection, NpEndpointInfo endpoint, CancellationToken cancellationToken)
             => ValueTask.FromResult(NpVerdict.Allow);
@@ -100,6 +107,14 @@ namespace NetProxy.PluginApi
             => ValueTask.CompletedTask;
 
         public virtual ValueTask OnEndpointConnectFailedAsync(INpConnection connection, NpEndpointInfo endpoint, string error, CancellationToken cancellationToken)
+            => ValueTask.CompletedTask;
+
+        /// <summary>
+        /// Every endpoint has failed or been skipped, so the client can not be connected to anything. Answer it with
+        /// <see cref="NpUnavailableEventArgs.Respond"/> (a page that tells that the site is down for maintenance, say). The plug-ins that
+        /// are enabled for the proxy are asked in order until one answers. Without an answer the connection is closed.
+        /// </summary>
+        public virtual ValueTask OnEndpointsUnavailableAsync(NpUnavailableEventArgs unavailable, CancellationToken cancellationToken)
             => ValueTask.CompletedTask;
 
         /// <summary>The client is connected to an endpoint and data starts to flow.</summary>

@@ -11,6 +11,24 @@
     <File Path="README.md" />
     <File Path="To-Do.txt" />
   </Folder>
+  <Folder Name="/Plugins/">
+    <Project Path="NetProxy.Plugins/Common/NetProxy.Plugins.Common.csproj" />
+    <Project Path="NetProxy.Plugins/AccessLog/NetProxy.Plugins.AccessLog.csproj" />
+    <Project Path="NetProxy.Plugins/Alerts/NetProxy.Plugins.Alerts.csproj" />
+    <Project Path="NetProxy.Plugins/AntiHammer/NetProxy.Plugins.AntiHammer.csproj" />
+    <Project Path="NetProxy.Plugins/BasicAuth/NetProxy.Plugins.BasicAuth.csproj" />
+    <Project Path="NetProxy.Plugins/Cache/NetProxy.Plugins.Cache.csproj" />
+    <Project Path="NetProxy.Plugins/GeoFilter/NetProxy.Plugins.GeoFilter.csproj" />
+    <Project Path="NetProxy.Plugins/Maintenance/NetProxy.Plugins.Maintenance.csproj" />
+    <Project Path="NetProxy.Plugins/Metrics/NetProxy.Plugins.Metrics.csproj" />
+    <Project Path="NetProxy.Plugins/Redirect/NetProxy.Plugins.Redirect.csproj" />
+    <Project Path="NetProxy.Plugins/SecurityHeaders/NetProxy.Plugins.SecurityHeaders.csproj" />
+    <Project Path="NetProxy.Plugins/TrafficSplit/NetProxy.Plugins.TrafficSplit.csproj" />
+    <Project Path="NetProxy.Plugins/Tests/NetProxy.Plugins.Tests.csproj" />
+    <Project Path="NetProxy.Plugins/TrafficTracker.Contracts/TrafficTracker.Contracts.csproj" />
+    <Project Path="NetProxy.Plugins/TrafficTracker.Plugin/TrafficTracker.Plugin.csproj" />
+    <Project Path="NetProxy.Plugins/TrafficTracker.Ingestion/TrafficTracker.Ingestion.csproj" />
+  </Folder>
   <Project Path="NetProxy.Client/NetProxy.Client.csproj" />
   <Project Path="NetProxy.ClientApi/NetProxy.ClientApi.csproj" />
   <Project Path="NetProxy.Cli/NetProxy.Cli.csproj" />

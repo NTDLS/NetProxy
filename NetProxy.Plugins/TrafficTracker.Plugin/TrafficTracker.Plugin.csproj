@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Version>1.0.0</Version>
+		<Description>A NetProxy plug-in that tracks the web traffic that passes through a proxy: host, client, user agent and more, sent to a CatMQ queue.</Description>
+
+		<!-- The plug-in is loaded by NetProxy from its own folder, so everything it needs is copied next to it. -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<GenerateDependencyFile>true</GenerateDependencyFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- The service supplies the plug-in API, so it is built against and is not shipped with the plug-in (not in the output, and not published). -->
+		<PackageReference Include="NetProxy.PluginApi" Version="3.1.0" ExcludeAssets="runtime" />
+		<PackageReference Include="NTDLS.CatMQ.Client" Version="2.9.0" />
+
+		<!-- A newer version than the one that the message queue client asks for, which has known vulnerabilities. -->
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\TrafficTracker.Contracts\TrafficTracker.Contracts.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="NetProxy.TrafficTracker.Tests" />
+	</ItemGroup>
+
+</Project>

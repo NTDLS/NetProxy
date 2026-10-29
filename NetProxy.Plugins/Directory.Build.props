@@ -1,0 +1,16 @@
+<Project>
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+
+		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
+		<Company>NetworkDLS</Company>
+		<Authors>NetworkDLS</Authors>
+		<Product>NetProxy Plugins</Product>
+		<Version>1.0.0</Version>
+	</PropertyGroup>
+
+</Project>

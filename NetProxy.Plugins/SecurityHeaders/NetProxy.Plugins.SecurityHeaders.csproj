@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Description>Adds security headers (HSTS, nosniff, referrer policy, CSP, ...) to responses and removes the ones that give away the server.</Description>
+
+		<!-- The plug-in is loaded by NetProxy from its own folder, so everything it needs is copied next to it. -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<GenerateDependencyFile>true</GenerateDependencyFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Inside this repository the plug-in API is a project reference. Private: the service supplies the plug-in API, so it must not be copied next to the plug-in. -->
+		<ProjectReference Include="..\..\NetProxy.PluginApi\NetProxy.PluginApi.csproj">
+			<Private>false</Private>
+			<ExcludeAssets>runtime</ExcludeAssets>
+		</ProjectReference>
+		<ProjectReference Include="..\Common\NetProxy.Plugins.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="NetProxy.Plugins.Tests" />
+	</ItemGroup>
+
+</Project>

@@ -22,4 +22,10 @@
 		<InternalsVisibleTo Include="NetProxy.Plugins.Tests" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="README.md">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

@@ -21,4 +21,10 @@
 	  <PackageReference Include="NetProxy.PluginApi" Version="3.2.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="README.md">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

@@ -25,5 +25,10 @@
 	  <!-- For the traffic tracker's queue and messages (Common/TrafficTracker). Private: the other plug-ins do not use it, so it is not copied next to them. The tracker and its ingestion service get it from the CatMQ client. -->
 	  <PackageReference Include="NTDLS.CatMQ.Shared" Version="2.9.0" PrivateAssets="all" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Update="README.md">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 
 </Project>

@@ -18,4 +18,9 @@ dotnet publish .\TrafficTracker -c Release -o publish\NetProxy.Plugins.TrafficTr
 del publish\NetProxy.Plugins.TrafficTracker\*.pdb
 7z.exe a -tzip -r -mx9 ".\Publish\NetProxy.Plugins.TrafficTracker.zip" ".\publish\NetProxy.Plugins.TrafficTracker\*.*"
 
+rem The ingestion service of the traffic tracker (a service of its own, not a plug-in). The installers build it per platform; this is the portable build.
+dotnet publish .\TrafficTracker.Ingestion -c Release -o publish\NetProxy.Plugins.TrafficTracker.Ingestion --self-contained false
+del publish\NetProxy.Plugins.TrafficTracker.Ingestion\*.pdb
+7z.exe a -tzip -r -mx9 ".\Publish\NetProxy.Plugins.TrafficTracker.Ingestion.zip" ".\publish\NetProxy.Plugins.TrafficTracker.Ingestion\*.*"
+
 pause

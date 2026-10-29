@@ -33,7 +33,9 @@
  Source: "publish\win-x64\Service\*.json"; DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
  Source: "publish\win-x64\Service\*.exe";  DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
  Source: "publish\win-x64\Service\*.dll";  DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
- Source: "publish\win-x64\Plugins\*";       DestDir: "{app}\Plugins"; Components: Service\Plugins; Flags: IgnoreVersion recursesubdirs createallsubdirs;
+ Source: "publish\win-x64\Plugins\*";       DestDir: "{app}\Plugins"; Excludes: "appsettings.json"; Components: Service\Plugins; Flags: IgnoreVersion recursesubdirs createallsubdirs;
+ ; The settings are edited by whoever installs it (the database, the queue), so an upgrade must not put the defaults back.
+ Source: "publish\win-x64\Plugins\TrafficTracker.Ingestion\appsettings.json"; DestDir: "{app}\Plugins\TrafficTracker.Ingestion"; Components: Service\Plugins; Flags: onlyifdoesntexist;
   
 [Icons]
  Name: "{group}\Manage NetProxy"; Filename: "{app}\NetProxy.Client.Exe"; WorkingDir: "{app}"; Components: Base\Management;

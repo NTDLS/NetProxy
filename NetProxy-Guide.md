@@ -257,7 +257,7 @@ What people build with them: audit logs, IP block lists, content filters, find-a
 
 A plugin that throws or runs too long is logged and skipped, and the connection carries on.
 
-**Ready-made plugins** come with every package, built for its platform, in a `Plugins` folder (the Windows installer has them as the *Ready-made Plugins* component, in the install folder; the Linux zips have the folder next to the service): access log, alerts (Discord, Slack, webhook, e-mail), anti-hammer bans, Basic authentication, response cache, geo filter, maintenance page, Prometheus metrics, redirects (and ACME challenges), security headers, traffic split (canary releases) and the traffic tracker. Add one with a path relative to the service, for example `Plugins\AccessLog\NetProxy.Plugins.AccessLog.dll`. What each does and how it is set up is in the `README.md` of its project under `NetProxy.Plugins`.
+**Ready-made plugins** come with every package, built for its platform, in a `Plugins` folder (the Windows installer has them as the *Ready-made Plugins* component, in the install folder; the Linux zips have the folder next to the service): access log, alerts (Discord, Slack, webhook, e-mail), anti-hammer bans, Basic authentication, response cache, geo filter, maintenance page, Prometheus metrics, redirects (and ACME challenges), security headers, traffic split (canary releases) and the traffic tracker (whose ingestion service, `Plugins\TrafficTracker.Ingestion`, is there too, not installed or started). Add one with a path relative to the service, for example `Plugins\AccessLog\NetProxy.Plugins.AccessLog.dll`. What each does and how it is set up is in the `README.md` of its project under `NetProxy.Plugins`.
 
 ---
 

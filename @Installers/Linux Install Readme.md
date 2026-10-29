@@ -27,6 +27,13 @@ built for this platform. They do nothing until you add them. In the console (*Se
 name empty, and put its settings in. Each plugin's settings are in the `README.md` of its project (`NetProxy.Plugins/<Name>`).
 Keep the files of a plugin together. `Plugins/TrafficTracker` needs a CatMQ server and the ingestion service to be of any use.
 
+## Traffic tracker ingestion service
+
+`Plugins/TrafficTracker.Ingestion` is not a plugin: it is the service that reads what the traffic tracker plugin sends to a CatMQ server and
+writes it to SQL Server. It is self contained like the service, and it is **not started or installed**: edit its `appsettings.json` (the
+database and the CatMQ server), `chmod +x NetProxy.Plugins.TrafficTracker.Ingestion`, try it by hand, then run it as a systemd service. The
+unit file and the settings are in the `README.md` of its project (`NetProxy.Plugins/TrafficTracker.Ingestion`).
+
 ## Where things are kept
 
 The configuration (proxies, users, and the key that protects the passwords in them) is kept in `/usr/share/NetProxy`.

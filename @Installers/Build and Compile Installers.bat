@@ -30,10 +30,20 @@ call :PublishPlugins win-x64 publish\win-x64\Plugins || goto :failed
 call :PublishPlugins linux-x64 publish\linux-x64\NetProxy\Plugins || goto :failed
 call :PublishPlugins linux-arm64 publish\linux-arm64\NetProxy\Plugins || goto :failed
 
-REM The Windows installer (the plug-ins are its Service\Plugins component).
+REM The ingestion service of the traffic tracker goes in the Plugins folder too, in a folder of its own (Plugins\TrafficTracker.Ingestion): it is not a plug-in, but it is
+REM what the tracker plug-in needs on the other end, and it is not installed or started. Windows: a plain publish, like the NetProxy service (the machine has the
+REM .NET runtime). Linux: self contained, like the NetProxy service.
+dotnet publish ..\NetProxy.Plugins\TrafficTracker.Ingestion -c Release -o publish\win-x64\Plugins\TrafficTracker.Ingestion --runtime win-x64 --self-contained false || goto :failed
+del publish\win-x64\Plugins\TrafficTracker.Ingestion\*.pdb /q
+dotnet publish ..\NetProxy.Plugins\TrafficTracker.Ingestion -c Release -o publish\linux-x64\NetProxy\Plugins\TrafficTracker.Ingestion --runtime linux-x64 --self-contained true || goto :failed
+del publish\linux-x64\NetProxy\Plugins\TrafficTracker.Ingestion\*.pdb /q
+dotnet publish ..\NetProxy.Plugins\TrafficTracker.Ingestion -c Release -o publish\linux-arm64\NetProxy\Plugins\TrafficTracker.Ingestion --runtime linux-arm64 --self-contained true || goto :failed
+del publish\linux-arm64\NetProxy\Plugins\TrafficTracker.Ingestion\*.pdb /q
+
+REM The Windows installer (the plug-ins, and the ingestion service with them, are its Service\Plugins component).
 iscc Windows.Installer.iss
 
-REM The Linux packages (the plug-ins are in the Plugins folder of the zip).
+REM The Linux packages (the plug-ins are in the Plugins folder of the zip, the ingestion service in Plugins\TrafficTracker.Ingestion).
 7z.exe a -tzip -r -mx9 ".\output\NetProxy.Service.Linux.x64.zip" ".\publish\linux-x64\NetProxy\*.*"
 7z.exe a -tzip -r -mx9 ".\output\NetProxy.Service.Linux.Arm64.zip" ".\publish\linux-arm64\NetProxy\*.*"
 
@@ -44,7 +54,7 @@ exit /b 0
 
 :failed
 echo.
-echo A plug-in did not build, so the packages are not complete. Fix it and run this again.
+echo Something did not build, so the packages are not complete. Fix it and run this again.
 pause
 exit /b 1
 

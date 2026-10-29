@@ -167,8 +167,11 @@ namespace NetProxy.Plugins.Tests
         {
             var (plugin, _) = Start(new()
             {
-                ["Webhook.Url"] = "https://hooks.example/h", ["Webhook.Authorization"] = "Bearer secret-token",
-                ["Discord.Url"] = "https://discord.example/d", ["Source"] = "web01", ["FailuresBeforeDown"] = "1"
+                ["Webhook.Url"] = "https://hooks.example/h",
+                ["Webhook.Authorization"] = "Bearer secret-token",
+                ["Discord.Url"] = "https://discord.example/d",
+                ["Source"] = "web01",
+                ["FailuresBeforeDown"] = "1"
             });
 
             Fail(plugin, new FakeConnection(), Endpoint(), 1);
@@ -266,7 +269,11 @@ namespace NetProxy.Plugins.Tests
         {
             var (plugin, _) = Start(new()
             {
-                ["Smtp.Host"] = "mail.example", ["Smtp.From"] = "netproxy@example.com", ["Smtp.To"] = "ops@example.com, boss@example.com", ["FailuresBeforeDown"] = "1", ["Source"] = "web01"
+                ["Smtp.Host"] = "mail.example",
+                ["Smtp.From"] = "netproxy@example.com",
+                ["Smtp.To"] = "ops@example.com, boss@example.com",
+                ["FailuresBeforeDown"] = "1",
+                ["Source"] = "web01"
             });
 
             Fail(plugin, new FakeConnection(), Endpoint(), 1);

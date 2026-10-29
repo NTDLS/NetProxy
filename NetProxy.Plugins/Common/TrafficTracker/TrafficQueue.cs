@@ -1,6 +1,6 @@
 using NTDLS.CatMQ.Shared;
 
-namespace NetProxy.TrafficTracker.Contracts
+namespace NetProxy.Plugins.Common.TrafficTracker
 {
     /// <summary>
     /// The queue that the plug-in and the ingestion service meet on, and how it is made. Both create it, so it does not matter which of

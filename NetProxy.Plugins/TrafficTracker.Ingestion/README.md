@@ -1,6 +1,6 @@
 # NetProxy Traffic Tracker (ingestion service)
 
-The service that reads the web requests that the [Traffic Tracker plug-in](../TrafficTracker.Plugin) sends to a [CatMQ](https://github.com/NTDLS/CatMQ) queue and writes them to a SQL Server database. It is a Windows service or a systemd service when it is run as one (the service name is `NetProxyTrafficIngestion`), and an ordinary console program when it is not.
+The service that reads the web requests that the [Traffic Tracker plug-in](../TrafficTracker) sends to a [CatMQ](https://github.com/NTDLS/CatMQ) queue and writes them to a SQL Server database. It is a Windows service or a systemd service when it is run as one (the service name is `NetProxyTrafficIngestion`), and an ordinary console program when it is not.
 
 Both the plug-in and this service are clients of a [CatMQ](https://github.com/NTDLS/CatMQ) server (`NTDLS.CatMQ.Server`, default port `45784`), which has to be running where both can reach it; `Mq:Host` is that machine. The queue is made by whichever of the two starts first, and keeps its messages on disk, so nothing is lost while this service or the database is down; a message that can not be ingested after 20 tries goes to a dead-letter queue (`NetProxy.Traffic.dlq`). The service keeps trying to connect until it can.
 

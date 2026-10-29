@@ -12,7 +12,10 @@ namespace NetProxy.Plugins.Tests
         {
             public Dictionary<string, string> Countries { get; } = new()
             {
-                ["203.0.113.7"] = "US", ["198.51.100.9"] = "CN", ["192.0.2.50"] = "RU", ["100.64.0.1"] = "DE"
+                ["203.0.113.7"] = "US",
+                ["198.51.100.9"] = "CN",
+                ["192.0.2.50"] = "RU",
+                ["100.64.0.1"] = "DE"
             };
 
             public Dictionary<string, long> Asns { get; } = new() { ["203.0.113.7"] = 64500, ["198.51.100.9"] = 64501 };

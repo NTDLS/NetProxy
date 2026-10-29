@@ -1,6 +1,6 @@
-using NetProxy.TrafficTracker.Contracts;
+using NetProxy.Plugins.Common.TrafficTracker;
 
-namespace NetProxy.TrafficTracker.Plugin
+namespace NetProxy.Plugins.TrafficTracker
 {
     /// <summary>
     /// What the plug-in is set up with: the name=value lines of its settings in the NetProxy console. Every setting has a default, so a

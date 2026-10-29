@@ -14,8 +14,8 @@ for %%P in (AccessLog Alerts AntiHammer BasicAuth Cache GeoFilter Maintenance Me
 	7z.exe a -tzip -r -mx9 ".\Publish\NetProxy.Plugins.%%P.zip" ".\publish\NetProxy.Plugins.%%P\*.*"
 )
 
-dotnet publish .\TrafficTracker.Plugin -c Release -o publish\NetProxy.TrafficTracker.Plugin --self-contained false
-del publish\NetProxy.TrafficTracker.Plugin\*.pdb
-7z.exe a -tzip -r -mx9 ".\Publish\NetProxy.TrafficTracker.Plugin.zip" ".\publish\NetProxy.TrafficTracker.Plugin\*.*"
+dotnet publish .\TrafficTracker -c Release -o publish\NetProxy.Plugins.TrafficTracker --self-contained false
+del publish\NetProxy.Plugins.TrafficTracker\*.pdb
+7z.exe a -tzip -r -mx9 ".\Publish\NetProxy.Plugins.TrafficTracker.zip" ".\publish\NetProxy.Plugins.TrafficTracker\*.*"
 
 pause

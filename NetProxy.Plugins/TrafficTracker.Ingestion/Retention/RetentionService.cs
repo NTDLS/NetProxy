@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
-using NetProxy.TrafficTracker.Ingestion.Commands;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Commands;
 
-namespace NetProxy.TrafficTracker.Ingestion.Retention
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Retention
 {
     /// <summary>
     /// Removes the requests that are older than Ingestion:RetentionDays, once an hour. With 0 days nothing is ever removed and this does nothing.

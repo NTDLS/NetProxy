@@ -1,5 +1,4 @@
 using NetProxy.PluginApi;
-
 using NetProxy.Plugins.Common;
 
 namespace NetProxy.Plugins.Maintenance

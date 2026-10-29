@@ -1,8 +1,8 @@
-using NetProxy.TrafficTracker.Contracts;
+using NetProxy.Plugins.Common.TrafficTracker;
 using NTDLS.CatMQ.Client;
 using System.Threading.Channels;
 
-namespace NetProxy.TrafficTracker.Plugin
+namespace NetProxy.Plugins.TrafficTracker
 {
     /// <summary>
     /// Takes the requests that the plug-in saw and sends them to the CatMQ queue in batches, in the background and without waiting for the

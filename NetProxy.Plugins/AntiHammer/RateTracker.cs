@@ -1,7 +1,5 @@
 using System.Collections.Concurrent;
 
-using NetProxy.Plugins.Common;
-
 namespace NetProxy.Plugins.AntiHammer
 {
     /// <summary>

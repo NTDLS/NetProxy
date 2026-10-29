@@ -1,11 +1,11 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
-using NetProxy.TrafficTracker.Contracts;
-using NetProxy.TrafficTracker.Ingestion.Database;
+using NetProxy.Plugins.Common.TrafficTracker;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Database;
 using System.Data;
 
-namespace NetProxy.TrafficTracker.Ingestion.Commands
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Commands
 {
     /// <summary>
     /// Writes the requests of a batch to the database, normalized.

@@ -1,6 +1,6 @@
-using NetProxy.TrafficTracker.Contracts;
+using NetProxy.Plugins.Common.TrafficTracker;
 
-namespace NetProxy.TrafficTracker.Ingestion
+namespace NetProxy.Plugins.TrafficTracker.Ingestion
 {
     /// <summary>
     /// What the ingestion service is set up with (appsettings.json, or environment variables such as Mq__Host).

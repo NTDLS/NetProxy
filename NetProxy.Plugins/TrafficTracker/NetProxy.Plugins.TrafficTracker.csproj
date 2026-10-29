@@ -19,11 +19,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\TrafficTracker.Contracts\TrafficTracker.Contracts.csproj" />
+		<!-- The messages and the queue that this plug-in and the ingestion service share are in Common/TrafficTracker. -->
+		<ProjectReference Include="..\Common\NetProxy.Plugins.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="NetProxy.TrafficTracker.Tests" />
+		<InternalsVisibleTo Include="NetProxy.Plugins.Tests" />
 	</ItemGroup>
 
 </Project>

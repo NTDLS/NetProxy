@@ -1,7 +1,7 @@
+using NetProxy.PluginApi;
 using NetProxy.Plugins.Common;
 using NetProxy.Plugins.Maintenance;
 using NetProxy.Plugins.Tests.Support;
-using NetProxy.PluginApi;
 using System.Net;
 using Xunit;
 
@@ -88,7 +88,9 @@ namespace NetProxy.Plugins.Tests
         {
             var (plugin, _) = Start(new()
             {
-                ["StatusCode"] = "502", ["RetryAfterSeconds"] = "0", ["Title"] = "<b>Back</b> at 5",
+                ["StatusCode"] = "502",
+                ["RetryAfterSeconds"] = "0",
+                ["Title"] = "<b>Back</b> at 5",
                 ["Message"] = "Line one\nLine <script>alert(1)</script>"
             });
 
@@ -309,8 +311,13 @@ namespace NetProxy.Plugins.Tests
         {
             var (plugin, host) = Start(new()
             {
-                ["Window1"] = "yesterday to tomorrow", ["Window2"] = "2026-01-02 10:00 to 2026-01-02 09:00", ["Weekly1"] = "Someday 02:00-04:00", ["Weekly2"] = "Sun 2am-4am",
-                ["Daily1"] = "03:00", ["Daily2"] = "04:00-04:00", ["TimeZone"] = "Mars/Olympus"
+                ["Window1"] = "yesterday to tomorrow",
+                ["Window2"] = "2026-01-02 10:00 to 2026-01-02 09:00",
+                ["Weekly1"] = "Someday 02:00-04:00",
+                ["Weekly2"] = "Sun 2am-4am",
+                ["Daily1"] = "03:00",
+                ["Daily2"] = "04:00-04:00",
+                ["TimeZone"] = "Mars/Olympus"
             });
 
             Assert.Equal(7, host.Messages.Count(o => o.Level == NpPluginLogLevel.Warning));

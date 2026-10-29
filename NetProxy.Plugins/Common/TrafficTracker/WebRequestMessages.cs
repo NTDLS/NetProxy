@@ -1,6 +1,6 @@
 using NTDLS.CatMQ.Shared;
 
-namespace NetProxy.TrafficTracker.Contracts
+namespace NetProxy.Plugins.Common.TrafficTracker
 {
     /// <summary>
     /// One HTTP request that passed through a NetProxy proxy, with what its response was when that is known.

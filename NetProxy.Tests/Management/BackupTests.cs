@@ -1,4 +1,3 @@
-using NetProxy.ClientApi;
 using NetProxy.Library;
 using NetProxy.Library.Payloads;
 using NetProxy.Library.Payloads.ReliableMessages.Queries;

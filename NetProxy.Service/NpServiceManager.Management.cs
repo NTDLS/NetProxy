@@ -5,7 +5,6 @@ using NetProxy.PluginApi;
 using NetProxy.Service.Proxy;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 
 namespace NetProxy.Service
 {

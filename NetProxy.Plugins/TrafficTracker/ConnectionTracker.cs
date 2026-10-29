@@ -1,9 +1,9 @@
 using NetProxy.PluginApi;
-using NetProxy.TrafficTracker.Contracts;
-using NetProxy.TrafficTracker.Plugin.Http;
+using NetProxy.Plugins.Common.TrafficTracker;
+using NetProxy.Plugins.TrafficTracker.Http;
 using System.Diagnostics;
 
-namespace NetProxy.TrafficTracker.Plugin
+namespace NetProxy.Plugins.TrafficTracker
 {
     /// <summary>
     /// Follows the requests and the responses of one connection, and turns every request into a <see cref="WebRequestRecord"/>. A keep-alive

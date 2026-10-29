@@ -59,8 +59,12 @@ namespace NetProxy.Plugins.Tests
         {
             var (plugin, _) = Start(new()
             {
-                ["FrameOptions"] = "DENY", ["ContentSecurityPolicy"] = "default-src 'self'", ["PermissionsPolicy"] = "camera=()", ["CrossOriginOpenerPolicy"] = "same-origin",
-                ["ReferrerPolicy"] = "no-referrer", ["ContentTypeOptions"] = "false"
+                ["FrameOptions"] = "DENY",
+                ["ContentSecurityPolicy"] = "default-src 'self'",
+                ["PermissionsPolicy"] = "camera=()",
+                ["CrossOriginOpenerPolicy"] = "same-origin",
+                ["ReferrerPolicy"] = "no-referrer",
+                ["ContentTypeOptions"] = "false"
             });
 
             var lines = HeaderLines(Changed(Exchange(plugin, new FakeConnection(), Response())));

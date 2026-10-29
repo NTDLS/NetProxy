@@ -1,6 +1,5 @@
 using NetProxy.PluginApi;
 using NetProxy.Plugins.Common;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace NetProxy.Plugins.Redirect

@@ -16,7 +16,7 @@ Ready-made plug-ins for [NetProxy](https://github.com/NTDLS/NetProxy). Each is a
 | [Security Headers](SecurityHeaders/README.md) | `NetProxy.Plugins.SecurityHeaders.dll` | Adds HSTS, nosniff, referrer policy, CSP... and removes `Server` / `X-Powered-By`. |
 | [Traffic Split](TrafficSplit/README.md) | `NetProxy.Plugins.TrafficSplit.dll` | Sends a percentage of clients to chosen endpoints first (canary releases, blue/green). |
 
-The traffic tracker is here too: [`TrafficTracker.Plugin`](TrafficTracker.Plugin/README.md), the [`TrafficTracker.Ingestion`](TrafficTracker.Ingestion/README.md) service that writes what it sees to a database, and the [`TrafficTracker.Contracts`](TrafficTracker.Contracts/README.md) they share. [`Common`](Common/README.md) is the code that the plug-ins share.
+The traffic tracker is here too: [`TrafficTracker`](TrafficTracker/README.md), the [`TrafficTracker.Ingestion`](TrafficTracker.Ingestion/README.md) service that writes what it sees to a database. [`Common`](Common/README.md) is the code that the plug-ins share.
 
 Every project has a README of its own with its settings: follow the link in the table.
 

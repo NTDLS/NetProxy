@@ -1,6 +1,5 @@
 using NetProxy.PluginApi;
 using NetProxy.Plugins.Common;
-using System.Net;
 
 namespace NetProxy.Plugins.AccessLog
 {

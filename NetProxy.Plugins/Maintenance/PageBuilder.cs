@@ -1,8 +1,6 @@
 using System.Net;
 using System.Text;
 
-using NetProxy.Plugins.Common;
-
 namespace NetProxy.Plugins.Maintenance
 {
     /// <summary>

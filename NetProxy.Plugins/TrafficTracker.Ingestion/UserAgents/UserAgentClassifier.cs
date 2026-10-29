@@ -1,4 +1,4 @@
-namespace NetProxy.TrafficTracker.Ingestion.UserAgents
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.UserAgents
 {
     /// <summary>
     /// What a user agent is, in the few terms that a traffic report wants: the browser, the operating system, and what kind of client it is.

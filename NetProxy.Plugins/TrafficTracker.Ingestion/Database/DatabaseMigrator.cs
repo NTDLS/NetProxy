@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace NetProxy.TrafficTracker.Ingestion.Database
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Database
 {
     /// <summary>
     /// Puts the database in the state that the service expects. The SQL scripts that are embedded in the service (Database/Scripts, in the order of
@@ -82,7 +82,7 @@ namespace NetProxy.TrafficTracker.Ingestion.Database
         }
 
         /// <summary>
-        /// "NetProxy.TrafficTracker.Ingestion.Database.Scripts.001_Schema.sql" is "001_Schema.sql".
+        /// "NetProxy.Plugins.TrafficTracker.Ingestion.Database.Scripts.001_Schema.sql" is "001_Schema.sql".
         /// </summary>
         internal static string ScriptName(string resource)
         {

@@ -82,7 +82,10 @@ namespace NetProxy.Plugins.Tests
         {
             var settings = AntiHammerSettings.From(new Dictionary<string, string>
             {
-                ["BanMinutes"] = "soon", ["LogOnly"] = "maybe", ["MaxRequests"] = "1", ["Allow"] = "1.2.3.4, nonsense, 5.6.7.0/24"
+                ["BanMinutes"] = "soon",
+                ["LogOnly"] = "maybe",
+                ["MaxRequests"] = "1",
+                ["Allow"] = "1.2.3.4, nonsense, 5.6.7.0/24"
             }, out var problems);
 
             Assert.Equal(4, problems.Count);

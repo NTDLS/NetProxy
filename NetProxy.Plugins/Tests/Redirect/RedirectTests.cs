@@ -163,7 +163,10 @@ namespace NetProxy.Plugins.Tests
         {
             var settings = new Dictionary<string, string>
             {
-                ["Status"] = "302", ["Rule2"] = "a.com -> https://two.com", ["Rule10"] = "a.com -> https://ten.com", ["Rule1"] = "a.com/x -> https://one.com"
+                ["Status"] = "302",
+                ["Rule2"] = "a.com -> https://two.com",
+                ["Rule10"] = "a.com -> https://ten.com",
+                ["Rule1"] = "a.com/x -> https://one.com"
             };
             var (plugin, _) = Start(new RedirectPlugin(), settings);
 

@@ -1,10 +1,10 @@
-using NetProxy.TrafficTracker.Contracts;
-using NetProxy.TrafficTracker.Ingestion.UserAgents;
+using NetProxy.Plugins.Common.TrafficTracker;
+using NetProxy.Plugins.TrafficTracker.Ingestion.UserAgents;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace NetProxy.TrafficTracker.Ingestion.Database
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Database
 {
     /// <summary>
     /// Builds the table that goes to traffic.IngestWebRequests (the traffic.WebRequestTableType): one row for each request, with what the database

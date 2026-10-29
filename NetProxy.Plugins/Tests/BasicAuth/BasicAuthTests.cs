@@ -77,7 +77,11 @@ namespace NetProxy.Plugins.Tests
         {
             var (plugin, host) = Start(new()
             {
-                ["User1"] = "alice:wonderland", ["User2"] = "alice:again", ["User3"] = "nocolon", ["User4"] = "eve:sha256:zz", ["User5"] = "frank:pbkdf2:x:y:z"
+                ["User1"] = "alice:wonderland",
+                ["User2"] = "alice:again",
+                ["User3"] = "nocolon",
+                ["User4"] = "eve:sha256:zz",
+                ["User5"] = "frank:pbkdf2:x:y:z"
             });
 
             Assert.Equal(4, host.Messages.Count(o => o.Level == NpPluginLogLevel.Warning && o.Message.Contains("is left out")));

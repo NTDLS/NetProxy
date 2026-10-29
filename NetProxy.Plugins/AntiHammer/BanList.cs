@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 
-using NetProxy.Plugins.Common;
-
 namespace NetProxy.Plugins.AntiHammer
 {
     /// <summary>

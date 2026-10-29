@@ -4,6 +4,9 @@
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
 
+		<!-- A plug-in is loaded by NetProxy, which has the plug-in API, so the NetProxy.PluginApi package leaves it out of the output. These tests run the plug-ins themselves, so they need their own copy. -->
+		<NetProxyPluginApiCopyLocal>true</NetProxyPluginApiCopyLocal>
+
 		<!-- The events of a plug-in complete at once in these tests, so blocking on them (.AsTask().Wait()) can not deadlock. -->
 		<NoWarn>$(NoWarn);xUnit1031</NoWarn>
 	</PropertyGroup>

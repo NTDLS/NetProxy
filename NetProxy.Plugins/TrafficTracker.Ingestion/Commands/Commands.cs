@@ -1,4 +1,4 @@
-namespace NetProxy.TrafficTracker.Ingestion.Commands
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Commands
 {
     /// <summary>
     /// A command: a request to change something, which is handled by exactly one handler. What the ingestion service does with a message

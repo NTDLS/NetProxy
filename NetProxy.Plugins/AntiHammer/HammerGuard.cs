@@ -1,6 +1,5 @@
-using System.Net;
-
 using NetProxy.Plugins.Common;
+using System.Net;
 
 namespace NetProxy.Plugins.AntiHammer
 {

@@ -1,6 +1,6 @@
 using NetProxy.PluginApi;
 
-namespace NetProxy.TrafficTracker.Plugin
+namespace NetProxy.Plugins.TrafficTracker
 {
     /// <summary>
     /// Tracks the web traffic that passes through the proxies that use it: for every HTTP request the host, the client, the user agent, the

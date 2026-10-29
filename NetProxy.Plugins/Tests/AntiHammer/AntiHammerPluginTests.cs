@@ -1,7 +1,7 @@
+using NetProxy.PluginApi;
 using NetProxy.Plugins.AntiHammer;
 using NetProxy.Plugins.Common;
 using NetProxy.Plugins.Tests.Support;
-using NetProxy.PluginApi;
 using Xunit;
 
 namespace NetProxy.Plugins.Tests

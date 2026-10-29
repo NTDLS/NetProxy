@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Options;
-using NetProxy.TrafficTracker.Ingestion.Commands;
-using NetProxy.TrafficTracker.Ingestion.Database;
-using NetProxy.TrafficTracker.Ingestion.Messaging;
-using NetProxy.TrafficTracker.Ingestion.Retention;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Commands;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Database;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Messaging;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Retention;
 using Serilog;
 
-namespace NetProxy.TrafficTracker.Ingestion
+namespace NetProxy.Plugins.TrafficTracker.Ingestion
 {
     internal class Program
     {

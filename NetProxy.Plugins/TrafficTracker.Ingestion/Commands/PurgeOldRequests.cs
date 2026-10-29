@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using System.Data;
 
-namespace NetProxy.TrafficTracker.Ingestion.Commands
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Commands
 {
     /// <summary>
     /// Removes the requests that are older than a time. The hosts, clients, user agents and the rest stay: they are small, and it is useful to know

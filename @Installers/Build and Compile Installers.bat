@@ -56,6 +56,6 @@ for %%P in (AccessLog Alerts AntiHammer BasicAuth Cache GeoFilter Maintenance Me
 )
 
 REM The traffic tracker (it needs a CatMQ server and the ingestion service, see its README).
-dotnet publish ..\NetProxy.Plugins\TrafficTracker.Plugin -c Release -o %2\TrafficTracker --runtime %1 --self-contained false || exit /b 1
+dotnet publish ..\NetProxy.Plugins\TrafficTracker -c Release -o %2\TrafficTracker --runtime %1 --self-contained false || exit /b 1
 del %2\TrafficTracker\*.pdb /q
 exit /b 0

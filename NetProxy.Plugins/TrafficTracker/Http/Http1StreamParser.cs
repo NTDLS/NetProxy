@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace NetProxy.TrafficTracker.Plugin.Http
+namespace NetProxy.Plugins.TrafficTracker.Http
 {
     /// <summary>
     /// The head of an HTTP/1.x request or response: the start line and the headers.

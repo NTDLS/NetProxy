@@ -1,12 +1,12 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
-using NetProxy.TrafficTracker.Contracts;
-using NetProxy.TrafficTracker.Ingestion.Commands;
-using NetProxy.TrafficTracker.Ingestion.Database;
+using NetProxy.Plugins.Common.TrafficTracker;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Commands;
+using NetProxy.Plugins.TrafficTracker.Ingestion.Database;
 using NTDLS.CatMQ.Client;
 using NTDLS.CatMQ.Shared;
 
-namespace NetProxy.TrafficTracker.Ingestion.Messaging
+namespace NetProxy.Plugins.TrafficTracker.Ingestion.Messaging
 {
     /// <summary>
     /// Subscribes to the traffic queue and turns every message into a command. It is the queue side of the service: it connects (and keeps

@@ -25,9 +25,8 @@
     <Project Path="NetProxy.Plugins/SecurityHeaders/NetProxy.Plugins.SecurityHeaders.csproj" />
     <Project Path="NetProxy.Plugins/TrafficSplit/NetProxy.Plugins.TrafficSplit.csproj" />
     <Project Path="NetProxy.Plugins/Tests/NetProxy.Plugins.Tests.csproj" />
-    <Project Path="NetProxy.Plugins/TrafficTracker.Contracts/TrafficTracker.Contracts.csproj" />
-    <Project Path="NetProxy.Plugins/TrafficTracker.Plugin/TrafficTracker.Plugin.csproj" />
-    <Project Path="NetProxy.Plugins/TrafficTracker.Ingestion/TrafficTracker.Ingestion.csproj" />
+    <Project Path="NetProxy.Plugins/TrafficTracker/NetProxy.Plugins.TrafficTracker.csproj" />
+    <Project Path="NetProxy.Plugins/TrafficTracker.Ingestion/NetProxy.Plugins.TrafficTracker.Ingestion.csproj" />
   </Folder>
   <Project Path="NetProxy.Client/NetProxy.Client.csproj" />
   <Project Path="NetProxy.ClientApi/NetProxy.ClientApi.csproj" />

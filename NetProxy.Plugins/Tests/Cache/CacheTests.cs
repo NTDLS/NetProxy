@@ -287,7 +287,9 @@ namespace NetProxy.Plugins.Tests
             CachedResponse Entry(int size) => new()
             {
                 Head = new NetProxy.Plugins.Common.HttpResponseHead { Status = 200 },
-                Body = new byte[size], StoredUtc = Clock.GetUtcNow().UtcDateTime, ExpiresUtc = Clock.GetUtcNow().UtcDateTime.AddMinutes(1)
+                Body = new byte[size],
+                StoredUtc = Clock.GetUtcNow().UtcDateTime,
+                ExpiresUtc = Clock.GetUtcNow().UtcDateTime.AddMinutes(1)
             };
 
             cache.Put("a", Entry(1000));

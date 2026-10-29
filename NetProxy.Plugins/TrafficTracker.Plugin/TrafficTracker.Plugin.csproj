@@ -11,11 +11,11 @@
 
 	<ItemGroup>
 		<!-- The service supplies the plug-in API, so it is built against and is not shipped with the plug-in (not in the output, and not published). -->
-		<PackageReference Include="NetProxy.PluginApi" Version="3.1.0" ExcludeAssets="runtime" />
+		<PackageReference Include="NetProxy.PluginApi" Version="3.2.0" />
 		<PackageReference Include="NTDLS.CatMQ.Client" Version="2.9.0" />
 
 		<!-- A newer version than the one that the message queue client asks for, which has known vulnerabilities. -->
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -4,13 +4,6 @@
 		<Description>The code that the NetProxy plug-ins share: HTTP/1.x readers, address ranges, trusted proxies and a settings reader.</Description>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\NetProxy.PluginApi\NetProxy.PluginApi.csproj">
-			<Private>false</Private>
-			<ExcludeAssets>runtime</ExcludeAssets>
-		</ProjectReference>
-	</ItemGroup>
-
 	<!-- Its types are internal: only the plug-ins that are built with it, and the tests, can use them. -->
 	<ItemGroup>
 		<InternalsVisibleTo Include="NetProxy.Plugins.Tests" />
@@ -25,6 +18,9 @@
 		<InternalsVisibleTo Include="NetProxy.Plugins.Redirect" />
 		<InternalsVisibleTo Include="NetProxy.Plugins.SecurityHeaders" />
 		<InternalsVisibleTo Include="NetProxy.Plugins.TrafficSplit" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="NetProxy.PluginApi" Version="3.2.0" />
 	</ItemGroup>
 
 </Project>

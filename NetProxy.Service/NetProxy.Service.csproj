@@ -7,7 +7,7 @@
 		<Nullable>enable</Nullable>
 
 		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
-		<Version>3.1.0</Version>
+		<Version>3.2.0</Version>
 		<Company>NetworkDLS</Company>
 		<Product>NetProxy</Product>
 		<ApplicationIcon>AppIcon.ico</ApplicationIcon>
@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="NTDLS.Persistence" Version="2.0.1" />
-		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
 		<PackageReference Include="Topshelf" Version="4.3.0" />
 	</ItemGroup>
 

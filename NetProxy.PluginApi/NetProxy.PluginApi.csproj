@@ -7,7 +7,7 @@
 		<NoWarn>$(NoWarn);CS1591</NoWarn>
 
 		<Copyright>Copyright © 2026 NetworkDLS</Copyright>
-		<Version>3.1.0</Version>
+		<Version>3.2.0</Version>
 		<Company>NetworkDLS</Company>
 		<Product>NetProxy</Product>
 		<Description>The API for writing NetProxy plug-ins: derive from NpPlugin, override the events you want, and load the assembly from the NetProxy console. No dependencies.</Description>

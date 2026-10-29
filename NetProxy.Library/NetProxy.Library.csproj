@@ -19,7 +19,7 @@
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="NTDLS.Permafrost" Version="2.2.0" />
-		<PackageReference Include="NTDLS.ReliableMessaging" Version="3.5.0" />
+		<PackageReference Include="NTDLS.ReliableMessaging" Version="3.6.0" />
 		<PackageReference Include="NTDLS.SecureKeyExchange" Version="3.0.3" />
 		<PackageReference Include="protobuf-net" Version="3.4.40" />
 	</ItemGroup>

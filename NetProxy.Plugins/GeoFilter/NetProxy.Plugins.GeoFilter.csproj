@@ -10,15 +10,12 @@
 
 	<ItemGroup>
 		<!-- Inside this repository the plug-in API is a project reference. Private: the service supplies the plug-in API, so it must not be copied next to the plug-in. -->
-		<ProjectReference Include="..\..\NetProxy.PluginApi\NetProxy.PluginApi.csproj">
-			<Private>false</Private>
-			<ExcludeAssets>runtime</ExcludeAssets>
-		</ProjectReference>
 		<ProjectReference Include="..\Common\NetProxy.Plugins.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="MaxMind.Db" Version="5.2.0" />
+		<PackageReference Include="NetProxy.PluginApi" Version="3.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>

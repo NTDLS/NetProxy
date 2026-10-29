@@ -1,4 +1,4 @@
-#define AppVersion "3.1.0"
+#define AppVersion "3.2.0"
 
 [Setup]
 ;-- Main Setup Information
@@ -24,6 +24,7 @@
  Name: Base;            Description: "Base Install";       Types: full compact custom;  Flags: Fixed;
  Name: Base\Management; Description: "Management Console"; Types: full compact custom;
  Name: Service;         Description: "Proxy Service";      Types: full compact custom;
+ Name: Service\Plugins; Description: "Ready-made Plugins"; Types: full custom;
 
 [Files]
  Source: "publish\win-x64\Client\*.exe";   DestDir: "{app}"; Components: Base\Management; Flags: IgnoreVersion;
@@ -32,6 +33,7 @@
  Source: "publish\win-x64\Service\*.json"; DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
  Source: "publish\win-x64\Service\*.exe";  DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
  Source: "publish\win-x64\Service\*.dll";  DestDir: "{app}"; Components: Service;         Flags: IgnoreVersion;
+ Source: "publish\win-x64\Plugins\*";       DestDir: "{app}\Plugins"; Components: Service\Plugins; Flags: IgnoreVersion recursesubdirs createallsubdirs;
   
 [Icons]
  Name: "{group}\Manage NetProxy"; Filename: "{app}\NetProxy.Client.Exe"; WorkingDir: "{app}"; Components: Base\Management;

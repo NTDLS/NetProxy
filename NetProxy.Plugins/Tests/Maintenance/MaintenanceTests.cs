@@ -1,4 +1,3 @@
-#pragma warning disable xUnit1031 //The plug-in events complete at once; there is nothing to deadlock on.
 using NetProxy.Plugins.Common;
 using NetProxy.Plugins.Maintenance;
 using NetProxy.Plugins.Tests.Support;

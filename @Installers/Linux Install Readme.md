@@ -19,6 +19,14 @@ cd ~/apps/NetProxy
 chmod +x NetProxy.Service
 ```
 
+## Ready-made plugins
+
+The zip has the ready-made plugins in the `Plugins` folder, one folder each (`Plugins/AccessLog`, `Plugins/Alerts`, `Plugins/Redirect`, ...),
+built for this platform. They do nothing until you add them. In the console (*Settings > Plugins*) add the plugin with a path
+**relative to the folder the service runs from**, for example `Plugins/AccessLog/NetProxy.Plugins.AccessLog.dll`, leave the type
+name empty, and put its settings in. Each plugin's settings are in the `README.md` of its project (`NetProxy.Plugins/<Name>`).
+Keep the files of a plugin together. `Plugins/TrafficTracker` needs a CatMQ server and the ingestion service to be of any use.
+
 ## Where things are kept
 
 The configuration (proxies, users, and the key that protects the passwords in them) is kept in `/usr/share/NetProxy`.

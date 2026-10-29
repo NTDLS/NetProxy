@@ -10,11 +10,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Dapper" Version="2.1.66" />
+		<PackageReference Include="Dapper" Version="2.1.89" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.13" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.13" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.14" />
 		<PackageReference Include="NTDLS.CatMQ.Client" Version="2.9.0" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
@@ -22,7 +22,7 @@
 		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
 
 		<!-- A newer version than the one that the message queue client asks for, which has known vulnerabilities. -->
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
 	</ItemGroup>
 
 	<ItemGroup>

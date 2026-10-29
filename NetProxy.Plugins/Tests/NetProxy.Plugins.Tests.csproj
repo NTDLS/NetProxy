@@ -3,10 +3,14 @@
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
+
+		<!-- The events of a plug-in complete at once in these tests, so blocking on them (.AsTask().Wait()) can not deadlock. -->
+		<NoWarn>$(NoWarn);xUnit1031</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+		<PackageReference Include="NetProxy.PluginApi" Version="3.2.0" />
 		<PackageReference Include="xunit" Version="2.9.3" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
 			<PrivateAssets>all</PrivateAssets>
@@ -15,7 +19,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\NetProxy.PluginApi\NetProxy.PluginApi.csproj" />
 		<ProjectReference Include="..\Common\NetProxy.Plugins.Common.csproj" />
 		<ProjectReference Include="..\AccessLog\NetProxy.Plugins.AccessLog.csproj" />
 		<ProjectReference Include="..\Alerts\NetProxy.Plugins.Alerts.csproj" />
